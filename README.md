@@ -28,18 +28,14 @@ pip install draagon-ai[all]
 ## Quick Start
 
 ```python
-from draagon_ai import DraagonConfig, Persona, SinglePersonaManager
-from draagon_ai.cognition import LearningService
-
-# Configure the engine
-config = DraagonConfig.from_env()
+from draagon_ai import Persona, PersonaTraits, SinglePersonaManager
 
 # Create a persona
 assistant = Persona(
     id="assistant",
     name="Ada",
     description="A helpful AI assistant",
-    traits=PersonaTraits({
+    traits=PersonaTraits.from_dict({
         "helpful": 0.95,
         "curious": 0.7,
         "formal": 0.3,
@@ -64,7 +60,7 @@ blacksmith = Persona(
     id="grumak",
     name="Grumak",
     description="Aging orc blacksmith",
-    traits=PersonaTraits({"gruff": 0.8, "honest": 0.9}),
+    traits=PersonaTraits.from_dict({"gruff": 0.8, "honest": 0.9}),
     voice_notes="Short sentences. Drops articles.",
 )
 
@@ -72,7 +68,7 @@ sage = Persona(
     id="elara",
     name="Elara",
     description="Elven scholar",
-    traits=PersonaTraits({"mysterious": 0.9, "verbose": 0.7}),
+    traits=PersonaTraits.from_dict({"mysterious": 0.9, "verbose": 0.7}),
 )
 
 # Manage multiple personas

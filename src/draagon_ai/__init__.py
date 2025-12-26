@@ -82,6 +82,16 @@ from draagon_ai.cognition import (
     VerificationResult,
 )
 
+# Persona system
+from draagon_ai.persona import (
+    Persona,
+    PersonaTraits,
+    PersonaRelationship,
+    PersonaManager,
+    SinglePersonaManager,
+    MultiPersonaManager,
+)
+
 # Tools (MCP integration - optional dependency)
 from draagon_ai.tools import (
     MCP_AVAILABLE,
@@ -136,6 +146,13 @@ __all__ = [
     "LearningResult",
     "LearningType",
     "VerificationResult",
+    # Persona system
+    "Persona",
+    "PersonaTraits",
+    "PersonaRelationship",
+    "PersonaManager",
+    "SinglePersonaManager",
+    "MultiPersonaManager",
     # Tools (optional MCP dependency)
     "MCP_AVAILABLE",
     "MCPClient",
