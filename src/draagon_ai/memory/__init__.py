@@ -8,6 +8,13 @@ Phase C.1 (AGI-Lite) additions:
 - TemporalEdge: Relationships between nodes
 - TemporalCognitiveGraph: The core graph container
 - HierarchicalScope: Scope-based access control
+
+Phase C.2 (AGI-Lite) additions:
+- WorkingMemory: Session-scoped, limited capacity
+- EpisodicMemory: Episodes and events with chronological linking
+- SemanticMemory: Entity resolution, facts, relationships
+- MetacognitiveMemory: Skills, strategies, insights
+- MemoryPromotion: Auto-promotion between layers
 """
 
 from draagon_ai.memory.base import (
@@ -52,6 +59,38 @@ from draagon_ai.memory.temporal_graph import (
     PermissionDeniedError,
 )
 
+# Memory Layers (C.2)
+from draagon_ai.memory.layers import (
+    # Base
+    LayerConfig,
+    MemoryLayerBase,
+    PromotionResult,
+    # Working Memory
+    WorkingMemory,
+    WorkingMemoryItem,
+    # Episodic Memory
+    EpisodicMemory,
+    Episode,
+    Event,
+    # Semantic Memory
+    SemanticMemory,
+    Entity,
+    Fact,
+    Relationship,
+    EntityMatch,
+    # Metacognitive Memory
+    MetacognitiveMemory,
+    Skill,
+    Strategy,
+    Insight,
+    BehaviorNode,
+    # Promotion
+    MemoryPromotion,
+    MemoryConsolidator,
+    PromotionConfig,
+    PromotionStats,
+)
+
 __all__ = [
     # Base memory interfaces
     "MemoryProvider",
@@ -87,4 +126,27 @@ __all__ = [
     "GraphSearchResult",
     "GraphTraversalResult",
     "PermissionDeniedError",
+    # Memory Layers (C.2)
+    "LayerConfig",
+    "MemoryLayerBase",
+    "PromotionResult",
+    "WorkingMemory",
+    "WorkingMemoryItem",
+    "EpisodicMemory",
+    "Episode",
+    "Event",
+    "SemanticMemory",
+    "Entity",
+    "Fact",
+    "Relationship",
+    "EntityMatch",
+    "MetacognitiveMemory",
+    "Skill",
+    "Strategy",
+    "Insight",
+    "BehaviorNode",
+    "MemoryPromotion",
+    "MemoryConsolidator",
+    "PromotionConfig",
+    "PromotionStats",
 ]
