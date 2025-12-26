@@ -56,6 +56,28 @@ from .architect_agent import (
     ArchitectResult,
     create_architect_agent,
 )
+from .learning_channel import (
+    LearningChannel,
+    Learning,
+    LearningType,
+    LearningScope,
+    StubLearningChannel,
+    InMemoryLearningChannel,
+    create_learning_channel,
+    get_learning_channel,
+    set_learning_channel,
+    reset_learning_channel,
+)
+from .multi_agent_orchestrator import (
+    MultiAgentOrchestrator,
+    OrchestrationMode,
+    AgentSpec,
+    AgentRole,
+    TaskContext,
+    AgentResult,
+    OrchestratorResult,
+    execute_single_agent,
+)
 
 __all__ = [
     # Core Agent
@@ -79,4 +101,24 @@ __all__ = [
     "ArchitectAgent",
     "ArchitectResult",
     "create_architect_agent",
+    # Learning Channel (C.1)
+    "LearningChannel",
+    "Learning",
+    "LearningType",
+    "LearningScope",
+    "StubLearningChannel",
+    "InMemoryLearningChannel",
+    "create_learning_channel",
+    "get_learning_channel",
+    "set_learning_channel",
+    "reset_learning_channel",
+    # Multi-Agent Orchestrator (C.1)
+    "MultiAgentOrchestrator",
+    "OrchestrationMode",
+    "AgentSpec",
+    "AgentRole",
+    "TaskContext",
+    "AgentResult",
+    "OrchestratorResult",
+    "execute_single_agent",
 ]
