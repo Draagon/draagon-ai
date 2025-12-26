@@ -92,6 +92,25 @@ from draagon_ai.persona import (
     MultiPersonaManager,
 )
 
+# Configuration
+from draagon_ai.config import (
+    DraagonConfig,
+    LLMConfig,
+    MemoryConfig,
+    EmbeddingConfig,
+    MCPConfig,
+    CognitiveConfig,
+)
+
+# Auth & Credentials
+from draagon_ai.auth import (
+    CredentialScope,
+    Credential,
+    CredentialStore,
+    EnvCredentialStore,
+    InMemoryCredentialStore,
+)
+
 # Tools (MCP integration - optional dependency)
 from draagon_ai.tools import (
     MCP_AVAILABLE,
@@ -153,6 +172,19 @@ __all__ = [
     "PersonaManager",
     "SinglePersonaManager",
     "MultiPersonaManager",
+    # Configuration
+    "DraagonConfig",
+    "LLMConfig",
+    "MemoryConfig",
+    "EmbeddingConfig",
+    "MCPConfig",
+    "CognitiveConfig",
+    # Auth & Credentials
+    "CredentialScope",
+    "Credential",
+    "CredentialStore",
+    "EnvCredentialStore",
+    "InMemoryCredentialStore",
     # Tools (optional MCP dependency)
     "MCP_AVAILABLE",
     "MCPClient",
