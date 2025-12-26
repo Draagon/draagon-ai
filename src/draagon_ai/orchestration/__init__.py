@@ -1,0 +1,68 @@
+"""Agent orchestration layer.
+
+This module provides the generic agent loop that ties together:
+- Behaviors: What the agent can do
+- Personality: Who the agent is
+- Cognition: How the agent thinks (learning, beliefs, etc.)
+- Tools: External capabilities
+
+Architecture:
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                          Agent                                   │
+    │                                                                  │
+    │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
+    │  │  Personality │  │   Behavior   │  │  Cognitive Services  │  │
+    │  │   (Persona)  │  │  (Actions)   │  │  (Learning, Beliefs) │  │
+    │  └──────────────┘  └──────────────┘  └──────────────────────┘  │
+    │                          │                                       │
+    │                          ▼                                       │
+    │  ┌─────────────────────────────────────────────────────────┐   │
+    │  │                  Decision Engine                         │   │
+    │  │   Query → Activation → Decision → Execution → Response  │   │
+    │  └─────────────────────────────────────────────────────────┘   │
+    │                          │                                       │
+    │                          ▼                                       │
+    │  ┌─────────────────────────────────────────────────────────┐   │
+    │  │                    Tool Registry                         │   │
+    │  │         (Handler implementations)                        │   │
+    │  └─────────────────────────────────────────────────────────┘   │
+    └─────────────────────────────────────────────────────────────────┘
+
+Usage:
+    from draagon_ai.orchestration import Agent, AgentConfig
+    from draagon_ai.behaviors import VOICE_ASSISTANT_TEMPLATE
+    from draagon_ai.persona import Persona
+
+    # Create an agent
+    agent = Agent(
+        agent_id="roxy",
+        persona=my_persona,
+        behavior=VOICE_ASSISTANT_TEMPLATE,
+        tools=my_tool_registry,
+        llm=my_llm_provider,
+    )
+
+    # Process a query
+    response = await agent.process("What time is it?", context)
+"""
+
+from .agent import Agent, AgentConfig
+from .decision import DecisionEngine, DecisionResult
+from .execution import ActionExecutor, ActionResult
+from .loop import AgentLoop, AgentContext, AgentResponse
+from .protocols import LLMProvider, MemoryProvider, ToolProvider
+
+__all__ = [
+    "Agent",
+    "AgentConfig",
+    "DecisionEngine",
+    "DecisionResult",
+    "ActionExecutor",
+    "ActionResult",
+    "AgentLoop",
+    "AgentContext",
+    "AgentResponse",
+    "LLMProvider",
+    "MemoryProvider",
+    "ToolProvider",
+]
