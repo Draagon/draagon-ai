@@ -53,6 +53,9 @@ dev = [
     "mypy>=1.0",
 ]
 
+[project.scripts]
+draagon-architect = "draagon_ai.cli.architect:architect_cli"
+
 [project.urls]
 Homepage = "https://draagon.ai"
 Documentation = "https://github.com/Draagon/draagon-ai#readme"

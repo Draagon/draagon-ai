@@ -46,23 +46,37 @@ Usage:
     response = await agent.process("What time is it?", context)
 """
 
-from .agent import Agent, AgentConfig
+from .agent import Agent, AgentConfig, MultiAgent
 from .decision import DecisionEngine, DecisionResult
 from .execution import ActionExecutor, ActionResult
 from .loop import AgentLoop, AgentContext, AgentResponse
 from .protocols import LLMProvider, MemoryProvider, ToolProvider
+from .architect_agent import (
+    ArchitectAgent,
+    ArchitectResult,
+    create_architect_agent,
+)
 
 __all__ = [
+    # Core Agent
     "Agent",
     "AgentConfig",
+    "MultiAgent",
+    # Decision & Execution
     "DecisionEngine",
     "DecisionResult",
     "ActionExecutor",
     "ActionResult",
+    # Loop
     "AgentLoop",
     "AgentContext",
     "AgentResponse",
+    # Protocols
     "LLMProvider",
     "MemoryProvider",
     "ToolProvider",
+    # Behavior Architect
+    "ArchitectAgent",
+    "ArchitectResult",
+    "create_architect_agent",
 ]

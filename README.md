@@ -104,6 +104,42 @@ Higher-level reasoning including:
 ### MCP Support
 Model Context Protocol integration for extensible tool use.
 
+### Behavior System
+Dynamic behavior definitions that can be created, tested, and evolved:
+
+```python
+from draagon_ai.orchestration import create_architect_agent
+from draagon_ai.behaviors import BehaviorRegistry
+
+# Create a behavior architect
+architect = await create_architect_agent(
+    llm=my_llm,
+    registry=BehaviorRegistry(),
+)
+
+# Create a behavior from natural language
+result = await architect.create_behavior(
+    "A behavior for managing kitchen timers with voice commands"
+)
+
+if result.success:
+    print(f"Created: {result.behavior.name}")
+    print(f"Actions: {len(result.behavior.actions)}")
+    print(f"Test pass rate: {result.test_pass_rate}")
+```
+
+**CLI Usage:**
+```bash
+# Research a domain
+draagon-architect research "smart home management"
+
+# Create a behavior
+draagon-architect create "A behavior for kitchen timers"
+
+# Create with evolution
+draagon-architect create "home automation" --evolve --generations 10
+```
+
 ## Configuration
 
 Environment variables:
