@@ -75,6 +75,7 @@ from draagon_ai.cognition.learning import (
     SearchProvider,
     CredibilityProvider as LearningCredibilityProvider,  # Avoid conflict
     UserProvider,
+    LearningExtension,
     LEARNING_DETECTION_PROMPT,
     LEARNING_EXTRACTION_PROMPT,
     MODE_LEARNING_GUIDANCE,
@@ -137,6 +138,7 @@ __all__ = [
     "SearchProvider",
     "LearningCredibilityProvider",
     "UserProvider",
+    "LearningExtension",
     "LEARNING_DETECTION_PROMPT",
     "LEARNING_EXTRACTION_PROMPT",
     "MODE_LEARNING_GUIDANCE",

@@ -225,6 +225,98 @@ class UserProvider(Protocol):
         ...
 
 
+@runtime_checkable
+class LearningExtension(Protocol):
+    """Protocol for extending the learning service with domain-specific features.
+
+    Host applications can implement this to add:
+    - Knowledge graph integration
+    - Skill template matching
+    - Household/multi-user conflict detection
+    - Meta-knowledge extraction
+    - Custom memory linking
+
+    All methods are optional - implement only what you need.
+    """
+
+    async def pre_store_hook(
+        self,
+        content: str,
+        learning_type: str,
+        user_id: str,
+        entities: list[str],
+        confidence: float,
+    ) -> dict[str, Any] | None:
+        """Called before storing a learning. Can modify or skip storage.
+
+        Args:
+            content: The learning content
+            learning_type: Type of learning (skill, fact, etc.)
+            user_id: User ID
+            entities: Extracted entities
+            confidence: Confidence score
+
+        Returns:
+            Dict with optional keys:
+            - skip: True to skip normal storage
+            - modified_content: Replace content with this
+            - additional_entities: Entities to add
+            - scope: Override detected scope
+            - extra_metadata: Additional metadata to store
+        """
+        ...
+
+    async def post_store_hook(
+        self,
+        memory_id: str,
+        content: str,
+        learning_type: str,
+        user_id: str,
+        entities: list[str],
+    ) -> None:
+        """Called after successfully storing a learning.
+
+        Use for:
+        - Adding to knowledge graph
+        - Creating entity links
+        - Triggering downstream processes
+        """
+        ...
+
+    async def try_template_match(
+        self,
+        user_query: str,
+        learning_type: str,
+    ) -> dict[str, Any] | None:
+        """Try to match against pre-defined skill templates.
+
+        Fast path for common patterns like:
+        - "My name is X" -> name extraction
+        - "Remember that X" -> fact storage
+        - "X's birthday is Y" -> date fact
+
+        Returns:
+            Dict with extracted data if matched, None otherwise
+        """
+        ...
+
+    async def detect_household_conflicts(
+        self,
+        content: str,
+        user_id: str,
+        entities: list[str],
+    ) -> list[dict[str, Any]]:
+        """Detect conflicts with other household members' knowledge.
+
+        For multi-user households, check if this learning conflicts
+        with what other users have stated.
+
+        Returns:
+            List of conflicts with user_id, existing_content, conflict_type
+        """
+        ...
+
+
 # =============================================================================
 # Prompts
 # =============================================================================
@@ -592,6 +684,7 @@ class LearningService:
         search_provider: SearchProvider | None = None,
         credibility_provider: CredibilityProvider | None = None,
         user_provider: UserProvider | None = None,
+        extension: LearningExtension | None = None,
         learning_cooldown_minutes: int = 30,
     ):
         """Initialize the learning service.
@@ -604,6 +697,7 @@ class LearningService:
             search_provider: Optional search provider for relearning
             credibility_provider: Optional provider for user credibility
             user_provider: Optional provider for user information
+            extension: Optional extension for domain-specific features
             learning_cooldown_minutes: Cooldown for duplicate detection
         """
         self.llm = llm
@@ -613,6 +707,7 @@ class LearningService:
         self.search_provider = search_provider
         self.credibility_provider = credibility_provider
         self.user_provider = user_provider
+        self.extension = extension
 
         # Track recent learnings to avoid duplicates
         self._recent_learnings: dict[str, datetime] = {}

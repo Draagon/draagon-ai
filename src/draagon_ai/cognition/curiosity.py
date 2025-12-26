@@ -197,7 +197,7 @@ Output JSON:
             "priority": "low" | "medium" | "high",
             "target_user": "user_id" or null,
             "why_this_question": "Why {agent_name} genuinely wants to know this (from their perspective)",
-            "what_roxy_will_do_with_answer": "Specific follow-up: teach something, remember for later, adjust behavior, etc.",
+            "what_agent_will_do_with_answer": "Specific follow-up: teach something, remember for later, adjust behavior, etc.",
             "context_to_remember": "Full context so {agent_name} remembers why they asked when user answers",
             "interesting_to_user": true/false
         }}
@@ -425,7 +425,7 @@ class CuriosityEngine:
                 # Rich context fields
                 purpose=purpose_map.get(q.get("purpose", "genuine_curiosity"), QuestionPurpose.GENUINE_CURIOSITY),
                 why_asking=q.get("why_this_question", ""),
-                follow_up_plan=q.get("what_roxy_will_do_with_answer", ""),
+                follow_up_plan=q.get("what_agent_will_do_with_answer", ""),
                 interesting_to_user=q.get("interesting_to_user", True),
             )
 

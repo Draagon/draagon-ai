@@ -80,6 +80,7 @@ from draagon_ai.cognition import (
     LearningResult,
     LearningType,
     VerificationResult,
+    LearningExtension,  # Protocol for domain-specific hooks
 )
 
 # Persona system
@@ -109,6 +110,27 @@ from draagon_ai.auth import (
     CredentialStore,
     EnvCredentialStore,
     InMemoryCredentialStore,
+)
+
+# Exceptions
+from draagon_ai.exceptions import (
+    DraagonError,
+    ConfigurationError,
+    ProviderError,
+    LLMError,
+    MemoryError,
+    EmbeddingError,
+    CognitionError,
+    BeliefError,
+    LearningError,
+    CuriosityError,
+    OpinionError,
+    MCPError,
+    MCPConnectionError,
+    MCPToolError,
+    AuthError,
+    CredentialNotFoundError,
+    CredentialExpiredError,
 )
 
 # Tools (MCP integration - optional dependency)
@@ -165,6 +187,7 @@ __all__ = [
     "LearningResult",
     "LearningType",
     "VerificationResult",
+    "LearningExtension",
     # Persona system
     "Persona",
     "PersonaTraits",
@@ -185,6 +208,24 @@ __all__ = [
     "CredentialStore",
     "EnvCredentialStore",
     "InMemoryCredentialStore",
+    # Exceptions
+    "DraagonError",
+    "ConfigurationError",
+    "ProviderError",
+    "LLMError",
+    "MemoryError",
+    "EmbeddingError",
+    "CognitionError",
+    "BeliefError",
+    "LearningError",
+    "CuriosityError",
+    "OpinionError",
+    "MCPError",
+    "MCPConnectionError",
+    "MCPToolError",
+    "AuthError",
+    "CredentialNotFoundError",
+    "CredentialExpiredError",
     # Tools (optional MCP dependency)
     "MCP_AVAILABLE",
     "MCPClient",
