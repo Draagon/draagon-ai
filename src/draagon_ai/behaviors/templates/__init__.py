@@ -19,6 +19,10 @@ Usage:
         STORY_TELLER_TEMPLATE,
         create_story_character,
     )
+
+    # Or use the Behavior Architect to create new behaviors
+    from draagon_ai.behaviors.templates import BEHAVIOR_ARCHITECT_TEMPLATE
+    from draagon_ai.services import BehaviorArchitectService
 """
 
 from .assistant import (
@@ -38,6 +42,11 @@ from .storyteller import (
     CharacterProfile,
 )
 
+from .architect import (
+    BEHAVIOR_ARCHITECT_TEMPLATE,
+    create_behavior_architect,
+)
+
 __all__ = [
     # Voice Assistant
     "VOICE_ASSISTANT_TEMPLATE",
@@ -49,4 +58,7 @@ __all__ = [
     "create_story_teller",
     "StoryState",
     "CharacterProfile",
+    # Behavior Architect
+    "BEHAVIOR_ARCHITECT_TEMPLATE",
+    "create_behavior_architect",
 ]
