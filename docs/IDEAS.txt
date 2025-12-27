@@ -1,0 +1,118 @@
+
+"do next"
+
+That's it. I'll:
+
+Read the file
+Do the current task
+Update the file
+Move to the next step
+
+---
+
+
+Other commands:
+| You say | I do |
+
+|---------|------|
+
+| do next | Continue with current task |
+
+| skip | Mark blocked, move on |
+
+| status | Show where we are |
+
+| phase review | Review entire current phase |
+
+
+
+
+
+
+
+
+Requirements Documentation Summary
+
+Location: /home/doug/Development/draagon-ai/docs/requirements/
+
+
+Files Created
+
+| File | Purpose |
+
+|------|---------|
+
+| DELIVERY_CHECKLIST.md | Master tracking document with phase overview, success criteria, and progress tracking |
+
+| REQ-001-MEMORY.md | Memory system migration (4-layer cognitive memory with Qdrant) |
+
+| REQ-002-ORCHESTRATOR.md | Orchestrator migration (ReAct loop, Agent, DecisionEngine) |
+
+| REQ-003-COGNITION.md | Cognitive services consolidation |
+
+| REQ-004-AUTONOMOUS.md | Autonomous agent core integration |
+
+| REQ-005-MCP.md | Memory MCP Server for cross-app sharing |
+
+| REQ-006-ROXY.md | Roxy thin client refactor |
+
+
+Each Requirement Doc Includes
+
+Current State vs Target State - Clear before/after
+Detailed Requirements - With IDs (e.g., REQ-001-01)
+Acceptance Criteria - Checkboxes for each requirement
+Test Cases - Tables with inputs/outputs
+Technical Notes - Code examples where helpful
+Implementation Plan - Sequenced steps with risks
+Review Checklist - For self-verification
+God-Level Review Prompt - Comprehensive review template
+
+How to Use
+
+Track Progress: Update DELIVERY_CHECKLIST.md as phases complete
+Before Implementation: Read detailed requirement doc
+During Implementation: Check acceptance criteria
+After Implementation: Run the God-Level Review Prompt
+Final Verification: Ensure all checklist items are marked complete
+
+
+
+
+
+--------------
+ECOSYSTEM
+
+
+How can we share the same memory across different apps?
+Or do we want to share the actual behaviors by calling out to a central MCP for draagon-ai (or maybe this is an app itself called roxy?)
+And then roxy-assistant can plugin roxy where roxy has all the memories and core behaviors
+What about a roxy MCP for claude code?
+What about a VS Code plugin where it's a coding assistant that can use the shared roxy MCP or memory?
+In all of these scenarios how do local edits happen vs. MCP/API integrations on the central roxy application?  How does Claude handle this?
+What if I want the running app to be able to make local changes to the system it's running on or in (file system, IDE, mobile device) 
+  but also delegate out to the central Roxy where it can also make local changes on that system (if it's running on my pop-os-desktop for example)?
+Should these just all be separate apps that can work together in the ecosystem using MCP?
+How do they still all share and modify the same memories though, as that's where it gets powerful.  My personal "assistant" can be
+  involved in any work I am doing or involved in any device or app, and have their specific personality and memory.
+Even more interesting is how we do this in mixed ecosystem.  For example, if I license draagon-ai to my company CareMetx and setup
+  a central system for them that stores knowledge about me and other users in the company, can I also plugin in my own personal assistant
+  so I can have my personal memories and my personalized behavior profile?  
+
+Do some research on this complex ecosystem and how best to architect this.  What are my options, what are the pros and cons.  
+
+Here are a few more examples:
+
+I have a local claude I use on my desktop to edit and change things, can I replace that with my own version that can do the same things
+  as claude but it as my assistants personality and my memories and household memories?  and then on my work laptop, I can hook into 
+  the work memories and also integrate my personal assistant?
+
+
+
+------------------
+AGENTIC
+
+Where are the ReAct patterns?  I thought we had some fancy graph approach to doing it, where did that go?
+
+
+

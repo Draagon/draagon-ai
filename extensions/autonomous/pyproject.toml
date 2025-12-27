@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "draagon-ai-ext-autonomous"
+version = "0.1.0"
+description = "Autonomous background agent extension for draagon-ai"
+readme = "README.md"
+license = {text = "AGPL-3.0-or-later"}
+requires-python = ">=3.10"
+authors = [
+    { name = "Doug Mealing", email = "doug@draagon.ai" },
+]
+keywords = [
+    "ai",
+    "draagon",
+    "autonomous",
+    "agent",
+    "background-tasks",
+    "self-monitoring",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "draagon-ai>=0.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.21",
+]
+
+[project.entry-points."draagon_ai.extensions"]
+autonomous = "draagon_ai_ext_autonomous:AutonomousExtension"
+
+[project.urls]
+Homepage = "https://github.com/draagon-ai/draagon-ai"
+Documentation = "https://github.com/draagon-ai/draagon-ai#readme"
+Repository = "https://github.com/draagon-ai/draagon-ai"
+
+[tool.setuptools.packages.find]
+where = ["src"]
