@@ -7,6 +7,7 @@ Available providers:
 - LayeredMemoryProvider: 4-layer cognitive memory (working, episodic, semantic, metacognitive)
 - QdrantMemoryProvider: Qdrant vector database backend (requires qdrant-client)
 - QdrantPromptProvider: Prompt versioning and evolution storage
+- QdrantGraphStore: Qdrant-backed TemporalCognitiveGraph with persistence
 """
 
 from .layered import (
@@ -26,6 +27,10 @@ try:
         PromptDomain,
         QDRANT_AVAILABLE,
     )
+    from .qdrant_graph import (
+        QdrantGraphStore,
+        QdrantGraphConfig,
+    )
 except ImportError:
     QDRANT_AVAILABLE = False
     QdrantMemoryProvider = None
@@ -33,6 +38,8 @@ except ImportError:
     QdrantConfig = None
     PromptVersion = None
     PromptDomain = None
+    QdrantGraphStore = None
+    QdrantGraphConfig = None
 
 __all__ = [
     # Layered provider
@@ -47,4 +54,7 @@ __all__ = [
     "PromptVersion",
     "PromptDomain",
     "QDRANT_AVAILABLE",
+    # Qdrant graph store
+    "QdrantGraphStore",
+    "QdrantGraphConfig",
 ]
