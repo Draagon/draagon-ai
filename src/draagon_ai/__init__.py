@@ -54,7 +54,6 @@ from draagon_ai.memory import (
 # Personality
 from draagon_ai.personality import (
     Archetype,
-    ROXY,
     HELPFUL_ASSISTANT,
     get_archetype,
     list_archetypes,
@@ -164,7 +163,6 @@ __all__ = [
     "SearchResult",
     # Personality
     "Archetype",
-    "ROXY",
     "HELPFUL_ASSISTANT",
     "get_archetype",
     "list_archetypes",

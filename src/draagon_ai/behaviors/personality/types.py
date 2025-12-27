@@ -120,7 +120,7 @@ class PersonalityConfig:
 
     Example:
         personality = PersonalityConfig(
-            name="Roxy",
+            name="Assistant",
             values=[
                 ValueConfig(CoreValue.TRUTH_SEEKING, 0.9),
                 ValueConfig(CoreValue.INTERDEPENDENCE, 0.8),

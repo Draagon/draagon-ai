@@ -19,7 +19,7 @@ class MemoryScopeConfig:
     """Configuration for what memory scopes an agent can access."""
 
     # Primary scopes this agent can read/write
-    agent_scope: str  # e.g., "agent:roxy"
+    agent_scope: str  # e.g., "agent:assistant"
     user_scope_prefix: str  # e.g., "user:" - combined with user_id
 
     # Shared scopes (read access, maybe write)
@@ -112,7 +112,7 @@ class AgentContext:
     """
 
     # Agent identification
-    agent_id: str  # "roxy", "max", "dungeon_master"
+    agent_id: str  # "assistant", "narrator", "guide"
     agent_name: str  # Display name
 
     # Agent identity (personality, beliefs, values)

@@ -39,6 +39,8 @@ from .types import (
     ExtensionNotFoundError,
     ExtensionLoadError,
     ExtensionDependencyError,
+    MCPServerConfig,
+    MCPTransport,
 )
 from .discovery import (
     discover_extensions,
@@ -307,6 +309,40 @@ class ExtensionManager:
             tools.extend(ext.get_tools())
         return tools
 
+    def get_all_prompt_domains(self) -> dict[str, dict[str, str]]:
+        """Aggregate prompt domains from all loaded extensions.
+
+        Returns:
+            Dict mapping domain names to prompt dicts.
+            Domain names are prefixed with extension name if collision.
+        """
+        domains: dict[str, dict[str, str]] = {}
+        for ext_name, ext in self._extensions.items():
+            ext_domains = ext.get_prompt_domains()
+            for domain_name, prompts in ext_domains.items():
+                if domain_name in domains:
+                    # Prefix with extension name to avoid collision
+                    prefixed_name = f"{ext_name}:{domain_name}"
+                    logger.warning(
+                        f"Prompt domain '{domain_name}' provided by multiple extensions, "
+                        f"using '{prefixed_name}'"
+                    )
+                    domains[prefixed_name] = prompts
+                else:
+                    domains[domain_name] = prompts
+        return domains
+
+    def get_all_mcp_servers(self) -> list[MCPServerConfig]:
+        """Aggregate MCP server configs from all loaded extensions.
+
+        Returns:
+            List of all MCPServerConfig instances from extensions.
+        """
+        servers: list[MCPServerConfig] = []
+        for ext in self._extensions.values():
+            servers.extend(ext.get_mcp_servers())
+        return servers
+
 
 def get_extension_manager() -> ExtensionManager:
     """Get the global extension manager instance.
@@ -341,6 +377,8 @@ __all__ = [
     "ExtensionInfo",
     "ExtensionConfig",
     "DraagonExtensionConfig",
+    "MCPServerConfig",
+    "MCPTransport",
     # Exceptions
     "ExtensionError",
     "ExtensionNotFoundError",

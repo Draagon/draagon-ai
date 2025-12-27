@@ -17,8 +17,6 @@ from draagon_ai.personality.archetypes import (
     GRUFF_INFORMANT,
     MYSTERIOUS_MENTOR,
     EMPATHETIC_SUPPORT,
-    # The Roxy archetype (Doug's personal assistant)
-    ROXY,
 )
 
 __all__ = [
@@ -32,5 +30,4 @@ __all__ = [
     "GRUFF_INFORMANT",
     "MYSTERIOUS_MENTOR",
     "EMPATHETIC_SUPPORT",
-    "ROXY",
 ]

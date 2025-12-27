@@ -58,7 +58,6 @@ class MultiTierRouter(LLMProvider):
         fast: LLMProvider | None = None,
         complex: LLMProvider | None = None,
         deep: LLMProvider | None = None,
-        local: LLMProvider | None = None,  # Alias for fast
         embedding: EmbeddingProvider | None = None,
         config: MultiTierConfig | None = None,
     ):
@@ -68,7 +67,6 @@ class MultiTierRouter(LLMProvider):
             fast: Provider for fast/local tier (8B models)
             complex: Provider for complex tier (70B models)
             deep: Provider for deep tier (Claude Opus)
-            local: Alias for fast (backward compatibility)
             embedding: Provider for embeddings
             config: Optional configuration
         """
@@ -79,8 +77,6 @@ class MultiTierRouter(LLMProvider):
 
         if fast:
             self._providers[ModelTier.LOCAL] = fast
-        elif local:
-            self._providers[ModelTier.LOCAL] = local
 
         if complex:
             self._providers[ModelTier.COMPLEX] = complex

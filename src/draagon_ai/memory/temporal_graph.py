@@ -110,7 +110,7 @@ class TemporalCognitiveGraph:
         node = await graph.add_node(
             content="Doug's birthday is March 15",
             node_type=NodeType.FACT,
-            scope_id="user:roxy:doug",
+            scope_id="user:assistant:alice",
             entities=["Doug", "birthday", "March 15"],
         )
 
@@ -556,8 +556,8 @@ class TemporalCognitiveGraph:
             include_superseded: Include superseded nodes
             include_edges: Include connected edges in results
             include_ancestor_scopes: If True, also include nodes from ancestor scopes.
-                For example, searching with scope_id="user:roxy:doug" will also
-                return nodes from "agent:roxy", "context:mealing_home", and "world:global".
+                For example, searching with scope_id="user:assistant:alice" will also
+                return nodes from "agent:assistant", "context:home", and "world:global".
                 This implements hierarchical scope inheritance. (default: True)
 
         Returns:
@@ -619,7 +619,7 @@ class TemporalCognitiveGraph:
             layers: Filter by memory layers
             include_superseded: Include superseded nodes
             include_ancestor_scopes: If True, also include nodes from ancestor scopes
-                (e.g., searching user:roxy:doug also includes agent:roxy and world:global)
+                (e.g., searching user:assistant:alice also includes agent:assistant and world:global)
 
         Returns:
             Set of candidate node IDs

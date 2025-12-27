@@ -18,6 +18,7 @@ class StorytellingExtension(Extension):
     - Story Teller behavior for narrating interactive stories
     - Story Character behavior for NPCs with personalities
     - Drama Manager integration for pacing
+    - Storytelling prompt domains (for evolution)
 
     Configuration options:
     - drama_intensity: How dramatic the narration (0.0-1.0)
@@ -41,6 +42,9 @@ class StorytellingExtension(Extension):
             provides_behaviors=[
                 "story_teller",
                 "story_character",
+            ],
+            provides_prompt_domains=[
+                "storytelling",
             ],
             config_schema={
                 "type": "object",
@@ -100,3 +104,27 @@ class StorytellingExtension(Extension):
         """
         # Services could be added here for drama manager, etc.
         return {}
+
+    def get_prompt_domains(self) -> dict[str, dict[str, str]]:
+        """Return storytelling prompt domains.
+
+        These prompts are loaded into Qdrant for versioning and evolution.
+
+        Returns:
+            Dict with storytelling domain prompts.
+        """
+        from .behavior import (
+            STORY_TELLER_DECISION_PROMPT,
+            STORY_TELLER_SYNTHESIS_PROMPT,
+            STORY_CHARACTER_DECISION_PROMPT,
+            STORY_CHARACTER_SYNTHESIS_PROMPT,
+        )
+
+        return {
+            "storytelling": {
+                "STORY_TELLER_DECISION_PROMPT": STORY_TELLER_DECISION_PROMPT,
+                "STORY_TELLER_SYNTHESIS_PROMPT": STORY_TELLER_SYNTHESIS_PROMPT,
+                "STORY_CHARACTER_DECISION_PROMPT": STORY_CHARACTER_DECISION_PROMPT,
+                "STORY_CHARACTER_SYNTHESIS_PROMPT": STORY_CHARACTER_SYNTHESIS_PROMPT,
+            },
+        }

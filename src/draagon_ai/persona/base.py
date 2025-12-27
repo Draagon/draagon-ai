@@ -65,12 +65,12 @@ class Persona:
     be backed by a full AgentIdentity for cognitive architecture.
 
     For simple use cases:
-        persona = Persona(id="roxy", name="Roxy", description="A helpful assistant")
+        persona = Persona(id="assistant", name="Assistant", description="A helpful assistant")
 
     For complex cognitive agents:
         persona = Persona(
-            id="roxy",
-            name="Roxy",
+            id="guide",
+            name="Guide",
             identity=my_agent_identity,  # Full cognitive architecture
         )
     """
@@ -183,7 +183,7 @@ class PersonaManager(ABC):
     interaction context. Different implementations support different
     use cases:
 
-    - SinglePersonaManager: One persistent identity (e.g., Roxy)
+    - SinglePersonaManager: One persistent identity (e.g., a voice assistant)
     - MultiPersonaManager: Multiple identities (e.g., PartyLore NPCs)
     """
 

@@ -1,7 +1,7 @@
 """Voice assistant behavior template.
 
-This template provides a complete behavior definition for voice assistants
-like Roxy. It includes:
+This template provides a complete behavior definition for voice assistants.
+It includes:
 - Common actions (answer, search, calendar, smart home, etc.)
 - Decision and synthesis prompts
 - Test cases for validation
@@ -586,7 +586,7 @@ VOICE_ASSISTANT_TRIGGERS = [
         keyword_patterns=[
             r"^(hi|hello|hey)(\s|$)",
             r"good\s*(morning|afternoon|evening|night)",
-            r"^hey\s+\w+$",  # "hey roxy"
+            r"^hey\s+\w+$",  # "hey assistant"
         ],
         priority=60,
     ),

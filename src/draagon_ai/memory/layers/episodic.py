@@ -95,7 +95,7 @@ class EpisodicMemory(MemoryLayerBase[Episode]):
         # Start a new episode
         episode = await episodic.start_episode(
             episode_type="conversation",
-            participants=["doug", "roxy"],
+            participants=["user", "assistant"],
         )
 
         # Add events to the episode

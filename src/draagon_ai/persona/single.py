@@ -1,7 +1,7 @@
 """SinglePersonaManager for applications with one identity.
 
 This is the simplest PersonaManager - there's one persona that
-handles all interactions. Perfect for voice assistants like Roxy.
+handles all interactions. Perfect for voice assistants.
 """
 
 from typing import Any
@@ -13,19 +13,19 @@ class SinglePersonaManager(PersonaManager):
     """Manager for a single persistent persona.
 
     This is the appropriate choice for:
-    - Voice assistants (Roxy)
+    - Voice assistants
     - Personal AI companions
     - Branded AI interfaces
     - Any application with one consistent identity
 
     Example:
-        roxy = Persona(
-            id="roxy",
-            name="Roxy",
+        assistant = Persona(
+            id="assistant",
+            name="Assistant",
             description="A helpful voice assistant for smart homes",
             traits=PersonaTraits.from_dict({"friendly": 0.8, "concise": 0.7}),
         )
-        manager = SinglePersonaManager(roxy)
+        manager = SinglePersonaManager(assistant)
 
         # Always returns the same persona
         persona = await manager.get_active_persona({})

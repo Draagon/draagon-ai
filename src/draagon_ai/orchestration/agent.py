@@ -51,9 +51,9 @@ class Agent:
 
         agent = Agent(
             config=AgentConfig(
-                agent_id="roxy",
-                name="Roxy",
-                personality_intro="You are Roxy, a helpful voice assistant.",
+                agent_id="assistant",
+                name="Assistant",
+                personality_intro="You are a helpful voice assistant.",
             ),
             behavior=VOICE_ASSISTANT_TEMPLATE,
             llm=my_llm_provider,

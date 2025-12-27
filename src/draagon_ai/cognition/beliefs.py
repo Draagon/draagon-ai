@@ -444,7 +444,6 @@ class BeliefReconciliationService:
             "inferred": BeliefType.INFERRED,
             "user_preference": BeliefType.USER_PREFERENCE,
             "agent_preference": BeliefType.AGENT_PREFERENCE,
-            "roxy_preference": BeliefType.AGENT_PREFERENCE,  # Backward compat
         }
         belief_type = type_map.get(
             parsed.get("belief_type", "unverified_claim"),

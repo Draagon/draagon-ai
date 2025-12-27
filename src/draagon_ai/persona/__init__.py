@@ -3,7 +3,7 @@
 The Persona system provides a clean abstraction for AI identities:
 - Persona: A coherent identity an agent can embody
 - PersonaManager: Manages active persona(s) for an application
-- SinglePersonaManager: For apps with one identity (e.g., Roxy voice assistant)
+- SinglePersonaManager: For apps with one identity (e.g., a voice assistant)
 - MultiPersonaManager: For apps with multiple identities (e.g., PartyLore NPCs)
 """
 

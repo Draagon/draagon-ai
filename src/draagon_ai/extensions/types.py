@@ -4,6 +4,13 @@ This module defines the base types and protocols for extensions.
 Extensions are optional modules that can be installed and configured
 independently of the core draagon-ai package.
 
+Extensions can provide:
+- **Behaviors**: Complete personality packages (prompts + actions + triggers)
+- **Prompt Domains**: Collections of LLM prompts for specific capabilities
+- **Tools**: Function definitions for agent capabilities
+- **MCP Servers**: Model Context Protocol server configurations
+- **Services**: Shared service instances (caches, clients, etc.)
+
 Example:
     from draagon_ai.extensions import Extension, ExtensionInfo
 
@@ -16,6 +23,7 @@ Example:
                 description="My custom extension",
                 author="me",
                 requires_core=">=0.2.0",
+                provides_prompt_domains=["my_domain"],
             )
 
         def initialize(self, config: dict) -> None:
@@ -24,16 +32,69 @@ Example:
         def get_behaviors(self) -> list:
             from .behaviors import MY_BEHAVIOR
             return [MY_BEHAVIOR]
+
+        def get_prompt_domains(self) -> dict[str, dict[str, str]]:
+            return {
+                "my_domain": {
+                    "MY_PROMPT": "You are a helpful assistant...",
+                }
+            }
 """
 
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from draagon_ai.behaviors import Behavior
+
+
+class MCPTransport(Enum):
+    """MCP server transport type."""
+
+    STDIO = "stdio"
+    HTTP = "http"
+    WEBSOCKET = "websocket"
+
+
+@dataclass
+class MCPServerConfig:
+    """Configuration for an MCP (Model Context Protocol) server.
+
+    MCP servers provide tools that the agent can use. They run as
+    subprocess (stdio) or connect via HTTP/WebSocket.
+
+    Example:
+        config = MCPServerConfig(
+            name="calendar",
+            command="google-calendar-mcp",
+            env={"GOOGLE_OAUTH_CREDENTIALS": "/path/to/creds.json"},
+        )
+    """
+
+    name: str
+    """Unique server name (used as tool prefix, e.g., 'calendar.list_events')."""
+
+    command: str
+    """Command to run (for stdio transport) or URL (for http/websocket)."""
+
+    transport: MCPTransport = MCPTransport.STDIO
+    """Transport type for MCP communication."""
+
+    args: list[str] = field(default_factory=list)
+    """Command arguments (for stdio transport)."""
+
+    env: dict[str, str] = field(default_factory=dict)
+    """Environment variables for the server process."""
+
+    enabled: bool = True
+    """Whether this server is enabled."""
+
+    timeout_seconds: int = 30
+    """Connection/request timeout in seconds."""
 
 
 @dataclass
@@ -72,6 +133,12 @@ class ExtensionInfo:
 
     provides_tools: list[str] = field(default_factory=list)
     """List of tool names this extension provides."""
+
+    provides_prompt_domains: list[str] = field(default_factory=list)
+    """List of prompt domain names this extension provides."""
+
+    provides_mcp_servers: list[str] = field(default_factory=list)
+    """List of MCP server names this extension provides."""
 
     config_schema: dict[str, Any] | None = None
     """JSON Schema for validating extension config."""
@@ -178,6 +245,48 @@ class Extension(ABC):
 
         Returns:
             List of tool instances (e.g., MCP tool configs).
+        """
+        return []
+
+    def get_prompt_domains(self) -> dict[str, dict[str, str]]:
+        """Return prompt domains provided by this extension.
+
+        Prompt domains are collections of related LLM prompts for
+        specific capabilities. Each domain contains named prompts.
+
+        Returns:
+            Dict mapping domain names to dicts of prompt_name: prompt_content.
+
+        Example:
+            return {
+                "home_assistant": {
+                    "DEVICE_RESOLUTION_PROMPT": "Given a user request...",
+                    "ENTITY_SEARCH_PROMPT": "Search for entities...",
+                },
+                "calendar": {
+                    "EVENT_CREATION_PROMPT": "Create a calendar event...",
+                },
+            }
+        """
+        return {}
+
+    def get_mcp_servers(self) -> list[MCPServerConfig]:
+        """Return MCP server configurations provided by this extension.
+
+        MCP servers are external tools that the agent can use via
+        the Model Context Protocol.
+
+        Returns:
+            List of MCPServerConfig instances.
+
+        Example:
+            return [
+                MCPServerConfig(
+                    name="calendar",
+                    command="google-calendar-mcp",
+                    env={"GOOGLE_OAUTH_CREDENTIALS": "..."},
+                ),
+            ]
         """
         return []
 

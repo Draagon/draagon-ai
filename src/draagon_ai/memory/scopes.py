@@ -9,7 +9,7 @@ Scopes control visibility and access to nodes in the graph:
 
 Based on research from:
 - Multi-tenant cognitive architectures
-- Roxy's existing scope system (extended)
+- Voice assistant scope systems (extended)
 - Netflix's access control patterns
 """
 
@@ -74,9 +74,9 @@ class HierarchicalScope:
 
     Example hierarchy:
         world:global
-        └── context:mealing_home
-            └── agent:roxy
-                └── user:doug
+        └── context:home
+            └── agent:assistant
+                └── user:alice
                     └── session:abc123
     """
 
@@ -161,8 +161,8 @@ class HierarchicalScope:
         """Check if a permission is granted, including inherited permissions.
 
         Permissions can be inherited from parent scopes. If a user has READ
-        permission on "agent:roxy", they also have READ on child scopes like
-        "user:roxy:doug" and "session:roxy:doug:abc123".
+        permission on "agent:assistant", they also have READ on child scopes like
+        "user:assistant:alice" and "session:assistant:alice:abc123".
 
         Args:
             agent_id: Agent requesting access
@@ -558,8 +558,8 @@ class ScopeRegistry:
             Scope ID string
 
         Example:
-            build_scope_id(ScopeType.USER, agent_id="roxy", user_id="doug")
-            # Returns: "user:roxy:doug"
+            build_scope_id(ScopeType.USER, agent_id="assistant", user_id="alice")
+            # Returns: "user:assistant:alice"
         """
         parts = [scope_type.value]
 

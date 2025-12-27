@@ -209,7 +209,7 @@ class ToolProvider(Protocol):
     Tools are the handlers for behavior actions.
 
     Example:
-        class RoxyToolProvider:
+        class MyToolProvider:
             async def execute(
                 self,
                 tool_call: ToolCall,

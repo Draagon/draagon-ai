@@ -17,7 +17,7 @@ Usage:
 
     # Define a personality
     personality = PersonalityConfig(
-        name="Roxy",
+        name="Assistant",
         description="A curious, opinionated voice assistant",
         values=[
             ValueConfig(CoreValue.TRUTH_SEEKING, 0.9),

@@ -1,8 +1,8 @@
 """Agent identity for Draagon AI cognitive engine.
 
 AgentIdentity represents who an agent IS - their personality, values,
-beliefs, and opinions. This replaces the Roxy-specific RoxySelf with
-a generic agent identity that can be customized for any agent.
+beliefs, and opinions. AgentIdentity is a generic agent identity
+that can be customized for any agent or application.
 """
 
 from dataclasses import dataclass, field
@@ -26,8 +26,7 @@ class AgentIdentity:
     """The persistent identity of an agent - who they ARE.
 
     This is persisted to storage and represents the agent's evolving self.
-    Unlike RoxySelf which was Roxy-specific, AgentIdentity is generic and
-    can represent any agent with any personality.
+    AgentIdentity is generic and can represent any agent with any personality.
     """
 
     # Unique identifier for this agent

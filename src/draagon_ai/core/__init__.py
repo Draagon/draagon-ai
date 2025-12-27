@@ -20,7 +20,6 @@ from draagon_ai.core.types import (
     # Observations and beliefs
     UserObservation,
     AgentBelief,
-    RoxyBelief,  # Backward compat alias
     # Interaction preferences
     UserInteractionPreferences,
     # Autonomous agent structures
@@ -62,7 +61,6 @@ __all__ = [
     # Observations and beliefs
     "UserObservation",
     "AgentBelief",
-    "RoxyBelief",  # Backward compat alias
     # Interaction preferences
     "UserInteractionPreferences",
     # Autonomous agent structures

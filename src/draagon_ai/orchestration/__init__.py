@@ -35,7 +35,7 @@ Usage:
 
     # Create an agent
     agent = Agent(
-        agent_id="roxy",
+        agent_id="assistant",
         persona=my_persona,
         behavior=VOICE_ASSISTANT_TEMPLATE,
         tools=my_tool_registry,

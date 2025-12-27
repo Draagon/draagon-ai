@@ -42,3 +42,10 @@ htmlcov/
 # OS
 .DS_Store
 Thumbs.db
+
+*.bak
+*.tmp
+*.log
+*.out
+*.pid
+*.seed

@@ -29,7 +29,6 @@ class BeliefType(str, Enum):
     INFERRED = "inferred"  # Agent figured this out
     USER_PREFERENCE = "user_preference"  # User's stated preference
     AGENT_PREFERENCE = "agent_preference"  # Agent's own preference
-    ROXY_PREFERENCE = "agent_preference"  # Backward compat alias for AGENT_PREFERENCE
 
 
 class ObservationScope(str, Enum):
@@ -473,9 +472,3 @@ class AutonomousContext:
     available_action_types: list[ActionType]
 
 
-# =============================================================================
-# Backward Compatibility Aliases
-# =============================================================================
-
-# RoxyBelief is the Roxy-specific name for AgentBelief
-RoxyBelief = AgentBelief

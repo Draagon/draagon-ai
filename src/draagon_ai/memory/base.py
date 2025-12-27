@@ -37,18 +37,11 @@ class MemoryScope(str, Enum):
     Maps to the cognitive architecture's hierarchical scoping.
     """
 
-    # Hierarchical scopes (from COGNITIVE_ARCHITECTURE)
     WORLD = "world"  # Universal facts (physics, geography)
     CONTEXT = "context"  # Shared within a context (household, team)
     AGENT = "agent"  # Agent's personal memories
     USER = "user"  # Per-user memories within an agent
     SESSION = "session"  # Conversation-specific memories
-
-    # Legacy scopes (for backward compatibility)
-    PRIVATE = "private"  # User-specific (alias for USER)
-    SHARED = "shared"  # Family/household (alias for CONTEXT)
-    PUBLIC = "public"  # Public information (alias for WORLD)
-    SYSTEM = "system"  # Internal system knowledge
 
 
 @dataclass
