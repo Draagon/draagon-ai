@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "draagon-ai-ext-storytelling"
+version = "0.1.0"
+description = "Interactive storytelling extension for draagon-ai"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    { name = "draagon-ai", email = "noreply@draagon.ai" },
+]
+keywords = [
+    "ai",
+    "draagon",
+    "storytelling",
+    "interactive-fiction",
+    "text-adventure",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Games/Entertainment :: Role-Playing",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "draagon-ai>=0.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.21",
+]
+
+[project.entry-points."draagon_ai.extensions"]
+storytelling = "draagon_ai_ext_storytelling:StorytellingExtension"
+
+[project.urls]
+Homepage = "https://github.com/draagon-ai/draagon-ai"
+Documentation = "https://github.com/draagon-ai/draagon-ai#readme"
+Repository = "https://github.com/draagon-ai/draagon-ai"
+
+[tool.setuptools.packages.find]
+where = ["src"]

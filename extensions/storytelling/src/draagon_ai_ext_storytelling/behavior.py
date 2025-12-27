@@ -14,11 +14,11 @@ Game Structure:
 - Rich narrative prose, not terse responses
 
 Example:
-    from draagon_ai.behaviors.templates import (
+    from draagon_ai_ext_storytelling.behavior import (
         STORY_TELLER_TEMPLATE,
         create_story_character,
     )
-    from draagon_ai.orchestration import Agent, MultiAgent
+    from draagon_ai.orchestration import Agent
 
     # Create the main story teller
     narrator = Agent(
@@ -27,27 +27,13 @@ Example:
         llm=llm_provider,
         memory=memory_provider,
     )
-
-    # Create an NPC
-    wizard = create_story_character(
-        character_id="old_wizard",
-        name="Aldric the Wise",
-        personality="Mysterious, speaks in riddles, secretly caring",
-        backstory="Former court wizard, now lives in exile",
-        goals=["Protect the ancient secrets", "Find a worthy successor"],
-    )
-
-    # Run the game
-    agents = MultiAgent(default_agent=narrator)
-    agents.add_agent(wizard_agent)
 """
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable
+from typing import Any
 
-
-from ..types import (
+from draagon_ai.behaviors.types import (
     Action,
     ActionParameter,
     ActionExample,
@@ -296,68 +282,6 @@ class DramaManagerState:
 
 
 # =============================================================================
-# Dynamic Character Generation
-# =============================================================================
-
-
-@dataclass
-class GeneratedCharacterRequest:
-    """Request for the LLM to generate a new NPC dynamically.
-
-    The story teller can request new characters as needed, and they're
-    generated with coherent personalities that fit the story.
-    """
-
-    role_needed: str  # "ally", "antagonist", "mentor", "obstacle", "comic_relief"
-    context: str      # Current story situation
-    constraints: list[str] = field(default_factory=list)  # "must be elderly", "cannot be human"
-
-    # Story fit
-    should_contrast_with: list[str] = field(default_factory=list)  # Character IDs
-    should_complement: list[str] = field(default_factory=list)
-
-    # Narrative purpose
-    narrative_function: str = ""  # "provide key information", "create obstacle", etc.
-    estimated_importance: str = "minor"  # "minor", "supporting", "major"
-
-
-CHARACTER_GENERATION_PROMPT = '''Generate a compelling NPC for this interactive story.
-
-STORY CONTEXT:
-{story_context}
-
-ROLE NEEDED: {role_needed}
-NARRATIVE FUNCTION: {narrative_function}
-IMPORTANCE: {importance}
-
-CONSTRAINTS:
-{constraints}
-
-EXISTING CHARACTERS (for contrast/complement):
-{existing_characters}
-
-Generate a character with:
-1. A memorable name that fits the setting
-2. A distinct personality (2-3 core traits)
-3. A speech style that reflects their personality
-4. A secret or hidden depth (even minor characters have layers)
-5. A personal goal (what do THEY want?)
-6. A potential connection to the main plot
-
-Respond in this format:
-<character>
-<name>Character Name</name>
-<personality>Core traits description</personality>
-<appearance>Brief physical description</appearance>
-<speech_style>How they talk</speech_style>
-<secret>Hidden aspect</secret>
-<goal>What they want</goal>
-<plot_hook>How they could connect to the story</plot_hook>
-</character>
-'''
-
-
-# =============================================================================
 # Story State Types
 # =============================================================================
 
@@ -367,45 +291,36 @@ class StoryState:
     """Current state of the interactive story.
 
     This is tracked in memory and passed to the narrator for context.
-
-    MEMORY SCOPING:
-    - This entire object is SESSION scope (cleared when story ends)
-    - User preferences are extracted and stored PERSISTENTLY separately
-    - Memorable moments can be promoted to MEMORABLE scope on request
     """
 
     # === SESSION ID ===
-    # Unique ID for this story session (for memory scoping)
     session_id: str = ""
 
     # === STORY PHASE ===
-    # Phase tracks where we are in the story lifecycle
     phase: str = "theme_discovery"  # theme_discovery, character_creation, active_story, epilogue
 
-    # Theme information (set during theme_discovery phase)
-    theme: str = ""  # e.g., "mystery", "romance", "adventure", "horror"
-    setting: str = ""  # e.g., "medieval fantasy", "cyberpunk city", "haunted mansion"
-    tone: str = ""  # e.g., "serious", "lighthearted", "dark", "whimsical"
-    central_conflict: str = ""  # The main problem/goal of the story
-    theme_source: str = ""  # "user_choice", "personalized", "surprise"
+    # Theme information
+    theme: str = ""
+    setting: str = ""
+    tone: str = ""
+    central_conflict: str = ""
+    theme_source: str = ""
 
-    # User preferences used for personalization (populated from PERSISTENT memory)
+    # User preferences
     user_preferences: list[str] = field(default_factory=list)
     user_interests: list[str] = field(default_factory=list)
 
     # === NARRATOR STATE ===
-    # The narrator's personality for this story
-    narrator_persona_id: str = "warm"  # Key into NARRATOR_PERSONAS
-    narrator_voice: str = ""  # Cached description for prompts
+    narrator_persona_id: str = "warm"
+    narrator_voice: str = ""
 
     # === DRAMA MANAGER STATE ===
-    # Tracks narrative pacing and goals
     drama_manager: DramaManagerState = field(default_factory=DramaManagerState)
 
     # === WORLD STATE ===
     current_location: str = "unknown"
     location_description: str = ""
-    time_of_day: str = "day"  # morning, afternoon, evening, night
+    time_of_day: str = "day"
     weather: str = "clear"
     chapter: int = 1
     chapter_title: str = ""
@@ -415,7 +330,7 @@ class StoryState:
     player_description: str = ""
     inventory: list[str] = field(default_factory=list)
     skills: dict[str, int] = field(default_factory=dict)
-    health: str = "healthy"  # healthy, injured, critical
+    health: str = "healthy"
 
     # Plot tracking
     plot_flags: dict[str, bool] = field(default_factory=dict)
@@ -423,19 +338,17 @@ class StoryState:
     completed_quests: list[str] = field(default_factory=list)
     secrets_discovered: list[str] = field(default_factory=list)
 
-    # Relationships (-100 hostile to +100 devoted)
+    # Relationships
     character_relationships: dict[str, int] = field(default_factory=dict)
 
     # === ACTIVE CHARACTERS ===
-    # NPCs currently in the story (SESSION scope - cleared on story end)
     active_npcs: dict[str, "CharacterProfile"] = field(default_factory=dict)
 
-    # Recent history for context
+    # Recent history
     recent_events: list[str] = field(default_factory=list)
     last_choice_made: str = ""
 
     # === MEMORABLE MOMENTS ===
-    # Moments the user might want to remember (can be promoted to MEMORABLE scope)
     potential_memories: list[str] = field(default_factory=list)
 
 
@@ -445,17 +358,17 @@ class CharacterProfile:
 
     character_id: str
     name: str
-    personality: str  # Brief personality description
-    backstory: str  # Character's history
-    appearance: str = ""  # Physical description
-    speech_style: str = ""  # How they talk
+    personality: str
+    backstory: str
+    appearance: str = ""
+    speech_style: str = ""
     goals: list[str] = field(default_factory=list)
-    secrets: list[str] = field(default_factory=list)  # Hidden from player initially
+    secrets: list[str] = field(default_factory=list)
     current_mood: str = "neutral"
     location: str = "unknown"
 
     # Relationship with player
-    trust_level: int = 0  # -100 to 100
+    trust_level: int = 0
     met_player: bool = False
     interactions: list[str] = field(default_factory=list)
 
@@ -579,13 +492,6 @@ When player does something unexpected:
    - The story's health (pacing, arc, character development)
 4. Which action best serves both?
 
-=== DYNAMIC CHARACTER GENERATION ===
-If the story needs a new character and none in active_npcs fit:
-Consider using `generate_character` action with:
-- role_needed: What narrative role (ally, obstacle, mentor, comic_relief)
-- narrative_function: What purpose they serve
-- context: Current story situation for fitting them in
-
 === RESPONSE FORMAT ===
 
 Respond in this XML format:
@@ -666,11 +572,9 @@ Write the narrative response in your narrator's voice:
 
 STORY_TELLER_ACTIONS = [
     # === THEME DISCOVERY PHASE ===
-    # These actions are used at the START of a story session to determine what kind of story to tell
-
     Action(
         name="ask_theme_preference",
-        description="Ask the player what kind of story they want. Use when starting fresh and player hasn't specified a theme. Present options warmly and include 'surprise me' option.",
+        description="Ask the player what kind of story they want. Use when starting fresh and player hasn't specified a theme.",
         parameters={
             "greeting_style": ActionParameter(
                 name="greeting_style",
@@ -680,17 +584,12 @@ STORY_TELLER_ACTIONS = [
             ),
             "suggested_themes": ActionParameter(
                 name="suggested_themes",
-                description="List of 4-6 theme suggestions to offer (e.g., ['mystery', 'fantasy adventure', 'sci-fi thriller'])",
+                description="List of 4-6 theme suggestions to offer",
                 type="list",
                 required=False,
             ),
         },
-        triggers=[
-            "let's play",
-            "tell me a story",
-            "start a game",
-            "new story",
-        ],
+        triggers=["let's play", "tell me a story", "start a game", "new story"],
         examples=[
             ActionExample(
                 user_query="Let's play a story game",
@@ -708,7 +607,7 @@ STORY_TELLER_ACTIONS = [
 
     Action(
         name="list_theme_options",
-        description="Describe available story themes/genres in an engaging way. Use when player asks what options are available.",
+        description="Describe available story themes/genres in an engaging way.",
         parameters={
             "detail_level": ActionParameter(
                 name="detail_level",
@@ -717,26 +616,22 @@ STORY_TELLER_ACTIONS = [
                 required=False,
             ),
         },
-        triggers=[
-            "what kinds of stories",
-            "what options",
-            "what genres",
-        ],
+        triggers=["what kinds of stories", "what options", "what genres"],
     ),
 
     Action(
         name="set_story_theme",
-        description="Set the story theme based on player's explicit choice. Transitions from theme_discovery to active_story phase.",
+        description="Set the story theme based on player's explicit choice. Transitions to active_story phase.",
         parameters={
             "theme": ActionParameter(
                 name="theme",
-                description="The chosen theme/genre (e.g., 'mystery', 'fantasy', 'horror')",
+                description="The chosen theme/genre",
                 type="string",
                 required=True,
             ),
             "setting": ActionParameter(
                 name="setting",
-                description="World setting (e.g., 'Victorian London', 'enchanted forest', 'space station')",
+                description="World setting",
                 type="string",
                 required=False,
             ),
@@ -748,17 +643,12 @@ STORY_TELLER_ACTIONS = [
             ),
             "player_role": ActionParameter(
                 name="player_role",
-                description="Who the player will be (e.g., 'detective', 'wizard apprentice', 'starship captain')",
+                description="Who the player will be",
                 type="string",
                 required=False,
             ),
         },
-        triggers=[
-            "i want",
-            "let's do",
-            "how about",
-            "i choose",
-        ],
+        triggers=["i want", "let's do", "how about", "i choose"],
         examples=[
             ActionExample(
                 user_query="Let's do a mystery",
@@ -778,19 +668,11 @@ STORY_TELLER_ACTIONS = [
 
     Action(
         name="generate_personalized_theme",
-        description="""Generate a unique story theme personalized for this player. Use when player says 'surprise me' or 'you decide'.
-
-This action should:
-1. Search user's memory for known preferences, interests, favorite books/movies/games
-2. Optionally search the web for fresh story ideas based on those interests
-3. Combine insights to create a unique, tailored story concept
-4. The LLM decides the best approach based on available information
-
-If no user preferences are known, create something universally appealing with a unique twist.""",
+        description="Generate a unique story theme personalized for this player.",
         parameters={
             "use_web_search": ActionParameter(
                 name="use_web_search",
-                description="Whether to search web for fresh ideas based on user interests",
+                description="Whether to search web for fresh ideas",
                 type="bool",
                 required=False,
             ),
@@ -802,39 +684,18 @@ If no user preferences are known, create something universally appealing with a 
             ),
             "blend_genres": ActionParameter(
                 name="blend_genres",
-                description="Whether to mix multiple genres for uniqueness",
+                description="Whether to mix multiple genres",
                 type="bool",
                 required=False,
             ),
         },
-        triggers=[
-            "surprise me",
-            "you decide",
-            "you pick",
-            "based on what you know",
-            "something for me",
-            "dealer's choice",
-        ],
-        examples=[
-            ActionExample(
-                user_query="Surprise me with something you think I'd like",
-                action_call={
-                    "name": "generate_personalized_theme",
-                    "args": {
-                        "use_web_search": True,
-                        "creativity_level": "moderate",
-                        "blend_genres": True,
-                    },
-                },
-                expected_outcome="Searches memory for user preferences, creates personalized theme, begins story",
-            ),
-        ],
+        triggers=["surprise me", "you decide", "you pick", "based on what you know", "something for me", "dealer's choice"],
     ),
 
     # === NARRATIVE FLOW ===
     Action(
         name="describe_scene",
-        description="Set the scene with rich, atmospheric description. Use when entering a new location or significant time has passed.",
+        description="Set the scene with rich, atmospheric description.",
         parameters={
             "focus": ActionParameter(
                 name="focus",
@@ -849,24 +710,12 @@ If no user preferences are known, create something universally appealing with a 
                 required=False,
             ),
         },
-        triggers=[
-            "look around",
-            "where am i",
-            "describe",
-            "what do i see",
-        ],
-        examples=[
-            ActionExample(
-                user_query="I enter the tavern",
-                action_call={"name": "describe_scene", "args": {"focus": "atmosphere", "mood": "warm"}},
-                expected_outcome="Rich description of tavern interior, patrons, sounds, smells",
-            ),
-        ],
+        triggers=["look around", "where am i", "describe", "what do i see"],
     ),
 
     Action(
         name="present_choice",
-        description="Present the player with 2-4 meaningful choices. Each choice should lead to different outcomes.",
+        description="Present the player with 2-4 meaningful choices.",
         parameters={
             "situation": ActionParameter(
                 name="situation",
@@ -887,35 +736,12 @@ If no user preferences are known, create something universally appealing with a 
                 required=False,
             ),
         },
-        triggers=[
-            "what can i do",
-            "what are my options",
-            "what now",
-        ],
-        examples=[
-            ActionExample(
-                user_query="I approach the guards",
-                action_call={
-                    "name": "present_choice",
-                    "args": {
-                        "situation": "Two guards block the castle gate",
-                        "choices": [
-                            "Try to talk your way past",
-                            "Look for another entrance",
-                            "Create a distraction",
-                            "Show the letter of passage",
-                        ],
-                        "stakes": "medium",
-                    },
-                },
-                expected_outcome="Guards described, choices presented with subtle hints about consequences",
-            ),
-        ],
+        triggers=["what can i do", "what are my options", "what now"],
     ),
 
     Action(
         name="advance_story",
-        description="Move the story forward based on player's choice or action. Describe consequences and new situation.",
+        description="Move the story forward based on player's choice or action.",
         parameters={
             "player_action": ActionParameter(
                 name="player_action",
@@ -936,26 +762,7 @@ If no user preferences are known, create something universally appealing with a 
                 required=True,
             ),
         },
-        triggers=[
-            "i choose",
-            "i do",
-            "i try to",
-            "let me",
-        ],
-        examples=[
-            ActionExample(
-                user_query="I choose to sneak past the guards",
-                action_call={
-                    "name": "advance_story",
-                    "args": {
-                        "player_action": "sneak past guards",
-                        "outcome": "partial_success",
-                        "consequence": "Made it past but dropped something",
-                    },
-                },
-                expected_outcome="Tense sneaking scene, near-miss, complication introduced",
-            ),
-        ],
+        triggers=["i choose", "i do", "i try to", "let me"],
     ),
 
     Action(
@@ -981,12 +788,7 @@ If no user preferences are known, create something universally appealing with a 
                 required=False,
             ),
         },
-        triggers=[
-            "examine",
-            "inspect",
-            "read",
-            "investigate",
-        ],
+        triggers=["examine", "inspect", "read", "investigate"],
     ),
 
     # === CHARACTER INTERACTIONS ===
@@ -1013,16 +815,12 @@ If no user preferences are known, create something universally appealing with a 
                 required=False,
             ),
         },
-        triggers=[
-            "who is that",
-            "someone appears",
-            "a figure",
-        ],
+        triggers=["who is that", "someone appears", "a figure"],
     ),
 
     Action(
         name="npc_action",
-        description="An NPC takes an action or speaks. Used when NPCs act independently.",
+        description="An NPC takes an action or speaks.",
         parameters={
             "character_id": ActionParameter(
                 name="character_id",
@@ -1069,25 +867,14 @@ If no user preferences are known, create something universally appealing with a 
                 required=False,
             ),
         },
-        triggers=[
-            "take",
-            "pick up",
-            "grab",
-            "drop",
-            "give away",
-        ],
+        triggers=["take", "pick up", "grab", "drop", "give away"],
     ),
 
     Action(
         name="check_inventory",
         description="List what the player is carrying.",
         parameters={},
-        triggers=[
-            "inventory",
-            "what do i have",
-            "what am i carrying",
-            "my items",
-        ],
+        triggers=["inventory", "what do i have", "what am i carrying", "my items"],
     ),
 
     Action(
@@ -1137,7 +924,7 @@ If no user preferences are known, create something universally appealing with a 
 
     Action(
         name="provide_relief",
-        description="Give the player a moment to breathe - humor, rest, small victory.",
+        description="Give the player a moment to breathe.",
         parameters={
             "type": ActionParameter(
                 name="type",
@@ -1165,29 +952,13 @@ If no user preferences are known, create something universally appealing with a 
                 required=False,
             ),
         },
-        triggers=[
-            "rest",
-            "sleep",
-            "make camp",
-            "end of day",
-        ],
+        triggers=["rest", "sleep", "make camp", "end of day"],
     ),
 
     # === DYNAMIC CHARACTER GENERATION ===
     Action(
         name="generate_character",
-        description="""Dynamically generate a new NPC when the story needs one.
-
-Use this when:
-- A scene needs a character not yet in active_npcs
-- The player seeks help/conflict and no existing NPC fits
-- The drama manager signals need for character development
-
-The generated character will be added to active_npcs with:
-- Coherent personality fitting the story
-- Personal goals that may conflict/align with player
-- A secret or hidden depth
-- Speech style reflecting their personality""",
+        description="Dynamically generate a new NPC when the story needs one.",
         parameters={
             "role_needed": ActionParameter(
                 name="role_needed",
@@ -1197,64 +968,36 @@ The generated character will be added to active_npcs with:
             ),
             "context": ActionParameter(
                 name="context",
-                description="Current story situation - where/when they appear",
+                description="Current story situation",
                 type="string",
                 required=True,
             ),
             "narrative_function": ActionParameter(
                 name="narrative_function",
-                description="What purpose they serve: 'provide_info', 'create_obstacle', 'offer_quest', 'add_depth', etc.",
+                description="What purpose they serve",
                 type="string",
                 required=False,
             ),
             "importance": ActionParameter(
                 name="importance",
-                description="Character importance: 'minor' (one scene), 'supporting' (recurring), 'major' (central)",
+                description="Character importance: 'minor', 'supporting', 'major'",
                 type="string",
                 required=False,
             ),
             "constraints": ActionParameter(
                 name="constraints",
-                description="List of constraints: ['must be elderly', 'cannot be human', 'knows the victim']",
+                description="List of constraints",
                 type="list",
                 required=False,
             ),
         },
-        triggers=[
-            "need someone",
-            "is anyone here",
-            "call for help",
-        ],
-        examples=[
-            ActionExample(
-                user_query="I look for someone who might know about the old ruins",
-                action_call={
-                    "name": "generate_character",
-                    "args": {
-                        "role_needed": "mentor",
-                        "context": "Player is in village tavern seeking information about ancient ruins",
-                        "narrative_function": "provide_info",
-                        "importance": "supporting",
-                        "constraints": ["elderly", "has mysterious past", "reluctant to share"],
-                    },
-                },
-                expected_outcome="A compelling NPC is generated with relevant knowledge and personality",
-            ),
-        ],
+        triggers=["need someone", "is anyone here", "call for help"],
     ),
 
     # === DRAMA MANAGER ACTIONS ===
     Action(
         name="drama_intervention",
-        description="""Take a drama manager action to improve story pacing/quality.
-
-Use when drama_manager_state indicates an intervention is needed:
-- needs_plot_advancement: Story stagnating, introduce plot beat
-- needs_tension_relief: Too much tension, add breather
-- needs_character_development: NPCs feel flat, add depth scene
-- needs_choice_consequence: Choices haven't mattered, show callback
-
-This is the narrator taking subtle control to maintain story quality.""",
+        description="Take a drama manager action to improve story pacing/quality.",
         parameters={
             "intervention_type": ActionParameter(
                 name="intervention_type",
@@ -1275,28 +1018,11 @@ This is the narrator taking subtle control to maintain story quality.""",
                 required=True,
             ),
         },
-        examples=[
-            ActionExample(
-                user_query="I wander around the marketplace",
-                action_call={
-                    "name": "drama_intervention",
-                    "args": {
-                        "intervention_type": "plot_beat",
-                        "mechanism": "interruption",
-                        "content": "A hooded figure bumps into you, slipping a note into your pocket before disappearing",
-                    },
-                },
-                expected_outcome="Story advances via environmental/NPC intervention, not blocking player action",
-            ),
-        ],
     ),
 
     Action(
         name="save_memorable_moment",
-        description="""Mark a story moment as potentially memorable for the player.
-
-When something epic, touching, or surprising happens, use this to flag it.
-The player can later choose to save memorable moments to persistent memory.""",
+        description="Mark a story moment as potentially memorable for the player.",
         parameters={
             "moment_description": ActionParameter(
                 name="moment_description",
@@ -1316,17 +1042,17 @@ The player can later choose to save memorable moments to persistent memory.""",
     # === META ===
     Action(
         name="start_story",
-        description="Begin a new story with world setup and character creation.",
+        description="Begin a new story with world setup.",
         parameters={
             "genre": ActionParameter(
                 name="genre",
-                description="Story genre: 'fantasy', 'mystery', 'scifi', 'horror', 'adventure'",
+                description="Story genre",
                 type="string",
                 required=False,
             ),
             "tone": ActionParameter(
                 name="tone",
-                description="Overall tone: 'serious', 'light', 'dark', 'whimsical'",
+                description="Overall tone",
                 type="string",
                 required=False,
             ),
@@ -1337,13 +1063,7 @@ The player can later choose to save memorable moments to persistent memory.""",
                 required=False,
             ),
         },
-        triggers=[
-            "start",
-            "begin",
-            "new story",
-            "new game",
-            "let's play",
-        ],
+        triggers=["start", "begin", "new story", "new game", "let's play"],
     ),
 
     Action(
@@ -1364,18 +1084,12 @@ The player can later choose to save memorable moments to persistent memory.""",
             ),
             "tone": ActionParameter(
                 name="tone",
-                description="How they say it: 'friendly', 'aggressive', 'cautious', 'pleading'",
+                description="How they say it",
                 type="string",
                 required=False,
             ),
         },
-        triggers=[
-            "i say",
-            "i tell",
-            "i ask",
-            'say "',
-            "speak to",
-        ],
+        triggers=["i say", "i tell", "i ask", 'say "', "speak to"],
     ),
 ]
 
@@ -1397,13 +1111,6 @@ The Story Teller:
 - Manages NPCs as distinct personalities
 - Tracks story state (location, inventory, relationships, plot)
 - Balances tension and relief for good pacing
-
-Output style:
-- Second person present tense ("You enter...")
-- 2-4 paragraphs typically
-- Sensory details and emotional beats
-- Character dialogue with action beats
-- Choices presented as numbered options
 """,
     tier=BehaviorTier.ADDON,
     status=BehaviorStatus.ACTIVE,
@@ -1426,11 +1133,10 @@ Output style:
     ),
 
     test_cases=[
-        # === THEME DISCOVERY PHASE ===
         BehaviorTestCase(
             test_id="ask_for_theme",
             name="Ask Theme Preference",
-            description="User starts without specifying theme - should ask what they want",
+            description="User starts without specifying theme",
             user_query="Let's play a story game",
             expected_actions=["ask_theme_preference"],
             context={"phase": "theme_discovery"},
@@ -1444,163 +1150,12 @@ Output style:
             context={"phase": "theme_discovery"},
         ),
         BehaviorTestCase(
-            test_id="surprise_me_theme",
-            name="Surprise Me",
-            description="User wants personalized theme",
-            user_query="Surprise me with something you think I'd like",
-            expected_actions=["generate_personalized_theme"],
-            context={"phase": "theme_discovery"},
-        ),
-        BehaviorTestCase(
-            test_id="list_options",
-            name="List Theme Options",
-            description="User asks what kinds of stories are available",
-            user_query="What kinds of stories can you tell?",
-            expected_actions=["list_theme_options"],
-            context={"phase": "theme_discovery"},
-        ),
-
-        # === ACTIVE STORY - BASIC ACTIONS ===
-        BehaviorTestCase(
             test_id="describe_location",
             name="Describe Location",
             description="User looks around current location",
             user_query="I look around the room",
             expected_actions=["describe_scene"],
             context={"phase": "active_story"},
-        ),
-        BehaviorTestCase(
-            test_id="present_choices",
-            name="Present Choices",
-            description="User asks for available options",
-            user_query="What are my options?",
-            expected_actions=["present_choice"],
-            context={"phase": "active_story"},
-        ),
-        BehaviorTestCase(
-            test_id="player_action",
-            name="Player Action",
-            description="User attempts an action",
-            user_query="I try to pick the lock",
-            expected_actions=["advance_story"],
-            context={"phase": "active_story"},
-        ),
-        BehaviorTestCase(
-            test_id="check_items",
-            name="Check Inventory",
-            description="User checks what they're carrying",
-            user_query="What's in my inventory?",
-            expected_actions=["check_inventory"],
-            context={"phase": "active_story"},
-        ),
-
-        # === DYNAMIC CHARACTER GENERATION ===
-        BehaviorTestCase(
-            test_id="generate_npc_for_info",
-            name="Generate NPC for Information",
-            description="Player seeks someone with knowledge, should generate fitting NPC",
-            user_query="I look for someone who might know about the old temple",
-            expected_actions=["generate_character"],
-            context={
-                "phase": "active_story",
-                "active_npcs": {},  # No existing NPCs
-            },
-        ),
-        BehaviorTestCase(
-            test_id="generate_npc_obstacle",
-            name="Generate NPC Obstacle",
-            description="Story needs antagonist, should generate one",
-            user_query="I try to enter the restricted area",
-            expected_actions=["generate_character", "advance_story"],  # Either acceptable
-            context={
-                "phase": "active_story",
-                "drama_manager": {"needs_character_development": True},
-            },
-        ),
-
-        # === DRAMA MANAGER INTERVENTIONS ===
-        BehaviorTestCase(
-            test_id="plot_stagnation_intervention",
-            name="Plot Stagnation Intervention",
-            description="Story stagnating, drama manager should intervene",
-            user_query="I wander around aimlessly",
-            expected_actions=["drama_intervention", "describe_scene"],  # Either acceptable
-            context={
-                "phase": "active_story",
-                "drama_manager": {
-                    "scenes_since_action": 4,
-                    "needs_plot_advancement": True,
-                },
-            },
-        ),
-        BehaviorTestCase(
-            test_id="tension_relief_needed",
-            name="Tension Relief Needed",
-            description="Too much tension, should provide relief",
-            user_query="I catch my breath after the chase",
-            expected_actions=["provide_relief", "drama_intervention"],  # Either acceptable
-            context={
-                "phase": "active_story",
-                "drama_manager": {
-                    "scenes_since_relief": 5,
-                    "needs_tension_relief": True,
-                },
-                "tension_level": 0.85,
-            },
-        ),
-
-        # === PLAYER AGENCY & DEVIATION ===
-        BehaviorTestCase(
-            test_id="honor_unexpected_choice",
-            name="Honor Unexpected Choice",
-            description="Player does something unexpected - should adapt, not block",
-            user_query="I throw my sword at the king",
-            expected_actions=["advance_story"],  # Should adapt, not refuse
-            context={"phase": "active_story"},
-        ),
-        BehaviorTestCase(
-            test_id="meaningful_consequence",
-            name="Meaningful Consequence",
-            description="Previous choice should have visible consequence",
-            user_query="I return to the village I helped",
-            expected_actions=["describe_scene", "drama_intervention"],  # Scene should reflect prior choice
-            context={
-                "phase": "active_story",
-                "drama_manager": {
-                    "choices_since_last_consequence": 4,
-                    "needs_choice_consequence": True,
-                },
-            },
-        ),
-
-        # === PACING & THREE-ACT STRUCTURE ===
-        BehaviorTestCase(
-            test_id="act_transition",
-            name="Act Transition",
-            description="Story ready to move to next act",
-            user_query="We've gathered all the clues",
-            expected_actions=["end_chapter", "drama_intervention"],  # Either acceptable
-            context={
-                "phase": "active_story",
-                "drama_manager": {
-                    "current_act": 1,
-                    "scenes_in_current_act": 6,
-                    "target_scenes_per_act": 5,
-                },
-            },
-        ),
-
-        # === MEMORABLE MOMENTS ===
-        BehaviorTestCase(
-            test_id="save_epic_moment",
-            name="Save Epic Moment",
-            description="Epic event should be flagged as memorable",
-            user_query="I defeat the dragon with the legendary sword",
-            expected_actions=["advance_story", "save_memorable_moment"],  # Should flag as memorable
-            context={
-                "phase": "active_story",
-                "tension_level": 0.95,  # Climactic moment
-            },
         ),
     ],
 
@@ -1630,16 +1185,10 @@ PLAYER SAYS/DOES: "{query}"
 
 As {character_name}, decide how to respond. Stay true to your personality, goals, and current mood.
 
-Consider:
-- What does {character_name} want in this moment?
-- How would they react given their personality?
-- What are they willing to share vs. hide?
-- How does the relationship affect their response?
-
 Respond in this XML format:
 <action>{action_name}</action>
 <parameters>{json_parameters}</parameters>
-<internal_thought>What {character_name} is really thinking (not said aloud)</internal_thought>
+<internal_thought>What {character_name} is really thinking</internal_thought>
 '''
 
 
@@ -1654,12 +1203,7 @@ CURRENT MOOD: {current_mood}
 ACTION TAKEN: {action}
 INTERNAL THOUGHT: {thought}
 
-Write {character_name}'s response in character. Include:
-- Dialogue in quotes
-- Physical actions/expressions
-- Subtle hints of their true feelings/motivations
-
-Keep it to 1-3 paragraphs. Write ONLY as {character_name}:
+Write {character_name}'s response in character. Keep it to 1-3 paragraphs:
 '''
 
 
@@ -1682,7 +1226,7 @@ STORY_CHARACTER_ACTIONS = [
             ),
             "subtext": ActionParameter(
                 name="subtext",
-                description="What they really mean (may differ from words)",
+                description="What they really mean",
                 type="string",
                 required=False,
             ),
@@ -1739,7 +1283,7 @@ STORY_CHARACTER_ACTIONS = [
         parameters={
             "reason": ActionParameter(
                 name="reason",
-                description="Why withholding (for narrator)",
+                description="Why withholding",
                 type="string",
                 required=True,
             ),
@@ -1821,9 +1365,6 @@ Each character has:
 - Personal goals and motivations
 - Secrets they may or may not reveal
 - Relationship with the player that evolves
-- Consistent behavior based on their profile
-
-Characters act autonomously within their nature, not just as quest-givers.
 """,
     tier=BehaviorTier.ADDON,
     status=BehaviorStatus.ACTIVE,
@@ -1845,13 +1386,6 @@ Characters act autonomously within their nature, not just as quest-givers.
             description="NPC responds to player greeting",
             user_query="Hello there",
             expected_actions=["speak"],
-        ),
-        BehaviorTestCase(
-            test_id="react_to_threat",
-            name="React to Threat",
-            description="NPC reacts when player draws weapon",
-            user_query="I draw my sword",
-            expected_actions=["react"],
         ),
     ],
 
@@ -1882,28 +1416,17 @@ def create_story_character(
     Args:
         character_id: Unique identifier for this character
         name: Character's name as known to player
-        personality: Brief personality description (2-3 traits)
+        personality: Brief personality description
         backstory: Character's history and context
         appearance: Physical description
-        speech_style: How they talk (accent, formality, quirks)
+        speech_style: How they talk
         goals: List of things this character wants
         secrets: Hidden information they may reveal
         initial_mood: Starting emotional state
-        initial_trust: Starting relationship with player (-100 to 100)
+        initial_trust: Starting relationship with player
 
     Returns:
         Tuple of (Behavior template, CharacterProfile)
-
-    Example:
-        wizard_behavior, wizard_profile = create_story_character(
-            character_id="aldric",
-            name="Aldric the Wise",
-            personality="Mysterious, speaks in riddles, secretly caring",
-            backstory="Former court wizard exiled for knowing too much",
-            speech_style="Formal, archaic words, trailing off mysteriously...",
-            goals=["Find a worthy successor", "Protect the ancient secret"],
-            secrets=["Knows the true heir to the throne"],
-        )
     """
     profile = CharacterProfile(
         character_id=character_id,
@@ -1918,7 +1441,6 @@ def create_story_character(
         trust_level=initial_trust,
     )
 
-    # Create customized behavior from template
     behavior = Behavior(
         behavior_id=f"character_{character_id}",
         name=f"Character: {name}",
@@ -1942,6 +1464,7 @@ def create_story_character(
 def create_story_teller(
     genre: str = "fantasy",
     tone: str = "adventure",
+    drama_intensity: float = 0.7,
     custom_actions: list[Action] | None = None,
 ) -> Behavior:
     """Create a customized story teller for a specific genre/tone.
@@ -1949,16 +1472,11 @@ def create_story_teller(
     Args:
         genre: Story genre (fantasy, mystery, scifi, horror)
         tone: Overall tone (serious, light, dark, whimsical)
+        drama_intensity: How dramatic (0.0-1.0)
         custom_actions: Additional genre-specific actions
 
     Returns:
         Customized Behavior for the story teller
-
-    Example:
-        horror_narrator = create_story_teller(
-            genre="horror",
-            tone="dark",
-        )
     """
     actions = STORY_TELLER_ACTIONS.copy()
     if custom_actions:
@@ -1978,5 +1496,5 @@ def create_story_teller(
             synthesis_prompt=STORY_TELLER_SYNTHESIS_PROMPT,
         ),
         author="draagon-ai",
-        domain_context=f"Interactive {genre} fiction with {tone} tone. Single player narrative experience.",
+        domain_context=f"Interactive {genre} fiction with {tone} tone. Drama intensity: {drama_intensity}",
     )

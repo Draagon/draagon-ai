@@ -1,24 +1,11 @@
 """Adapters for integrating draagon-ai with various applications.
 
-This module contains reference adapter implementations that show how to
+This module is for reference adapter implementations that show how to
 bridge draagon-ai's protocols with existing application services.
 
-Usage:
-    # In Roxy
-    from draagon_ai.adapters.roxy import RoxyLLMAdapter, RoxyMemoryAdapter
-
-    llm_provider = RoxyLLMAdapter(roxy_llm_service)
-    memory_provider = RoxyMemoryAdapter(roxy_memory_service)
+Adapters are app-specific and should be defined in the application code,
+not in the draagon-ai core package. See the roxy-voice-assistant project
+for examples of how to create adapters.
 """
 
-from .roxy import (
-    RoxyLLMAdapter,
-    RoxyMemoryAdapter,
-    RoxyToolAdapter,
-)
-
-__all__ = [
-    "RoxyLLMAdapter",
-    "RoxyMemoryAdapter",
-    "RoxyToolAdapter",
-]
+__all__: list[str] = []

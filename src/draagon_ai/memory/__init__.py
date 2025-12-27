@@ -91,6 +91,12 @@ from draagon_ai.memory.layers import (
     PromotionStats,
 )
 
+# Memory Providers
+from draagon_ai.memory.providers import (
+    LayeredMemoryProvider,
+    LayeredMemoryConfig,
+)
+
 __all__ = [
     # Base memory interfaces
     "MemoryProvider",
@@ -149,4 +155,7 @@ __all__ = [
     "MemoryConsolidator",
     "PromotionConfig",
     "PromotionStats",
+    # Memory Providers
+    "LayeredMemoryProvider",
+    "LayeredMemoryConfig",
 ]

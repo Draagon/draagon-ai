@@ -25,6 +25,28 @@ from .behavior_executor import (
     create_mock_tool_registry,
 )
 
+# Feedback collection
+from .feedback import (
+    FeedbackCollector,
+    InteractionRecord,
+    FeedbackStats,
+)
+
+# Evolution
+from .evolution import (
+    EvolutionService,
+    EvolutionServiceConfig,
+    EvolutionServiceResult,
+    VoiceAssistantFitnessEvaluator,
+)
+
+# Evolution scheduling
+from .evolution_scheduler import (
+    EvolutionScheduler,
+    EvolutionSchedulerConfig,
+    EvolutionRun,
+)
+
 __all__ = [
     # Architect
     "BehaviorArchitectService",
@@ -43,4 +65,17 @@ __all__ = [
     "ToolRegistry",
     "ToolResult",
     "create_mock_tool_registry",
+    # Feedback
+    "FeedbackCollector",
+    "InteractionRecord",
+    "FeedbackStats",
+    # Evolution
+    "EvolutionService",
+    "EvolutionServiceConfig",
+    "EvolutionServiceResult",
+    "VoiceAssistantFitnessEvaluator",
+    # Scheduler
+    "EvolutionScheduler",
+    "EvolutionSchedulerConfig",
+    "EvolutionRun",
 ]

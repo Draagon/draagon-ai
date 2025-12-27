@@ -81,14 +81,25 @@ from .registry import BehaviorRegistry
 from .templates import (
     # Voice Assistant
     VOICE_ASSISTANT_TEMPLATE,
+    VOICE_ASSISTANT_ACTIONS,
+    VOICE_ASSISTANT_TRIGGERS,
+    VOICE_ASSISTANT_CONSTRAINTS,
+    VOICE_ASSISTANT_TEST_CASES,
     create_voice_assistant_behavior,
-    # Story Teller
-    STORY_TELLER_TEMPLATE,
-    STORY_TELLER_CHARACTER_TEMPLATE,
-    create_story_character,
-    create_story_teller,
-    StoryState,
-    CharacterProfile,
+)
+
+# Personality
+from .personality import (
+    CoreValue,
+    TraitDimension,
+    HumorStyle,
+    ValueConfig,
+    TraitConfig,
+    Opinion,
+    Principle,
+    PersonalityConfig,
+    compose_personality_intro,
+    compose_opinion_prompt,
 )
 
 __all__ = [
@@ -127,12 +138,20 @@ __all__ = [
     "BehaviorRegistry",
     # Voice Assistant Templates
     "VOICE_ASSISTANT_TEMPLATE",
+    "VOICE_ASSISTANT_ACTIONS",
+    "VOICE_ASSISTANT_TRIGGERS",
+    "VOICE_ASSISTANT_CONSTRAINTS",
+    "VOICE_ASSISTANT_TEST_CASES",
     "create_voice_assistant_behavior",
-    # Story Teller Templates
-    "STORY_TELLER_TEMPLATE",
-    "STORY_TELLER_CHARACTER_TEMPLATE",
-    "create_story_character",
-    "create_story_teller",
-    "StoryState",
-    "CharacterProfile",
+    # Personality
+    "CoreValue",
+    "TraitDimension",
+    "HumorStyle",
+    "ValueConfig",
+    "TraitConfig",
+    "Opinion",
+    "Principle",
+    "PersonalityConfig",
+    "compose_personality_intro",
+    "compose_opinion_prompt",
 ]

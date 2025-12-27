@@ -104,6 +104,35 @@ Higher-level reasoning including:
 ### MCP Support
 Model Context Protocol integration for extensible tool use.
 
+### Extensions
+Modular extension system using Python entry points. Extensions can provide behaviors, services, and tools:
+
+```python
+from draagon_ai.extensions import ExtensionManager, load_config
+
+# Load extensions from draagon.yaml config
+config = load_config("draagon.yaml")
+manager = ExtensionManager(config=config)
+manager.discover_and_load()
+
+# Get behaviors from extensions
+for behavior in manager.get_all_behaviors():
+    print(f"  - {behavior.behavior_id}: {behavior.description}")
+```
+
+**Configuration** (`draagon.yaml`):
+```yaml
+extensions:
+  storytelling:
+    enabled: true
+    config:
+      drama_intensity: 0.7
+      default_narrator: "warm"
+```
+
+**Available Extensions:**
+- `draagon-ai-ext-storytelling` - Interactive fiction and text adventure behaviors
+
 ### Behavior System
 Dynamic behavior definitions that can be created, tested, and evolved:
 
