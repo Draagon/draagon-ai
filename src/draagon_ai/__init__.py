@@ -141,6 +141,10 @@ from draagon_ai.tools import (
     create_mcp_client,
 )
 
+# Testing framework (for apps building on draagon-ai)
+# Import the testing module namespace for easy access
+from draagon_ai import testing
+
 __all__ = [
     # Version
     "__version__",
@@ -230,4 +234,6 @@ __all__ = [
     "MCPServerConfig",
     "MCPTool",
     "create_mcp_client",
+    # Testing framework
+    "testing",
 ]
