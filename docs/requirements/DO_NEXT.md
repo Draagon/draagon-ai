@@ -10,8 +10,8 @@ I'll read this file, do the current task, update status, and move to the next st
 
 ```
 PHASE: 5 - Memory MCP Server
-REQ: REQ-005-01
-NAME: MCP server scaffolding
+REQ: REQ-005-06
+NAME: Scope-based access control
 STEP: IMPLEMENT
 ```
 
@@ -104,18 +104,18 @@ STEP: IMPLEMENT
 
 | # | Requirement | Implement | Test | Review | Complete |
 |---|-------------|-----------|------|--------|----------|
-| 01 | MCP server scaffolding | [ ] | [ ] | [ ] | [ ] |
-| 02 | memory.store tool | [ ] | [ ] | [ ] | [ ] |
-| 03 | memory.search tool | [ ] | [ ] | [ ] | [ ] |
-| 04 | memory.list tool | [ ] | [ ] | [ ] | [ ] |
-| 05 | beliefs.reconcile tool | [ ] | [ ] | [ ] | [ ] |
+| 01 | MCP server scaffolding | [x] | [x] | [x] | [x] |
+| 02 | memory.store tool | [x] | [x] | [x] | [x] |
+| 03 | memory.search tool | [x] | [x] | [x] | [x] |
+| 04 | memory.list tool | [x] | [x] | [x] | [x] |
+| 05 | beliefs.reconcile tool | [x] | [x] | [x] | [x] |
 | 06 | Scope-based access control | [ ] | [ ] | [ ] | [ ] |
 | 07 | Authentication/authorization | [ ] | [ ] | [ ] | [ ] |
 | 08 | Claude Code integration test | [ ] | [ ] | [ ] | [ ] |
-| 09 | Unit tests (≥90% coverage) | [ ] | [ ] | [ ] | [ ] |
+| 09 | Unit tests (≥90% coverage) | [x] | [x] | [x] | [x] |
 | 10 | Integration tests | [ ] | [ ] | [ ] | [ ] |
 
-**Phase 5 Status:** NOT STARTED
+**Phase 5 Status:** IN PROGRESS (6/10)
 
 ---
 
@@ -139,6 +139,56 @@ STEP: IMPLEMENT
 ---
 
 ## CURRENT WORK LOG
+
+### REQ-005-01 through REQ-005-05: Memory MCP Server Implementation
+
+**Status:** ✅ COMPLETED
+
+**Work Done:**
+- Created complete MCP server module at `src/draagon_ai/mcp/`
+- Implemented 6 MCP tools:
+  - `memory_store` - Store memories with type/scope mapping
+  - `memory_search` - Semantic search across memory layers
+  - `memory_list` - List recent memories with optional type filter
+  - `memory_get` - Get specific memory by ID
+  - `memory_delete` - Delete a memory by ID
+  - `beliefs_reconcile` - Add observations for belief reconciliation
+- Created configuration system:
+  - `MCPConfig` - Server configuration with env var support
+  - `MCPScope` enum - private/shared/system scopes
+  - `ClientConfig` - Per-client configuration
+- Scope mapping: private→USER, shared→CONTEXT, system→WORLD
+- Type mapping: fact/skill/insight/preference/episodic/instruction → MemoryType
+- Created 45 unit tests covering all components
+
+**Files Created:**
+- `src/draagon_ai/mcp/__init__.py` - Module exports
+- `src/draagon_ai/mcp/config.py` - MCPConfig, ClientConfig, MCPScope
+- `src/draagon_ai/mcp/server.py` - MemoryMCPServer with FastMCP
+- `src/draagon_ai/mcp/__main__.py` - CLI entry point
+- `tests/mcp/__init__.py` - Test module
+- `tests/mcp/test_mcp_server.py` - 45 unit tests
+
+**Test Results:** ✅ 45/45 PASSED
+
+**Key Technical Details:**
+- Uses `mcp.server.fastmcp.FastMCP` for tool registration
+- Tools access memory via `_get_memory()` which lazily creates `LayeredMemoryProvider`
+- API key authentication optional (set `api_key` in config)
+- Default user/agent IDs configurable
+- Entry point: `python -m draagon_ai.mcp`
+
+**Acceptance Criteria:**
+- [x] MCP server scaffolding with FastMCP
+- [x] memory_store tool with type/scope mapping
+- [x] memory_search tool with semantic search
+- [x] memory_list tool for listing memories
+- [x] memory_get/delete tools for CRUD
+- [x] beliefs_reconcile tool for cognitive integration
+- [x] 45 unit tests passing
+- [x] Environment variable configuration
+
+---
 
 ### REQ-004-01: Move autonomous agent to draagon-ai core
 
