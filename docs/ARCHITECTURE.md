@@ -282,15 +282,15 @@ These exist in roxy/services/ but should use draagon-ai versions via adapters:
 
 ## Migration Phases
 
-### Phase 1: Create Autonomous Extension ✅ COMPLETE
+### Phase 1: Autonomous Agent in Core ✅ COMPLETE
 
-1. ✅ Created `draagon-ai-ext-autonomous` extension in `extensions/autonomous/`
-2. ✅ Moved autonomous agent logic to extension with protocol-based design
+1. ✅ Moved autonomous agent to `draagon_ai.orchestration.autonomous` (core)
+2. ✅ Protocol-based design with 5 provider protocols
 3. ✅ Created adapters in Roxy (`roxy/adapters/autonomous_adapter.py`)
-4. ✅ Created factory in Roxy that uses extension or falls back to local
+4. ✅ Created factory in Roxy that uses core directly
 5. ✅ Updated Roxy main.py and dashboard to use the factory
 
-**Extension Location:** `extensions/autonomous/`
+**Core Location:** `src/draagon_ai/orchestration/autonomous/`
 **Roxy Adapters:** `src/roxy/adapters/autonomous_adapter.py`, `autonomous_factory.py`
 
 ### Phase 2: Clean Up Duplicates (Next)

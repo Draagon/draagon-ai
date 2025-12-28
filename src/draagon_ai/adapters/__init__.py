@@ -73,6 +73,9 @@ from draagon_ai.adapters.roxy_cognition import (
     RoxyLearningCredibilityAdapter,
     RoxyUserProviderAdapter,
     RoxyLearningAdapter,
+    # REQ-003-05: Identity manager adapters
+    RoxyIdentityStorageAdapter,
+    RoxyFullIdentityAdapter,
 )
 
 __all__ = [
@@ -109,4 +112,7 @@ __all__ = [
     "RoxyLearningCredibilityAdapter",
     "RoxyUserProviderAdapter",
     "RoxyLearningAdapter",
+    # Identity adapters (REQ-003-05)
+    "RoxyIdentityStorageAdapter",
+    "RoxyFullIdentityAdapter",
 ]

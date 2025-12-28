@@ -10,8 +10,8 @@ I'll read this file, do the current task, update status, and move to the next st
 
 ```
 PHASE: 4 - Autonomous Agent
-REQ: REQ-004-07
-NAME: Remove extension version
+REQ: REQ-004-08
+NAME: Unit tests (≥90% coverage)
 STEP: IMPLEMENT
 ```
 

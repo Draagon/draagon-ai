@@ -7,6 +7,7 @@ REQ-003-01: Belief reconciliation using core service.
 REQ-003-02: Curiosity engine using core service.
 REQ-003-03: Opinion formation using core service.
 REQ-003-04: Learning service using core service.
+REQ-003-05: Identity manager integration.
 """
 
 import logging
@@ -43,6 +44,12 @@ from draagon_ai.cognition.learning import (
     UserProvider,
     VerificationResult,
 )
+from draagon_ai.cognition.identity import (
+    IdentityManager as IdentityManagerImpl,
+    IdentityStorage,
+    serialize_user_prefs,
+    deserialize_user_prefs,
+)
 from draagon_ai.cognition.opinions import (
     FormedOpinion,
     IdentityManager,
@@ -58,6 +65,7 @@ from draagon_ai.core import (
     Opinion,
     PersonalityTrait,
     Preference,
+    UserInteractionPreferences,
     WorldviewBelief,
 )
 from draagon_ai.core.types import (
@@ -1869,3 +1877,369 @@ class RoxyLearningAdapter:
             "degraded_count": len([s for s in skills if s.needs_relearning()]),
             "average_confidence": sum(s.confidence for s in skills) / len(skills) if skills else 1.0,
         }
+
+
+# =============================================================================
+# Identity Manager Adapters (REQ-003-05)
+# =============================================================================
+
+
+class RoxyIdentityStorageAdapter(IdentityStorage):
+    """Adapts Roxy's MemoryService to draagon-ai's IdentityStorage protocol.
+
+    The IdentityStorage protocol is used by IdentityManager to persist
+    agent identity and per-user preferences. This adapter uses Roxy's
+    Qdrant-backed MemoryService for storage.
+
+    Storage structure:
+    - Agent identity stored with record_type="agent_identity"
+    - User preferences stored with record_type="user_interaction_prefs"
+    """
+
+    # Record type constants
+    IDENTITY_RECORD_TYPE = "agent_identity"
+    USER_PREFS_RECORD_TYPE = "user_interaction_prefs"
+
+    def __init__(self, memory: RoxyMemoryService):
+        """Initialize the storage adapter.
+
+        Args:
+            memory: Roxy's MemoryService for Qdrant storage
+        """
+        self._memory = memory
+
+    async def load_identity(self, agent_id: str) -> dict[str, Any] | None:
+        """Load serialized identity data for an agent.
+
+        Searches Qdrant for the agent's identity record.
+
+        Args:
+            agent_id: The agent's unique identifier
+
+        Returns:
+            Serialized identity dict, or None if not found
+        """
+        try:
+            # Search for the identity record
+            results = await self._memory.search(
+                query=f"agent identity {agent_id}",
+                user_id=f"agent_{agent_id}",
+                limit=5,
+            )
+
+            # Find the identity record
+            for result in results:
+                if (result.get("record_type") == self.IDENTITY_RECORD_TYPE and
+                        result.get("agent_id") == agent_id):
+                    # Return the stored identity data
+                    return result.get("identity_data", {})
+
+            return None
+
+        except Exception as e:
+            logger.error(f"Error loading identity for {agent_id}: {e}")
+            return None
+
+    async def save_identity(self, agent_id: str, data: dict[str, Any]) -> None:
+        """Save serialized identity data for an agent.
+
+        Args:
+            agent_id: The agent's unique identifier
+            data: Serialized identity data to store
+        """
+        try:
+            content = f"Agent identity for {agent_id}"
+
+            await self._memory.store(
+                content=content,
+                user_id=f"agent_{agent_id}",
+                scope="system",
+                memory_type="agent_identity",
+                entities=["identity", agent_id],
+                importance=1.0,  # Maximum importance
+                metadata={
+                    "record_type": self.IDENTITY_RECORD_TYPE,
+                    "agent_id": agent_id,
+                    "identity_data": data,
+                },
+            )
+
+            logger.debug(f"Saved identity for agent: {agent_id}")
+
+        except Exception as e:
+            logger.error(f"Error saving identity for {agent_id}: {e}")
+            raise
+
+    async def load_user_preferences(
+        self, agent_id: str, user_id: str
+    ) -> dict[str, Any] | None:
+        """Load per-user interaction preferences.
+
+        Args:
+            agent_id: The agent's unique identifier
+            user_id: The user to load preferences for
+
+        Returns:
+            Serialized preferences dict, or None if not found
+        """
+        try:
+            results = await self._memory.search(
+                query=f"interaction preferences for user {user_id}",
+                user_id=f"agent_{agent_id}",
+                limit=5,
+            )
+
+            for result in results:
+                if (result.get("record_type") == self.USER_PREFS_RECORD_TYPE and
+                        result.get("prefs_user_id") == user_id and
+                        result.get("agent_id") == agent_id):
+                    return result.get("prefs_data", {})
+
+            return None
+
+        except Exception as e:
+            logger.error(f"Error loading user prefs for {user_id}: {e}")
+            return None
+
+    async def save_user_preferences(
+        self, agent_id: str, user_id: str, data: dict[str, Any]
+    ) -> None:
+        """Save per-user interaction preferences.
+
+        Args:
+            agent_id: The agent's unique identifier
+            user_id: The user to save preferences for
+            data: Serialized preferences data
+        """
+        try:
+            content = f"Interaction preferences for user {user_id} with agent {agent_id}"
+
+            await self._memory.store(
+                content=content,
+                user_id=f"agent_{agent_id}",
+                scope="system",
+                memory_type="user_prefs",
+                entities=["preferences", user_id, agent_id],
+                importance=0.8,
+                metadata={
+                    "record_type": self.USER_PREFS_RECORD_TYPE,
+                    "agent_id": agent_id,
+                    "prefs_user_id": user_id,
+                    "prefs_data": data,
+                },
+            )
+
+            logger.debug(f"Saved interaction preferences for user: {user_id}")
+
+        except Exception as e:
+            logger.error(f"Error saving user prefs for {user_id}: {e}")
+            raise
+
+
+@dataclass
+class RoxyFullIdentityAdapter:
+    """Adapter that allows Roxy to use draagon-ai's IdentityManager.
+
+    This is the main entry point for REQ-003-05. It wraps draagon-ai's
+    IdentityManager and provides Roxy-compatible methods.
+
+    Key features:
+    - Uses Roxy's MemoryService for persistence via RoxyIdentityStorageAdapter
+    - Provides trait access, value access, and trait adjustment
+    - Manages per-user interaction preferences
+    - Builds personality context for prompts
+
+    Example:
+        from roxy.services.llm import LLMService
+        from roxy.services.memory import MemoryService
+
+        adapter = RoxyFullIdentityAdapter(
+            llm=llm_service,
+            memory=memory_service,
+            agent_name="Roxy",
+            agent_id="roxy",
+        )
+
+        # Load identity
+        identity = await adapter.load()
+
+        # Get trait value
+        curiosity = adapter.get_trait_value("curiosity_intensity", default=0.5)
+
+        # Adjust trait
+        adapter.adjust_trait(
+            "verification_threshold",
+            delta=0.1,
+            reason="User prefers more verification",
+            trigger="user_feedback"
+        )
+
+        # Save changes
+        await adapter.save_if_dirty()
+    """
+
+    llm: RoxyLLMService
+    memory: RoxyMemoryService
+    agent_name: str = "Roxy"
+    agent_id: str = "roxy"
+    _manager: IdentityManagerImpl | None = None
+    _storage: RoxyIdentityStorageAdapter | None = None
+
+    def _get_storage(self) -> RoxyIdentityStorageAdapter:
+        """Get or create the storage adapter."""
+        if self._storage is None:
+            self._storage = RoxyIdentityStorageAdapter(self.memory)
+        return self._storage
+
+    def _get_manager(self) -> IdentityManagerImpl:
+        """Get or create the IdentityManager instance."""
+        if self._manager is None:
+            self._manager = IdentityManagerImpl(
+                llm=RoxyLLMAdapter(self.llm),
+                storage=self._get_storage(),
+                agent_id=self.agent_id,
+                agent_name=self.agent_name,
+            )
+        return self._manager
+
+    async def load(self) -> AgentIdentity:
+        """Load the agent's identity.
+
+        Returns:
+            The loaded or newly created AgentIdentity
+        """
+        return await self._get_manager().load()
+
+    def get_cached(self) -> AgentIdentity | None:
+        """Get cached identity without async load.
+
+        Use this when you know load() has already been called.
+        Returns None if not yet loaded.
+        """
+        return self._get_manager().get_cached()
+
+    async def save_if_dirty(self) -> bool:
+        """Save identity if there are pending changes.
+
+        Returns:
+            True if saved, False if nothing to save
+        """
+        return await self._get_manager().save_if_dirty()
+
+    def mark_dirty(self) -> None:
+        """Mark identity as needing to be saved."""
+        self._get_manager().mark_dirty()
+
+    # =========================================================================
+    # Personality Access Methods
+    # =========================================================================
+
+    def get_trait_value(self, trait_name: str, default: float = 0.5) -> float:
+        """Get a personality trait value.
+
+        Args:
+            trait_name: Name of the trait (e.g., "verification_threshold")
+            default: Default value if trait not found
+
+        Returns:
+            The trait value (0.0 - 1.0)
+        """
+        return self._get_manager().get_trait_value(trait_name, default)
+
+    def get_value_strength(self, value_name: str, default: float = 0.5) -> float:
+        """Get a core value strength.
+
+        Args:
+            value_name: Name of the value (e.g., "truth_seeking")
+            default: Default value if not found
+
+        Returns:
+            The value strength (0.0 - 1.0)
+        """
+        return self._get_manager().get_value_strength(value_name, default)
+
+    def adjust_trait(
+        self,
+        trait_name: str,
+        delta: float,
+        reason: str,
+        trigger: str
+    ) -> bool:
+        """Adjust a personality trait.
+
+        Args:
+            trait_name: Name of the trait to adjust
+            delta: Amount to adjust (+/-)
+            reason: Why the adjustment is happening
+            trigger: What triggered it
+
+        Returns:
+            True if adjustment was applied
+        """
+        return self._get_manager().adjust_trait(trait_name, delta, reason, trigger)
+
+    async def reset_to_defaults(self) -> None:
+        """Reset agent's values, worldview, and principles to defaults.
+
+        Preserves learned traits, preferences, and opinions while
+        updating the foundational values, worldview, and principles.
+        """
+        await self._get_manager().reset_to_defaults()
+
+    # =========================================================================
+    # Per-User Interaction Preferences
+    # =========================================================================
+
+    async def get_user_prefs(self, user_id: str) -> UserInteractionPreferences:
+        """Get interaction preferences for a specific user.
+
+        Loads from storage if not cached, or creates default.
+
+        Args:
+            user_id: The user to get preferences for
+
+        Returns:
+            UserInteractionPreferences for the user
+        """
+        return await self._get_manager().get_user_prefs(user_id)
+
+    async def save_user_prefs(self, user_id: str) -> None:
+        """Save user interaction preferences to storage.
+
+        Args:
+            user_id: The user to save preferences for
+        """
+        await self._get_manager().save_user_prefs(user_id)
+
+    # =========================================================================
+    # Context Building
+    # =========================================================================
+
+    def build_personality_context(self, user_id: str | None = None) -> str:
+        """Build a context string describing the agent's personality for prompt injection.
+
+        Args:
+            user_id: Optional user ID to include user-specific preferences
+
+        Returns:
+            A formatted string describing the agent's personality
+        """
+        return self._get_manager().build_personality_context(user_id)
+
+    async def build_personality_context_with_query(
+        self,
+        query: str,
+        user_id: str | None = None,
+    ) -> str:
+        """Build personality context with query-relevant opinions.
+
+        Uses the query context to include the most relevant opinions.
+
+        Args:
+            query: The current user query for relevance matching
+            user_id: Optional user ID for user-specific preferences
+
+        Returns:
+            A formatted string describing personality with relevant opinions
+        """
+        return await self._get_manager().build_personality_context_with_query(query, user_id)

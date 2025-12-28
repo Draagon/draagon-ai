@@ -116,3 +116,2054 @@ Where are the ReAct patterns?  I thought we had some fancy graph approach to doi
 
 
 
+------------------
+VS CODE EXTENSIONS & DEVELOPMENT AGENTS (Research: 2025-12-28)
+------------------
+
+Given your background (AI/ML, self-hosted infrastructure, voice assistants, DevOps, Home Assistant)
+and draagon-ai's cognitive architecture, here are the most impactful extensions to build.
+
+
+═══════════════════════════════════════════════════════════════════════════════
+TIER 1: HIGH-IMPACT, LEVERAGES EXISTING DRAAGON-AI ARCHITECTURE
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 1. DRAAGON MEMORY MCP SERVER                                                 │
+│    Replace CLAUDE.md with living, queryable project memory                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ WHAT IT DOES:                                                                │
+│ Instead of static CLAUDE.md files that Claude Code reads at startup, expose │
+│ draagon-ai's layered memory as an MCP server. Claude Code (and any MCP      │
+│ client) can then query, update, and learn from project context in real-time.│
+│                                                                              │
+│ ARCHITECTURE:                                                                │
+│ ┌─────────────┐     MCP Protocol      ┌─────────────────────────────────┐   │
+│ │ Claude Code ├───────────────────────┤ draagon-memory-mcp-server       │   │
+│ │ VS Code     │   JSON-RPC 2.0        │                                 │   │
+│ │ Cursor      │                       │ Tools:                          │   │
+│ │ Any MCP     │◄──────────────────────┤ - memory_store(content, scope)  │   │
+│ │ Client      │                       │ - memory_search(query, scope)   │   │
+│ └─────────────┘                       │ - memory_consolidate()          │   │
+│                                       │ - beliefs_query(topic)          │   │
+│                                       │ - beliefs_reconcile(claim)      │   │
+│                                       │                                 │   │
+│                                       │ Resources:                      │   │
+│                                       │ - project://context             │   │
+│                                       │ - project://architecture        │   │
+│                                       │ - project://conventions         │   │
+│                                       │ - user://preferences            │   │
+│                                       │ - user://learnings              │   │
+│                                       │                                 │   │
+│                                       │ Prompts:                        │   │
+│                                       │ - project-onboarding            │   │
+│                                       │ - code-review-with-memory       │   │
+│                                       │ - decision-with-history         │   │
+│                                       └─────────────────────────────────┘   │
+│                                                     │                        │
+│                                                     ▼                        │
+│                                       ┌─────────────────────────────────┐   │
+│                                       │ Draagon-AI Core                 │   │
+│                                       │ - LayeredMemoryProvider         │   │
+│                                       │ - BeliefReconciliationService   │   │
+│                                       │ - TemporalCognitiveGraph        │   │
+│                                       │ - Qdrant (vector storage)       │   │
+│                                       └─────────────────────────────────┘   │
+│                                                                              │
+│ MEMORY SCOPES FOR DEVELOPMENT:                                               │
+│ - WORLD:   Language docs, framework patterns, best practices                │
+│ - CONTEXT: Project architecture, team conventions, product requirements     │
+│ - AGENT:   Claude's learnings about this codebase                           │
+│ - USER:    Doug's preferences, past decisions, coding style                 │
+│ - SESSION: Current task context                                              │
+│                                                                              │
+│ WHY IT'S POWERFUL:                                                           │
+│ - CLAUDE.md is static, read once. This is dynamic, queryable, updateable    │
+│ - Memory consolidates automatically (working → episodic → semantic)         │
+│ - Temporal graph tracks WHY decisions were made, not just WHAT              │
+│ - Beliefs reconcile conflicting information (old docs vs new behavior)      │
+│ - Same memory accessible from terminal Claude, VS Code, mobile              │
+│                                                                              │
+│ GROQ 70B USE:                                                                │
+│ - Memory storage/retrieval: Groq (fast, cheap)                              │
+│ - Complex belief reconciliation: Claude (when conflicts detected)           │
+│                                                                              │
+│ IMPLEMENTATION:                                                              │
+│ 1. Create new extension: extensions/mcp-memory-server/                      │
+│ 2. Implement MCP server using @modelcontextprotocol/sdk                     │
+│ 3. Wire to existing LayeredMemoryProvider                                   │
+│ 4. Add project-specific memory types to MemoryType enum                     │
+│ 5. Create development-focused prompt templates                              │
+│                                                                              │
+│ EFFORT: Medium (MCP spec is well-defined, memory layer exists)              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 2. CURIOSITY-DRIVEN CODEBASE EXPLORER                                        │
+│    AI that proactively asks questions to understand your project            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ WHAT IT DOES:                                                                │
+│ Uses draagon-ai's CuriosityEngine to detect knowledge gaps about your       │
+│ codebase and proactively asks questions at appropriate times. Learns        │
+│ patterns, conventions, and tribal knowledge that never gets documented.     │
+│                                                                              │
+│ HOW IT WORKS:                                                                │
+│                                                                              │
+│   ┌────────────────────────────────────────────────────────────────────┐    │
+│   │ Developer Activity                                                  │    │
+│   │ - Opens file                                                        │    │
+│   │ - Writes code                                                       │    │
+│   │ - Runs tests                                                        │    │
+│   │ - Commits changes                                                   │    │
+│   └───────────────────────────────┬────────────────────────────────────┘    │
+│                                   │                                          │
+│                                   ▼                                          │
+│   ┌────────────────────────────────────────────────────────────────────┐    │
+│   │ Curiosity Engine (draagon-ai)                                       │    │
+│   │                                                                     │    │
+│   │ Detects knowledge gaps:                                             │    │
+│   │ - "Why does UserService import from /legacy/auth?"                  │    │
+│   │ - "What's the pattern for error handling in API routes?"            │    │
+│   │ - "Why are there two date formatting utilities?"                    │    │
+│   │                                                                     │    │
+│   │ Prioritizes by:                                                     │    │
+│   │ - Importance (frequently touched code = higher priority)           │    │
+│   │ - Relevance to current work                                         │    │
+│   │ - User's curiosity_tolerance setting                                │    │
+│   └───────────────────────────────┬────────────────────────────────────┘    │
+│                                   │                                          │
+│                                   ▼                                          │
+│   ┌────────────────────────────────────────────────────────────────────┐    │
+│   │ VS Code Extension                                                   │    │
+│   │                                                                     │    │
+│   │ At appropriate moments (commit, PR, idle):                          │    │
+│   │ "I noticed you used a custom retry pattern in the API client.       │    │
+│   │  Is this the preferred approach for this project, or was it         │    │
+│   │  specific to this integration?"                                     │    │
+│   │                                                                     │    │
+│   │ [Project Standard] [This Case Only] [Let me explain...]            │    │
+│   │                                                                     │    │
+│   │ Answer stored in memory with:                                       │    │
+│   │ - Code location reference                                           │    │
+│   │ - Temporal context (when learned)                                   │    │
+│   │ - Source credibility (Doug = high trust)                            │    │
+│   └────────────────────────────────────────────────────────────────────┘    │
+│                                                                              │
+│ LEARNS THINGS LIKE:                                                          │
+│ - "In this project, we never use default exports"                           │
+│ - "Error codes above 5000 are reserved for third-party integrations"        │
+│ - "The /v2 API was started but abandoned, don't use it"                     │
+│ - "Performance tests should use the large dataset, not fixtures"            │
+│                                                                              │
+│ GROQ 70B USE:                                                                │
+│ - Question generation: Groq (fast)                                          │
+│ - Answer synthesis/storage: Groq (cheap)                                    │
+│ - Complex pattern recognition: Claude (when needed)                         │
+│                                                                              │
+│ EFFORT: Medium (CuriosityEngine exists, needs VS Code UI)                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 3. BELIEF-BASED CODE REVIEWER                                                │
+│    Code review that remembers decisions and detects contradictions          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ WHAT IT DOES:                                                                │
+│ Uses BeliefReconciliationService to build a belief system about code        │
+│ quality, patterns, and conventions. Detects when new code contradicts       │
+│ established beliefs and surfaces the conflict for resolution.               │
+│                                                                              │
+│ BELIEF TYPES FOR CODE:                                                       │
+│                                                                              │
+│ ARCHITECTURAL_PATTERN:                                                       │
+│   "API routes return {success: bool, data: T, error?: string}"              │
+│   Source: Inferred from 47 files, confirmed by Doug                         │
+│   Confidence: 0.95                                                          │
+│                                                                              │
+│ CONVENTION:                                                                  │
+│   "Test files are co-located with source as *.test.ts"                      │
+│   Source: Doug stated explicitly                                            │
+│   Confidence: 1.0                                                           │
+│                                                                              │
+│ DEPRECATION:                                                                 │
+│   "Don't use LegacyDateFormatter, use date-fns instead"                     │
+│   Source: PR #234 comment                                                   │
+│   Confidence: 0.8                                                           │
+│                                                                              │
+│ REVIEW FLOW:                                                                 │
+│                                                                              │
+│   New Code → Extract Patterns → Compare to Beliefs → Surface Conflicts      │
+│                                                                              │
+│   Example:                                                                   │
+│   ┌──────────────────────────────────────────────────────────────────┐      │
+│   │ 🔍 BELIEF CONFLICT DETECTED                                       │      │
+│   │                                                                   │      │
+│   │ Your code:                                                        │      │
+│   │   throw new Error(`User ${id} not found`)                         │      │
+│   │                                                                   │      │
+│   │ Established belief (confidence: 0.87):                            │      │
+│   │   "This project uses custom AppError with error codes"            │      │
+│   │   Source: 23 occurrences, UserService review discussion           │      │
+│   │                                                                   │      │
+│   │ Suggested:                                                        │      │
+│   │   throw new AppError(ErrorCode.USER_NOT_FOUND, id)                │      │
+│   │                                                                   │      │
+│   │ [Apply Fix] [Update Belief] [Ignore This Case]                    │      │
+│   └──────────────────────────────────────────────────────────────────┘      │
+│                                                                              │
+│ WHY IT'S POWERFUL:                                                           │
+│ - Learns conventions from the codebase, not just linting rules              │
+│ - Remembers WHY decisions were made (temporal graph)                        │
+│ - Handles conflicting information gracefully                                │
+│ - Builds institutional knowledge that survives team changes                 │
+│                                                                              │
+│ INTEGRATION WITH CLAUDE CODE:                                                │
+│ Claude Code already does code review. This adds:                            │
+│ - Persistent memory of past reviews                                         │
+│ - Belief-based pattern detection                                            │
+│ - Conflict resolution with reasoning                                        │
+│                                                                              │
+│ EFFORT: Medium (belief system exists, needs code-specific ontology)         │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════
+TIER 2: ADVANCED DEVELOPMENT AGENTS (SPECIALIZED)
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 4. ARCHITECTURE GUARDIAN                                                     │
+│    Maintains living architecture documentation that evolves with code       │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ WHAT IT DOES:                                                                │
+│ Watches codebase changes and maintains up-to-date architecture docs in      │
+│ draagon-ai memory. Detects drift between documented and actual architecture.│
+│                                                                              │
+│ STORES IN TEMPORAL GRAPH:                                                    │
+│ - Component relationships (with edges showing dependencies)                 │
+│ - API contracts (with version history)                                      │
+│ - Data flow diagrams (auto-generated from analysis)                         │
+│ - Decision records (ADRs with temporal context)                             │
+│                                                                              │
+│ TRIGGERS:                                                                    │
+│ - On commit: Analyze changed files for architectural impact                 │
+│ - On PR: Generate architecture impact summary                               │
+│ - On demand: "Show me the current auth flow"                                │
+│                                                                              │
+│ EXAMPLE QUERY:                                                               │
+│ "How has the payment processing architecture changed this quarter?"         │
+│                                                                              │
+│ RESPONSE (from temporal graph):                                              │
+│ "Payment processing evolved through 3 phases:                               │
+│  1. Oct 5: Added Stripe webhook handler                                     │
+│  2. Oct 23: Extracted PaymentService from OrderService (PR #156)            │
+│  3. Nov 12: Added retry queue for failed payments                           │
+│                                                                              │
+│  Key decision: Moved from sync to async processing due to                   │
+│  timeout issues with large orders (linked to incident #89)"                 │
+│                                                                              │
+│ GROQ 70B: Pattern detection, change summarization                           │
+│ CLAUDE: Complex architectural reasoning, decision documentation             │
+│                                                                              │
+│ EFFORT: High (needs robust static analysis + temporal tracking)             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 5. TEST ORACLE                                                               │
+│    Learns what "correct" means from your test patterns                      │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ WHAT IT DOES:                                                                │
+│ Uses LearningService to extract testing patterns and beliefs about what     │
+│ constitutes a well-tested feature. Can then generate test suggestions       │
+│ based on learned patterns, not generic templates.                           │
+│                                                                              │
+│ LEARNS:                                                                      │
+│ - "API endpoints always have auth, validation, and happy path tests"        │
+│ - "Database operations test rollback behavior"                              │
+│ - "React components test loading, error, and success states"                │
+│ - "This project mocks external APIs at the HTTP level, not service level"   │
+│                                                                              │
+│ GENERATES:                                                                   │
+│ - Test suggestions based on learned patterns for new code                   │
+│ - Coverage gap analysis against established beliefs                         │
+│ - Test refactoring suggestions when patterns change                         │
+│                                                                              │
+│ GROQ 70B: Pattern matching, test generation                                 │
+│ CLAUDE: Complex test scenario design                                        │
+│                                                                              │
+│ EFFORT: Medium (LearningService exists, needs test-specific extraction)     │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 6. DEPENDENCY ADVISOR                                                        │
+│    Maintains beliefs about package choices and their rationale              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ WHAT IT DOES:                                                                │
+│ Tracks dependency decisions in the belief system. When you consider adding  │
+│ a new package, consults memory for past decisions about similar needs.      │
+│                                                                              │
+│ EXAMPLE:                                                                     │
+│ You: "I need a date formatting library"                                     │
+│                                                                              │
+│ Advisor: "In October 2024, you evaluated date-fns vs dayjs vs moment:       │
+│           - Chose date-fns for tree-shaking                                 │
+│           - Noted dayjs is smaller but less TypeScript friendly             │
+│           - moment was rejected as deprecated                               │
+│                                                                              │
+│           date-fns is already in this project (17 imports).                 │
+│           Recommended: use existing date-fns"                               │
+│                                                                              │
+│ TRACKS:                                                                      │
+│ - Security advisories linked to packages                                    │
+│ - Performance benchmarks from your testing                                  │
+│ - Compatibility issues encountered                                          │
+│                                                                              │
+│ GROQ 70B: Dependency analysis, recommendation generation                    │
+│                                                                              │
+│ EFFORT: Low-Medium (mostly memory queries + npm/pypi API integration)       │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════
+TIER 3: ECOSYSTEM INTEGRATION (YOUR MULTI-APP VISION)
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 7. UNIFIED ROXY DEVELOPMENT ASSISTANT                                        │
+│    Your personal assistant, everywhere, with all your context               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ ARCHITECTURE FOR MULTI-DEVICE/MULTI-APP:                                     │
+│                                                                              │
+│   ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
+│   │ VS Code     │  │ Claude Code │  │ Termux      │  │ Roxy Voice  │        │
+│   │ Extension   │  │ CLI         │  │ (mobile)    │  │ Assistant   │        │
+│   └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘        │
+│          │                │                │                │                │
+│          └────────────────┴────────────────┴────────────────┘                │
+│                                   │                                          │
+│                           MCP Protocol                                       │
+│                                   │                                          │
+│                                   ▼                                          │
+│          ┌────────────────────────────────────────────────────┐              │
+│          │               ROXY MCP SERVER                       │              │
+│          │         (Central, running on pop-os-desktop)        │              │
+│          │                                                     │              │
+│          │  Identity: Roxy (traits, values, worldview)        │              │
+│          │  Memory:   Shared across all clients                │              │
+│          │  Scopes:   Personal | Household | Work              │              │
+│          │                                                     │              │
+│          │  Tools:                                              │              │
+│          │  - memory_* (store, search, consolidate)            │              │
+│          │  - beliefs_* (query, reconcile)                     │              │
+│          │  - curiosity_* (ask, defer, answer)                 │              │
+│          │  - home_* (control, status, scenes)                 │              │
+│          │  - calendar_* (events, reminders)                   │              │
+│          │                                                     │              │
+│          │  Resources:                                          │              │
+│          │  - roxy://identity                                   │              │
+│          │  - roxy://context/development                        │              │
+│          │  - roxy://context/home                               │              │
+│          │  - roxy://user/doug/preferences                      │              │
+│          └────────────────────────────────────────────────────┘              │
+│                                   │                                          │
+│                                   ▼                                          │
+│          ┌────────────────────────────────────────────────────┐              │
+│          │               DRAAGON-AI CORE                       │              │
+│          │                                                     │              │
+│          │  - Layered Memory (Qdrant)                          │              │
+│          │  - Belief Reconciliation                            │              │
+│          │  - Curiosity Engine                                 │              │
+│          │  - Learning Service                                 │              │
+│          │  - Personality (Roxy's identity)                    │              │
+│          │  - Extension Manager                                │              │
+│          │                                                     │              │
+│          │  LLM Routing:                                        │              │
+│          │  - LOCAL: Ollama 8B (on pop-os-desktop)             │              │
+│          │  - COMPLEX: Groq 70B (API)                          │              │
+│          │  - DEEP: Claude Opus (when needed)                  │              │
+│          └────────────────────────────────────────────────────┘              │
+│                                                                              │
+│ CONTEXT SCOPING (Answers your ecosystem question):                           │
+│                                                                              │
+│ ┌─────────────────────────────────────────────────────────────────────┐      │
+│ │ PERSONAL (always available to you)                                   │      │
+│ │ - Doug's coding preferences                                          │      │
+│ │ - Doug's past decisions                                              │      │
+│ │ - Doug's personal calendar                                           │      │
+│ │ - Doug's household context                                           │      │
+│ └─────────────────────────────────────────────────────────────────────┘      │
+│                       │                                                      │
+│                       ▼                                                      │
+│ ┌─────────────────────────────────────────────────────────────────────┐      │
+│ │ WORK CONTEXT (when on work laptop/project)                           │      │
+│ │ - CareMetx project conventions                                       │      │
+│ │ - Team decisions and patterns                                        │      │
+│ │ - Work calendar integration                                          │      │
+│ │                                                                      │      │
+│ │ PRIVACY: Work memories don't leak to personal. Personal memories    │      │
+│ │ are available at work (your preferences), but work-specific          │      │
+│ │ memories are scoped to work context.                                 │      │
+│ └─────────────────────────────────────────────────────────────────────┘      │
+│                                                                              │
+│ HOW CLAUDE CODE INTEGRATES:                                                  │
+│                                                                              │
+│ ~/.claude.json:                                                              │
+│ {                                                                            │
+│   "mcpServers": {                                                            │
+│     "roxy": {                                                                │
+│       "command": "ssh",                                                      │
+│       "args": ["pop-os-desktop", "roxy-mcp-server"],                         │
+│       // Or via Tailscale: roxy-mcp-server via HTTPS                        │
+│     }                                                                        │
+│   }                                                                          │
+│ }                                                                            │
+│                                                                              │
+│ Now Claude Code has:                                                         │
+│ - memory_store, memory_search (project + personal)                          │
+│ - beliefs_query (established patterns)                                      │
+│ - Roxy's personality and values in prompts                                  │
+│ - Access to home automation when relevant                                   │
+│                                                                              │
+│ EFFORT: High (but foundational for everything else)                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 8. CONTEXT-AWARE CLAUDE.MD GENERATOR                                         │
+│    Auto-generates and updates project context files                         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ WHAT IT DOES:                                                                │
+│ For projects that still need CLAUDE.md (external repos, shared projects),   │
+│ automatically generates them from draagon-ai memory. Keeps them in sync.    │
+│                                                                              │
+│ WORKFLOW:                                                                    │
+│                                                                              │
+│   1. Work on project with Roxy MCP connected                                │
+│   2. Memory accumulates: conventions, decisions, patterns                   │
+│   3. On demand or pre-commit: generate CLAUDE.md from memory                │
+│   4. CLAUDE.md is now a "snapshot" of current project beliefs               │
+│                                                                              │
+│ GENERATED SECTIONS:                                                          │
+│                                                                              │
+│   # Project: draagon-ai                                                      │
+│   Generated from Roxy memory on 2025-12-28                                  │
+│                                                                              │
+│   ## Architecture                                                            │
+│   [Extracted from ARCHITECTURAL_PATTERN beliefs]                            │
+│                                                                              │
+│   ## Conventions                                                             │
+│   [Extracted from CONVENTION beliefs, ordered by confidence]                │
+│                                                                              │
+│   ## Recent Decisions                                                        │
+│   [Extracted from temporal graph, last 30 days]                             │
+│                                                                              │
+│   ## Things to Avoid                                                         │
+│   [Extracted from DEPRECATION beliefs]                                      │
+│                                                                              │
+│   ## Doug's Preferences                                                      │
+│   [Extracted from USER scope memories]                                      │
+│                                                                              │
+│ BENEFITS:                                                                    │
+│ - CLAUDE.md is always current (generated, not maintained)                   │
+│ - Works with vanilla Claude Code on machines without Roxy                   │
+│ - Versioned with code, showing context evolution                            │
+│ - Can be customized per-project                                             │
+│                                                                              │
+│ GROQ 70B: Context synthesis, document generation                            │
+│                                                                              │
+│ EFFORT: Low (mostly prompt engineering + memory queries)                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════
+TIER 4: INNOVATIVE / EXPERIMENTAL
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 9. OPINION-DRIVEN REFACTORING ADVISOR                                        │
+│    Forms and updates opinions about code quality over time                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ WHAT IT DOES:                                                                │
+│ Uses OpinionFormationService to develop nuanced opinions about code         │
+│ quality. Not binary "good/bad" but contextual preferences that evolve.      │
+│                                                                              │
+│ OPINION EXAMPLE:                                                             │
+│                                                                              │
+│   Topic: "Abstracting database queries"                                     │
+│                                                                              │
+│   Opinion (current): "Slightly prefer raw queries in this codebase"         │
+│   Confidence: 0.65                                                          │
+│   Basis:                                                                     │
+│   - Repository pattern caused issues in OrderService (Nov 2024)             │
+│   - Performance-critical queries are 40% of the codebase                    │
+│   - Team prefers explicit SQL for debugging                                 │
+│                                                                              │
+│   Evolution:                                                                 │
+│   - Oct 2024: Neutral (0.5)                                                 │
+│   - Nov 2024: Lean against abstraction (0.35) after incident               │
+│   - Dec 2024: Slightly prefer raw (0.65) after positive experiences        │
+│                                                                              │
+│ REFACTORING SUGGESTIONS:                                                     │
+│ Based on opinions, not rigid rules:                                         │
+│                                                                              │
+│   "I've noticed this file mixes async/await with .then() chains.            │
+│    Based on the project's evolution, async/await is becoming the            │
+│    preference (23 recent changes went that direction, 2 went opposite).     │
+│                                                                              │
+│    Low confidence suggestion: Consider migrating the .then() chains."       │
+│                                                                              │
+│ EFFORT: Medium (OpinionFormationService exists, needs code analysis hooks)  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 10. AUTONOMOUS CODEBASE MAINTAINER                                           │
+│     Background agent that maintains code health                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ WHAT IT DOES:                                                                │
+│ Uses the existing Autonomous extension pattern to run background            │
+│ maintenance tasks on your codebase with careful guardrails.                 │
+│                                                                              │
+│ AUTONOMOUS TASKS:                                                            │
+│ - Update outdated comments when code changes                                │
+│ - Flag dead code based on static analysis                                   │
+│ - Detect and log security advisories for dependencies                       │
+│ - Generate missing type annotations (low-risk files first)                  │
+│ - Keep architecture docs in sync with code                                  │
+│                                                                              │
+│ GUARDRAILS (from AutonomousExtension):                                       │
+│ 1. Semantic verification: Does output make sense?                           │
+│ 2. Value alignment: Does it match project conventions?                      │
+│ 3. Harm prevention: No breaking changes, no secrets exposure                │
+│ 4. Resource limits: Token/time budgets                                      │
+│ 5. Uncertainty handling: Escalate to human when unsure                      │
+│                                                                              │
+│ WORKFLOW:                                                                    │
+│ - Runs in background at configured intervals                                │
+│ - Creates PRs for suggested changes                                         │
+│ - Never commits directly to main                                            │
+│ - Learns from accepted/rejected suggestions                                 │
+│                                                                              │
+│ GROQ 70B: Analysis, suggestion generation                                   │
+│ CLAUDE: Final review before PR creation                                     │
+│                                                                              │
+│ EFFORT: Medium-High (AutonomousExtension exists, needs code-specific tasks) │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 11. PAIR PROGRAMMING MEMORY                                                  │
+│     Remember context across pairing sessions                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ WHAT IT DOES:                                                                │
+│ When you pair with Claude (or another human), maintains session context     │
+│ that consolidates into long-term memory. Next session picks up where        │
+│ you left off.                                                                │
+│                                                                              │
+│ SESSION MEMORY (working → episodic):                                         │
+│ - Current task and subtasks                                                 │
+│ - Decisions made during session                                             │
+│ - Problems encountered and solutions tried                                  │
+│ - Files touched and why                                                     │
+│                                                                              │
+│ CONSOLIDATED MEMORY (episodic → semantic):                                   │
+│ - "We decided X because Y"                                                  │
+│ - "Approach Z didn't work for reason W"                                     │
+│ - "This area of the code is fragile"                                        │
+│                                                                              │
+│ NEXT SESSION:                                                                │
+│ "Welcome back. Last session we were working on the payment retry logic.     │
+│  We decided to use exponential backoff after trying fixed intervals.        │
+│  The implementation is 70% complete. Tests are passing.                     │
+│  Ready to continue?"                                                        │
+│                                                                              │
+│ EFFORT: Low-Medium (memory system exists, needs session tracking)           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════
+IMPLEMENTATION PRIORITY RECOMMENDATION
+═══════════════════════════════════════════════════════════════════════════════
+
+Based on your background and the existing draagon-ai architecture:
+
+PHASE 1 (Foundation - Do First):
+┌────────────────────────────────────────────────────────────────────────────┐
+│ 1. Draagon Memory MCP Server                                                │
+│    - Unlocks all other capabilities                                        │
+│    - Replaces static CLAUDE.md                                             │
+│    - Works with Claude Code immediately                                    │
+│    - Memory layer already built                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+PHASE 2 (Value Add - Quick Wins):
+┌────────────────────────────────────────────────────────────────────────────┐
+│ 2. Context-Aware CLAUDE.md Generator                                        │
+│    - Low effort, high visibility                                           │
+│    - Works with existing tools                                             │
+│                                                                            │
+│ 3. Pair Programming Memory                                                  │
+│    - Immediate daily benefit                                               │
+│    - Uses existing memory consolidation                                    │
+└────────────────────────────────────────────────────────────────────────────┘
+
+PHASE 3 (Differentiation):
+┌────────────────────────────────────────────────────────────────────────────┐
+│ 4. Belief-Based Code Reviewer                                               │
+│    - Unique value proposition                                              │
+│    - Uses existing BeliefReconciliationService                             │
+│                                                                            │
+│ 5. Curiosity-Driven Explorer                                                │
+│    - Proactive learning                                                    │
+│    - Uses existing CuriosityEngine                                         │
+└────────────────────────────────────────────────────────────────────────────┘
+
+PHASE 4 (Full Vision):
+┌────────────────────────────────────────────────────────────────────────────┐
+│ 6. Unified Roxy Development Assistant                                       │
+│    - Complete ecosystem integration                                        │
+│    - Multi-device, multi-context                                           │
+│    - Personal + Work scoping                                               │
+└────────────────────────────────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════
+LLM TIER STRATEGY
+═══════════════════════════════════════════════════════════════════════════════
+
+Cost-optimized routing based on task complexity:
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ GROQ LLAMA 70B (Primary - Fast & Cheap)                                     │
+│                                                                            │
+│ Use for:                                                                    │
+│ - Memory storage/retrieval                                                 │
+│ - Pattern matching in code                                                 │
+│ - Question generation (curiosity)                                          │
+│ - Simple code analysis                                                     │
+│ - Document generation                                                      │
+│ - Routine code review                                                      │
+│                                                                            │
+│ Latency: ~100-300ms                                                        │
+│ Cost: Very low                                                             │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ OLLAMA LOCAL 8B (Fallback - Offline Capable)                                │
+│                                                                            │
+│ Use for:                                                                    │
+│ - Offline development                                                      │
+│ - Simple queries when Groq is unavailable                                  │
+│ - Privacy-sensitive operations                                             │
+│ - Rate limit fallback                                                      │
+│                                                                            │
+│ Latency: ~500-1000ms (local)                                               │
+│ Cost: Free (your hardware)                                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ CLAUDE OPUS (Strategic - When Power Needed)                                 │
+│                                                                            │
+│ Use for:                                                                    │
+│ - Complex belief reconciliation                                            │
+│ - Architectural reasoning                                                  │
+│ - Multi-step refactoring plans                                             │
+│ - Nuanced code review                                                      │
+│ - Final validation of autonomous changes                                   │
+│ - User-facing responses needing high quality                               │
+│                                                                            │
+│ Latency: ~2-10s                                                            │
+│ Cost: Higher, use sparingly                                                │
+└────────────────────────────────────────────────────────────────────────────┘
+
+ROUTING LOGIC:
+```python
+async def route_llm_request(task: Task) -> LLMProvider:
+    if task.offline_required or groq_unavailable():
+        return ollama_local
+
+    if task.complexity in [Complexity.SIMPLE, Complexity.MODERATE]:
+        return groq_70b
+
+    if task.requires_nuance or task.is_user_facing or task.is_final_review:
+        return claude_opus
+
+    return groq_70b  # Default to fast/cheap
+```
+
+
+═══════════════════════════════════════════════════════════════════════════════
+TECHNICAL NOTES
+═══════════════════════════════════════════════════════════════════════════════
+
+MCP SERVER IMPLEMENTATION:
+
+The MCP server can be implemented using the official SDK:
+```python
+# extensions/mcp-memory/src/draagon_ai_mcp_memory/server.py
+
+from mcp.server import Server
+from mcp.types import Tool, Resource, Prompt
+from draagon_ai.memory import LayeredMemoryProvider
+from draagon_ai.cognition import BeliefReconciliationService
+
+server = Server("draagon-memory")
+
+@server.tool("memory_store")
+async def store_memory(content: str, scope: str, memory_type: str) -> dict:
+    """Store content in cognitive memory."""
+    provider = get_memory_provider()
+    return await provider.store(
+        content=content,
+        scope=MemoryScope[scope],
+        memory_type=MemoryType[memory_type],
+    )
+
+@server.tool("memory_search")
+async def search_memory(query: str, scope: str = None, limit: int = 10) -> list:
+    """Search cognitive memory semantically."""
+    provider = get_memory_provider()
+    return await provider.search(
+        query=query,
+        scope=MemoryScope[scope] if scope else None,
+        limit=limit,
+    )
+
+@server.tool("beliefs_query")
+async def query_beliefs(topic: str) -> list:
+    """Get beliefs about a topic."""
+    service = get_belief_service()
+    return await service.get_beliefs_about(topic)
+
+@server.resource("project://context")
+async def get_project_context() -> str:
+    """Current project context from memory."""
+    # Query memory for project-level beliefs and recent decisions
+    ...
+
+@server.prompt("code-review-with-memory")
+async def code_review_prompt(files: list[str]) -> str:
+    """Code review prompt enhanced with project memory."""
+    beliefs = await query_beliefs("code conventions")
+    patterns = await query_beliefs("architectural patterns")
+    return f"""
+    Review the following code considering these established conventions:
+    {format_beliefs(beliefs)}
+
+    And these architectural patterns:
+    {format_beliefs(patterns)}
+
+    Files to review: {files}
+    """
+```
+
+VS CODE EXTENSION STRUCTURE:
+
+```
+vscode-draagon-assistant/
+├── src/
+│   ├── extension.ts           # VS Code extension entry
+│   ├── mcpClient.ts          # MCP client for Roxy server
+│   ├── providers/
+│   │   ├── codeActions.ts    # Quick fixes from beliefs
+│   │   ├── codeLens.ts       # Inline belief annotations
+│   │   ├── diagnostics.ts    # Belief-based warnings
+│   │   └── completions.ts    # Memory-enhanced suggestions
+│   ├── views/
+│   │   ├── memoryPanel.ts    # Memory explorer webview
+│   │   ├── beliefsPanel.ts   # Beliefs browser
+│   │   └── curiosityPanel.ts # Pending questions
+│   └── commands/
+│       ├── askCuriosity.ts   # Answer curiosity questions
+│       ├── storeLearning.ts  # Capture learnings
+│       └── generateContext.ts # Generate CLAUDE.md
+├── package.json
+└── README.md
+```
+
+CLAUDE CODE INTEGRATION:
+
+Add to ~/.claude.json:
+```json
+{
+  "mcpServers": {
+    "draagon-memory": {
+      "command": "python",
+      "args": ["-m", "draagon_ai_mcp_memory.server"],
+      "env": {
+        "DRAAGON_CONFIG": "/path/to/draagon.yaml"
+      }
+    }
+  }
+}
+```
+
+Or for remote (Tailscale):
+```json
+{
+  "mcpServers": {
+    "roxy": {
+      "url": "https://pop-os-desktop.tail12345.ts.net:8080/mcp",
+      "headers": {
+        "Authorization": "Bearer ${ROXY_TOKEN}"
+      }
+    }
+  }
+}
+```
+
+
+
+═══════════════════════════════════════════════════════════════════════════════
+COMMERCIALIZATION ANALYSIS (Research: 2025-12-28)
+═══════════════════════════════════════════════════════════════════════════════
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ EXECUTIVE SUMMARY: IS THERE A REAL ADVANTAGE?                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ MARKET SIZE:                                                                 │
+│ - AI coding assistant market: $5.5B (2024) → $47.3B (2034)                  │
+│ - 24% CAGR, 41% of code now AI-assisted                                     │
+│                                                                              │
+│ THE HONEST ANSWER: YES, BUT...                                               │
+│                                                                              │
+│ ✅ REAL ADVANTAGES:                                                          │
+│                                                                              │
+│ 1. "Goldfish Memory Problem" is UNSOLVED                                    │
+│    - Industry recognizes AI assistants forget everything between sessions   │
+│    - Current solutions: static .cursorrules, CLAUDE.md, guidelines.md       │
+│    - NO competitor has: belief reconciliation, curiosity engines,           │
+│      opinion formation, or team knowledge synchronization                   │
+│                                                                              │
+│ 2. Unique Cognitive Architecture                                            │
+│    - BeliefReconciliationService → No one else has this                     │
+│    - CuriosityEngine → Proactive gap identification                         │
+│    - OpinionFormationService → Preferences that evolve                      │
+│    - Multi-scope memory → Personal + Team + Org                             │
+│                                                                              │
+│ 3. Already Built                                                             │
+│    - Competitors are adding "memory" as an afterthought                     │
+│    - Augment just added "Memories feature" - per-user only                  │
+│    - Draagon-ai was designed memory-first                                   │
+│                                                                              │
+│ ⚠️ REAL CHALLENGES:                                                          │
+│                                                                              │
+│ 1. Distribution                                                              │
+│    - GitHub Copilot: 40% market share, 5M+ users, Microsoft distribution    │
+│    - Cursor: Developer mindshare, Coinbase case study                       │
+│    - You: Starting from zero                                                │
+│                                                                              │
+│ 2. Enterprise Readiness                                                      │
+│    - SOC 2 Type II: ~$30-50K, 3-6 months                                    │
+│    - SSO/SAML: Table stakes, not built yet                                  │
+│    - Admin dashboard: Not built yet                                          │
+│                                                                              │
+│ 3. Cold Start Problem                                                        │
+│    - Team knowledge value compounds over time                               │
+│    - Hard to demo in a 15-minute call                                       │
+│    - "Trust us, it gets better" is a tough sell                             │
+│                                                                              │
+│ VERDICT: Differentiated product, but GTM is the challenge                   │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ COMPETITIVE LANDSCAPE                                                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ DIRECT COMPETITORS (Code Assistants):                                        │
+│                                                                              │
+│ ┌────────────────┬──────────────┬──────────────────────────────────────────┐│
+│ │ Tool           │ Price        │ Memory/Knowledge Capabilities            ││
+│ ├────────────────┼──────────────┼──────────────────────────────────────────┤│
+│ │ GitHub Copilot │ $10-39/user  │ Static knowledge bases (Markdown docs)   ││
+│ │ Enterprise     │              │ No learning, no belief tracking          ││
+│ ├────────────────┼──────────────┼──────────────────────────────────────────┤│
+│ │ Cursor         │ $20-40/user  │ .cursorrules files (static)              ││
+│ │                │              │ No persistent team knowledge             ││
+│ ├────────────────┼──────────────┼──────────────────────────────────────────┤│
+│ │ Augment Code   │ ~$20/mo      │ "Memories" feature (NEW, per-user only)  ││
+│ │                │              │ No team sync, no belief reconciliation   ││
+│ ├────────────────┼──────────────┼──────────────────────────────────────────┤│
+│ │ Sourcegraph    │ $19+/user    │ Prompt Library (shared, manual)          ││
+│ │ Cody           │              │ Knowledge bases (static docs)            ││
+│ ├────────────────┼──────────────┼──────────────────────────────────────────┤│
+│ │ Tabnine        │ $39/user     │ Enterprise Context Engine (passive)      ││
+│ │ Enterprise     │              │ Learns patterns, no gap identification   ││
+│ ├────────────────┼──────────────┼──────────────────────────────────────────┤│
+│ │ Amazon Q       │ $19/user     │ AWS-centric, no team knowledge           ││
+│ │ Developer      │              │ No persistent memory                     ││
+│ ├────────────────┼──────────────┼──────────────────────────────────────────┤│
+│ │ Continue.dev   │ $0-10/user   │ Open source, no built-in memory          ││
+│ │                │              │ Relies on external context               ││
+│ └────────────────┴──────────────┴──────────────────────────────────────────┘│
+│                                                                              │
+│ WHAT THEY'RE ALL MISSING:                                                    │
+│                                                                              │
+│ ❌ Belief reconciliation (conflicting info from multiple sources)           │
+│ ❌ Confidence tracking with temporal decay                                  │
+│ ❌ Curiosity-driven knowledge gap identification                            │
+│ ❌ Opinion formation grounded in identity                                   │
+│ ❌ Multi-user team knowledge with conflict detection                        │
+│ ❌ Memory that consolidates (working → episodic → semantic)                 │
+│                                                                              │
+│ THIS IS YOUR MOAT.                                                           │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ POSITIONING: NOT "ANOTHER AI CODING ASSISTANT"                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ WRONG POSITIONING:                                                           │
+│ "Draagon is an AI coding assistant that helps you write code faster"        │
+│ → Competing with GitHub Copilot on their terms = losing                     │
+│                                                                              │
+│ RIGHT POSITIONING:                                                           │
+│                                                                              │
+│ Option A: "COGNITIVE LAYER FOR DEVELOPMENT TEAMS"                           │
+│ ────────────────────────────────────────────────────────────────────────    │
+│ "Draagon is the shared brain for your engineering team.                     │
+│  It learns your conventions, remembers your decisions,                       │
+│  and ensures every AI tool you use has your team's context."                │
+│                                                                              │
+│ → Works WITH existing tools (Claude Code, Cursor, Copilot)                  │
+│ → Not replacing, augmenting                                                 │
+│ → MCP server = integration layer                                            │
+│                                                                              │
+│ Option B: "INSTITUTIONAL MEMORY FOR CODEBASES"                              │
+│ ────────────────────────────────────────────────────────────────────────    │
+│ "Your senior engineers' knowledge, available to everyone.                   │
+│  Draagon learns from code reviews, PR discussions, and daily work           │
+│  to build living documentation that never gets stale."                      │
+│                                                                              │
+│ → Addresses onboarding pain point                                           │
+│ → Knowledge preservation when people leave                                  │
+│ → Appeals to engineering managers                                           │
+│                                                                              │
+│ Option C: "AI THAT ACTUALLY REMEMBERS" (Consumer-friendly)                  │
+│ ────────────────────────────────────────────────────────────────────────    │
+│ "Tired of explaining your codebase to AI every time?                        │
+│  Draagon remembers your preferences, your patterns, your decisions.         │
+│  Start where you left off, not from scratch."                               │
+│                                                                              │
+│ → Direct pain point for developers                                          │
+│ → Easy to understand                                                        │
+│ → B2C positioning that can expand to B2B                                    │
+│                                                                              │
+│ RECOMMENDED: Start with Option C (easy adoption), evolve to Option A/B      │
+│              as you add team features                                       │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ PRODUCT TIERS & PRICING STRATEGY                                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ MARKET PRICING BENCHMARKS:                                                   │
+│ - Individual: $10-20/month                                                  │
+│ - Team: $20-40/user/month                                                   │
+│ - Enterprise: $39-50+/user/month                                            │
+│ - Trend: Moving from unlimited to usage-based (credits/tokens)              │
+│                                                                              │
+│ PROPOSED TIERS:                                                              │
+│                                                                              │
+│ ┌────────────────────────────────────────────────────────────────────────┐  │
+│ │ FREE / OPEN SOURCE                                                      │  │
+│ │ "Draagon Core"                                                          │  │
+│ ├────────────────────────────────────────────────────────────────────────┤  │
+│ │ - Self-hosted, full source code (MIT or Apache 2.0)                    │  │
+│ │ - Single user memory                                                    │  │
+│ │ - Local Qdrant + Ollama (no cloud dependency)                          │  │
+│ │ - All cognitive services (beliefs, curiosity, learning)                │  │
+│ │ - MCP server for Claude Code integration                               │  │
+│ │ - Community support only                                                │  │
+│ │                                                                         │  │
+│ │ WHY FREE: Build community, get contributors, establish credibility     │  │
+│ │ MODEL: Like Continue.dev, GitLab, Supabase                             │  │
+│ └────────────────────────────────────────────────────────────────────────┘  │
+│                                                                              │
+│ ┌────────────────────────────────────────────────────────────────────────┐  │
+│ │ PRO - $15/month                                                         │  │
+│ │ "Draagon Pro"                                                           │  │
+│ ├────────────────────────────────────────────────────────────────────────┤  │
+│ │ Everything in Free, plus:                                               │  │
+│ │ - Hosted cloud version (no self-hosting needed)                        │  │
+│ │ - Groq 70B included (10K requests/month)                               │  │
+│ │ - Cross-device sync (VS Code, terminal, mobile)                        │  │
+│ │ - Priority support                                                      │  │
+│ │ - Automatic backups                                                     │  │
+│ │                                                                         │  │
+│ │ TARGET: Individual developers who want convenience                     │  │
+│ │ MARGIN: High (mostly infrastructure cost)                               │  │
+│ └────────────────────────────────────────────────────────────────────────┘  │
+│                                                                              │
+│ ┌────────────────────────────────────────────────────────────────────────┐  │
+│ │ TEAM - $25/user/month (min 3 users)                                     │  │
+│ │ "Draagon Team"                                                          │  │
+│ ├────────────────────────────────────────────────────────────────────────┤  │
+│ │ Everything in Pro, plus:                                                │  │
+│ │ - SHARED TEAM MEMORY (the differentiator!)                             │  │
+│ │   - Team beliefs and conventions                                        │  │
+│ │   - Cross-user learning                                                 │  │
+│ │   - Conflict detection when team members disagree                       │  │
+│ │ - Project-level context (architecture, decisions, rationale)           │  │
+│ │ - Admin dashboard                                                       │  │
+│ │ - Usage analytics                                                       │  │
+│ │ - SSO (Google, GitHub, Okta)                                           │  │
+│ │ - Slack/Teams integration                                               │  │
+│ │ - 50K requests/user/month                                               │  │
+│ │                                                                         │  │
+│ │ TARGET: Small-medium engineering teams (5-50 people)                   │  │
+│ │ THIS IS WHERE CAREMETX STARTS                                           │  │
+│ └────────────────────────────────────────────────────────────────────────┘  │
+│                                                                              │
+│ ┌────────────────────────────────────────────────────────────────────────┐  │
+│ │ ENTERPRISE - Custom pricing ($40+/user/month)                           │  │
+│ │ "Draagon Enterprise"                                                    │  │
+│ ├────────────────────────────────────────────────────────────────────────┤  │
+│ │ Everything in Team, plus:                                               │  │
+│ │ - SOC 2 Type II certified                                               │  │
+│ │ - SAML SSO                                                              │  │
+│ │ - Self-hosted / on-prem option                                          │  │
+│ │ - Dedicated Qdrant instance (data isolation)                           │  │
+│ │ - Custom LLM integration (Azure OpenAI, Bedrock, private models)       │  │
+│ │ - SLA with uptime guarantees                                            │  │
+│ │ - Dedicated support                                                     │  │
+│ │ - Audit logs                                                            │  │
+│ │ - Data residency options                                                │  │
+│ │ - Unlimited requests                                                    │  │
+│ │                                                                         │  │
+│ │ TARGET: Enterprises with compliance requirements                       │  │
+│ │ TIMELINE: 6-12 months out (need SOC 2 first)                           │  │
+│ └────────────────────────────────────────────────────────────────────────┘  │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ CAREMETX PILOT: YOUR FIRST CUSTOMER                                          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ USE CASE:                                                                    │
+│ Your team at CareMetx becomes the pilot customer. You're the product       │
+│ manager AND the first user. Perfect for dogfooding.                         │
+│                                                                              │
+│ WHAT YOU'D DEPLOY:                                                           │
+│                                                                              │
+│   ┌─────────────────────────────────────────────────────────────────────┐   │
+│   │                     CAREMETX DRAAGON INSTANCE                        │   │
+│   │                      (Railway or internal)                           │   │
+│   ├─────────────────────────────────────────────────────────────────────┤   │
+│   │                                                                      │   │
+│   │  MEMORY SCOPES:                                                      │   │
+│   │  ┌───────────────────────────────────────────────────────────────┐  │   │
+│   │  │ ORGANIZATION (CareMetx-wide)                                   │  │   │
+│   │  │ - Company coding standards                                     │  │   │
+│   │  │ - Approved libraries/packages                                  │  │   │
+│   │  │ - Security requirements (HIPAA, etc.)                          │  │   │
+│   │  │ - Architecture decisions                                       │  │   │
+│   │  └───────────────────────────────────────────────────────────────┘  │   │
+│   │           │                                                          │   │
+│   │           ▼                                                          │   │
+│   │  ┌───────────────────────────────────────────────────────────────┐  │   │
+│   │  │ PROJECT (per repository/service)                               │  │   │
+│   │  │ - This service's conventions                                   │  │   │
+│   │  │ - API contracts                                                │  │   │
+│   │  │ - Known tech debt                                              │  │   │
+│   │  │ - Recent decisions and rationale                               │  │   │
+│   │  └───────────────────────────────────────────────────────────────┘  │   │
+│   │           │                                                          │   │
+│   │           ▼                                                          │   │
+│   │  ┌───────────────────────────────────────────────────────────────┐  │   │
+│   │  │ USER (per developer)                                           │  │   │
+│   │  │ - Individual preferences                                       │  │   │
+│   │  │ - Working style                                                │  │   │
+│   │  │ - Current tasks                                                │  │   │
+│   │  │ - (Doug's personal Roxy can connect here too!)                │  │   │
+│   │  └───────────────────────────────────────────────────────────────┘  │   │
+│   │                                                                      │   │
+│   └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                              │
+│ PRIVACY BOUNDARY:                                                            │
+│ - Work memories stay in CareMetx instance                                   │
+│ - Your personal Roxy can READ your user preferences from work               │
+│ - Your personal Roxy CANNOT read org/project memories                       │
+│ - Clean separation                                                           │
+│                                                                              │
+│ PILOT BENEFITS:                                                              │
+│ 1. Real usage data for product development                                  │
+│ 2. Case study for sales ("We use it ourselves")                             │
+│ 3. Feedback loop from colleagues                                            │
+│ 4. Healthcare domain expertise baked in                                     │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ DEPLOYMENT ARCHITECTURE                                                      │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ PHASE 1: MVP ON RAILWAY (0-100 users)                                        │
+│ Monthly Cost: ~$50-100                                                       │
+│                                                                              │
+│   ┌─────────────────────────────────────────────────────────────────────┐   │
+│   │                         Railway                                      │   │
+│   ├─────────────────────────────────────────────────────────────────────┤   │
+│   │                                                                      │   │
+│   │   FastAPI Service ─────┬──► PostgreSQL (users, API keys, billing)   │   │
+│   │   (draagon-api)        │                                            │   │
+│   │       │                └──► Redis (caching, rate limits, sessions)  │   │
+│   │       │                                                              │   │
+│   │       └──► WebSocket endpoint (/mcp)                                │   │
+│   │                                                                      │   │
+│   │   External:                                                          │   │
+│   │   - Qdrant Cloud (vector storage, starts free)                      │   │
+│   │   - Groq API (LLM inference)                                        │   │
+│   │   - Anthropic API (complex reasoning fallback)                      │   │
+│   │                                                                      │   │
+│   └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                              │
+│ WHY RAILWAY FOR MVP:                                                         │
+│ ✅ Fastest time to deploy                                                    │
+│ ✅ Native WebSocket support (critical for MCP)                              │
+│ ✅ GitHub integration for CI/CD                                             │
+│ ✅ Easy environment management                                              │
+│ ✅ You already know it                                                      │
+│ ❌ No SOC 2 yet (acceptable for MVP)                                        │
+│                                                                              │
+│ PHASE 2: GROWTH ON RENDER (100-1000 users)                                   │
+│ Monthly Cost: ~$200-500                                                      │
+│                                                                              │
+│ - Move to Render for SOC 2 compliance                                       │
+│ - Self-host Qdrant for cost savings                                         │
+│ - Add autoscaling                                                            │
+│                                                                              │
+│ PHASE 3: ENTERPRISE ON AWS (1000+ users)                                     │
+│ Monthly Cost: ~$1000-5000                                                    │
+│                                                                              │
+│   ┌─────────────────────────────────────────────────────────────────────┐   │
+│   │                           AWS                                        │   │
+│   ├─────────────────────────────────────────────────────────────────────┤   │
+│   │                                                                      │   │
+│   │   CloudFront ──► ALB ──► ECS Fargate (2-20 tasks, autoscaling)      │   │
+│   │                    │                                                 │   │
+│   │                    ├──► ElastiCache Redis (Multi-AZ)                │   │
+│   │                    │                                                 │   │
+│   │                    └──► RDS PostgreSQL (Multi-AZ)                   │   │
+│   │                                                                      │   │
+│   │   Qdrant Cluster (EC2 or Qdrant Cloud Enterprise)                   │   │
+│   │   - 3+ nodes for HA                                                  │   │
+│   │   - Per-tenant collections for enterprise customers                 │   │
+│   │                                                                      │   │
+│   │   Lambda (async: webhooks, background jobs)                         │   │
+│   │   Secrets Manager (API keys)                                         │   │
+│   │   CloudWatch (monitoring, alerting)                                 │   │
+│   │                                                                      │   │
+│   └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ MULTI-TENANT ARCHITECTURE                                                    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ DATA ISOLATION BY TIER:                                                      │
+│                                                                              │
+│ ┌─────────────┬───────────────────────────────────────────────────────────┐ │
+│ │ Tier        │ Isolation Level                                           │ │
+│ ├─────────────┼───────────────────────────────────────────────────────────┤ │
+│ │ Free/Pro    │ Shared Qdrant collection + payload filtering             │ │
+│ │             │ (tenant_id in every vector)                               │ │
+│ ├─────────────┼───────────────────────────────────────────────────────────┤ │
+│ │ Team        │ Dedicated collection per organization                     │ │
+│ │             │ (e.g., "caremetx_vectors")                                │ │
+│ ├─────────────┼───────────────────────────────────────────────────────────┤ │
+│ │ Enterprise  │ Dedicated Qdrant instance                                 │ │
+│ │             │ (completely isolated, can be self-hosted)                │ │
+│ └─────────────┴───────────────────────────────────────────────────────────┘ │
+│                                                                              │
+│ API KEY STRUCTURE:                                                           │
+│                                                                              │
+│   sk_live_org_abc123_user_def456_xxxxxxxxxxxxxxxx                           │
+│   │       │         │                                                        │
+│   │       │         └── User ID (for per-user scoping)                      │
+│   │       └── Organization ID (for team features)                           │
+│   └── Environment (live/test)                                               │
+│                                                                              │
+│ USAGE METERING:                                                              │
+│                                                                              │
+│   Track per organization:                                                    │
+│   - LLM tokens consumed (Groq, Claude)                                      │
+│   - Memory operations (store, search)                                       │
+│   - MCP connections (concurrent sessions)                                   │
+│   - Storage used (Qdrant vectors)                                           │
+│                                                                              │
+│   Bill monthly or enforce limits by tier                                    │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ GO-TO-MARKET STRATEGY                                                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ PHASE 1: OPEN SOURCE CREDIBILITY (Months 1-3)                                │
+│                                                                              │
+│ - Release draagon-ai core as open source (MIT/Apache 2.0)                   │
+│ - Write blog posts on cognitive architecture                                │
+│ - Target: HackerNews, Reddit /r/programming, Dev.to                         │
+│ - Goal: 500 GitHub stars, establish technical credibility                   │
+│                                                                              │
+│ PHASE 2: DEVELOPER ADOPTION (Months 3-6)                                     │
+│                                                                              │
+│ - Launch Draagon Pro (hosted version)                                       │
+│ - MCP server for Claude Code (immediate value)                              │
+│ - VS Code extension                                                          │
+│ - Content: "How to give Claude Code persistent memory"                      │
+│ - Target: Individual developers, AI enthusiasts                             │
+│ - Goal: 100 paying Pro users                                                │
+│                                                                              │
+│ PHASE 3: TEAM FEATURES (Months 6-9)                                          │
+│                                                                              │
+│ - Launch Draagon Team                                                        │
+│ - CareMetx as case study                                                    │
+│ - SSO, admin dashboard                                                       │
+│ - Content: "How we reduced onboarding time by 50%"                          │
+│ - Target: Engineering teams (5-50 people)                                   │
+│ - Goal: 10 paying Team customers                                            │
+│                                                                              │
+│ PHASE 4: ENTERPRISE (Months 9-12)                                            │
+│                                                                              │
+│ - SOC 2 Type II certification                                               │
+│ - Self-hosted option                                                         │
+│ - Enterprise sales motion                                                    │
+│ - Target: Companies with compliance requirements                            │
+│ - Goal: 3-5 Enterprise customers                                            │
+│                                                                              │
+│ DISTRIBUTION CHANNELS:                                                       │
+│                                                                              │
+│ 1. VS Code Marketplace - Extension discovery                                │
+│ 2. MCP ecosystem - Claude Code users                                        │
+│ 3. GitHub - Open source discovery                                           │
+│ 4. Content marketing - Technical blog, tutorials                            │
+│ 5. Dev communities - HN, Reddit, Discord                                    │
+│ 6. Conference talks - Strange Loop, PyCon, local meetups                    │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ ENTERPRISE READINESS CHECKLIST                                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ MUST-HAVE FOR ENTERPRISE SALES:                                              │
+│                                                                              │
+│ ┌─────────────────────────────────────────┬───────────┬───────────────────┐ │
+│ │ Requirement                             │ Status    │ Effort            │ │
+│ ├─────────────────────────────────────────┼───────────┼───────────────────┤ │
+│ │ SSO (Google, GitHub)                    │ Not built │ 2-3 weeks         │ │
+│ │ SAML SSO (Okta, Azure AD)               │ Not built │ 2-3 weeks         │ │
+│ │ Admin dashboard                         │ Not built │ 4-6 weeks         │ │
+│ │ Usage analytics                         │ Not built │ 2-3 weeks         │ │
+│ │ Audit logging                           │ Partial   │ 1-2 weeks         │ │
+│ │ SOC 2 Type II                           │ No        │ 3-6 months, $30K+ │ │
+│ │ Self-hosting docs                       │ Not done  │ 1-2 weeks         │ │
+│ │ Data export/deletion                    │ Not built │ 1 week            │ │
+│ │ Terms of Service / Privacy Policy       │ Not done  │ Legal review      │ │
+│ │ "No training on your code" guarantee    │ Can do    │ Contractual       │ │
+│ └─────────────────────────────────────────┴───────────┴───────────────────┘ │
+│                                                                              │
+│ TIMELINE TO ENTERPRISE-READY: ~6-9 months                                    │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ REVENUE PROJECTIONS (Conservative)                                           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ YEAR 1:                                                                      │
+│                                                                              │
+│   Month 6:  50 Pro users × $15 = $750/mo                                    │
+│   Month 9:  100 Pro + 5 Team (15 seats) × $25 = $1,500 + $375 = $1,875/mo   │
+│   Month 12: 200 Pro + 10 Team (50 seats) = $3,000 + $1,250 = $4,250/mo      │
+│                                                                              │
+│   Year 1 ARR: ~$50K                                                          │
+│                                                                              │
+│ YEAR 2:                                                                      │
+│                                                                              │
+│   500 Pro + 30 Team (200 seats) + 2 Enterprise (100 seats)                  │
+│   = $7,500 + $5,000 + $4,000 = $16,500/mo                                   │
+│                                                                              │
+│   Year 2 ARR: ~$200K                                                         │
+│                                                                              │
+│ BREAK-EVEN ANALYSIS:                                                         │
+│                                                                              │
+│   Major costs:                                                               │
+│   - Infrastructure: $200-500/mo at scale                                    │
+│   - LLM APIs: Variable (pass-through to customer)                           │
+│   - SOC 2: ~$30K one-time + $10K/year                                       │
+│   - Your time: Opportunity cost                                              │
+│                                                                              │
+│   Break-even (infrastructure only): ~30 Pro users or 5 Team seats           │
+│   Break-even (including SOC 2): ~$80K ARR                                   │
+│                                                                              │
+│ NOTE: This is a side project model. If you go full-time, numbers change.    │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ RISKS & MITIGATIONS                                                          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ RISK 1: GitHub Copilot adds persistent memory                               │
+│ ──────────────────────────────────────────────────────────────────────────  │
+│ Likelihood: High (1-2 years)                                                │
+│ Impact: High                                                                 │
+│ Mitigation:                                                                  │
+│ - Move fast, establish user base before they do                             │
+│ - Focus on TEAM memory (harder to copy, not their focus)                    │
+│ - Open source creates switching cost                                        │
+│ - Belief reconciliation is genuinely novel                                  │
+│                                                                              │
+│ RISK 2: Can't get traction as a solo project                                │
+│ ──────────────────────────────────────────────────────────────────────────  │
+│ Likelihood: Medium                                                           │
+│ Impact: High                                                                 │
+│ Mitigation:                                                                  │
+│ - Open source attracts contributors                                         │
+│ - CareMetx pilot provides real usage                                        │
+│ - If it fails commercially, still useful personally                         │
+│                                                                              │
+│ RISK 3: LLM costs make unit economics unworkable                            │
+│ ──────────────────────────────────────────────────────────────────────────  │
+│ Likelihood: Low-Medium                                                       │
+│ Impact: Medium                                                               │
+│ Mitigation:                                                                  │
+│ - Groq 70B is cheap (~$0.30-0.50/1M tokens)                                 │
+│ - Aggressive caching (Redis)                                                │
+│ - Usage-based pricing passes cost to heavy users                            │
+│ - Local Ollama option for cost-conscious users                              │
+│                                                                              │
+│ RISK 4: Conflict of interest with employer                                  │
+│ ──────────────────────────────────────────────────────────────────────────  │
+│ Likelihood: Unknown                                                          │
+│ Impact: High                                                                 │
+│ Mitigation:                                                                  │
+│ - Check employment agreement                                                │
+│ - Develop on personal time, personal hardware                               │
+│ - Don't use CareMetx code or data in product                                │
+│ - Be transparent with employer                                              │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ IMMEDIATE NEXT STEPS                                                         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ WEEK 1-2: Foundation                                                         │
+│ □ Implement MCP Memory Server (REQ-005)                                     │
+│ □ Test with Claude Code locally                                             │
+│ □ Document setup process                                                     │
+│                                                                              │
+│ WEEK 3-4: Validation                                                         │
+│ □ Use it yourself for 2 weeks                                               │
+│ □ Identify pain points and gaps                                             │
+│ □ Iterate on core features                                                   │
+│                                                                              │
+│ MONTH 2: Public Launch                                                       │
+│ □ Open source core on GitHub                                                │
+│ □ Write launch blog post                                                    │
+│ □ Post to HackerNews                                                        │
+│ □ Create simple landing page                                                │
+│                                                                              │
+│ MONTH 3: Hosted Version                                                      │
+│ □ Deploy to Railway                                                          │
+│ □ Implement auth (Clerk or Auth0)                                           │
+│ □ Stripe integration for Pro tier                                           │
+│ □ Launch Pro tier                                                            │
+│                                                                              │
+│ MONTH 4-6: Team Features                                                     │
+│ □ Multi-user memory scopes                                                  │
+│ □ Admin dashboard (basic)                                                   │
+│ □ CareMetx pilot                                                            │
+│ □ Collect feedback, iterate                                                 │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ THE BOTTOM LINE                                                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ IS THERE A REAL OPPORTUNITY?                                                 │
+│                                                                              │
+│ YES, with caveats:                                                           │
+│                                                                              │
+│ ✅ The "goldfish memory problem" is real and recognized                     │
+│ ✅ No competitor has your cognitive architecture                            │
+│ ✅ Team knowledge sharing is underserved                                    │
+│ ✅ MCP ecosystem is growing (Claude Code, VS Code native support)           │
+│ ✅ You have a built-in pilot customer (CareMetx)                            │
+│ ✅ Open source + hosted is a proven model (GitLab, Supabase, PostHog)       │
+│                                                                              │
+│ ⚠️ Distribution is hard (GitHub Copilot dominates)                          │
+│ ⚠️ Enterprise requires significant investment (SOC 2, etc.)                 │
+│ ⚠️ Solo founder = limited bandwidth                                         │
+│ ⚠️ Cold start problem for demos                                             │
+│                                                                              │
+│ RECOMMENDATION:                                                              │
+│                                                                              │
+│ Start as an open source project with a hosted Pro tier.                     │
+│ Use CareMetx as your pilot for team features.                               │
+│ If it gets traction, consider Enterprise.                                   │
+│ If not, you still have a useful personal tool.                              │
+│                                                                              │
+│ Worst case: You built something cool for yourself.                          │
+│ Best case: You built a business.                                            │
+│                                                                              │
+│ The cognitive architecture IS genuinely differentiated.                     │
+│ The question is execution and distribution.                                 │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+
+═══════════════════════════════════════════════════════════════════════════════
+HIPAA-COMPLIANT ENTERPRISE DEPLOYMENT (CareMetx Scenario)
+═══════════════════════════════════════════════════════════════════════════════
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ THE CORE CONSTRAINT                                                          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ HIPAA RULE: PHI (Protected Health Information) must NEVER leave the         │
+│             covered entity's environment.                                    │
+│                                                                              │
+│ IMPLICATION:                                                                 │
+│                                                                              │
+│   ┌─────────────────────┐         ┌─────────────────────┐                   │
+│   │ CareMetx Instance   │         │ Personal Roxy       │                   │
+│   │ (HIPAA Covered)     │         │ (Your Home Network) │                   │
+│   │                     │         │                     │                   │
+│   │ - Work memories     │ ──✗──►  │ Cannot receive      │                   │
+│   │ - Project context   │         │ work data           │                   │
+│   │ - Code patterns     │         │                     │                   │
+│   │ - Team decisions    │         │                     │                   │
+│   └─────────────────────┘         └─────────────────────┘                   │
+│                                            │                                 │
+│                                            │                                 │
+│   ┌─────────────────────┐                  │                                 │
+│   │ CareMetx Instance   │         ┌───────▼───────────┐                     │
+│   │                     │ ◄──✓──  │ Personal Roxy     │                     │
+│   │ - Doug's user scope │         │                   │                     │
+│   │   (preferences,     │         │ CAN push:         │                     │
+│   │    coding style,    │         │ - Coding style    │                     │
+│   │    working hours)   │         │ - Preferences     │                     │
+│   └─────────────────────┘         │ - NOT PHI         │                     │
+│                                   └───────────────────┘                     │
+│                                                                              │
+│ DATA FLOW IS ONE-WAY: Personal → Work (preferences only)                    │
+│                       Work → Personal: NEVER                                │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ ARCHITECTURE: FEDERATED IDENTITY WITH ONE-WAY SYNC                           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│                                                                              │
+│   YOUR HOME NETWORK                      AWS (CareMetx VPC)                 │
+│   ─────────────────────                  ──────────────────────────────     │
+│                                                                              │
+│   ┌─────────────────────┐                ┌─────────────────────────────┐    │
+│   │ pop-os-desktop      │                │ CareMetx Draagon Instance   │    │
+│   │                     │                │                             │    │
+│   │ ┌─────────────────┐ │   HTTPS/mTLS   │ ┌─────────────────────────┐ │    │
+│   │ │ Personal Roxy   │ │ ──────────────►│ │ Preference Sync API     │ │    │
+│   │ │                 │ │  (push only)   │ │ /api/v1/users/{id}/sync │ │    │
+│   │ │ Memories:       │ │                │ └───────────┬─────────────┘ │    │
+│   │ │ - Personal      │ │                │             │               │    │
+│   │ │ - Household     │ │                │             ▼               │    │
+│   │ │ - Doug's prefs  │ │                │ ┌─────────────────────────┐ │    │
+│   │ └────────┬────────┘ │                │ │ Doug's User Scope       │ │    │
+│   │          │          │                │ │                         │ │    │
+│   │          │          │                │ │ - Coding preferences    │ │    │
+│   │          ▼          │                │ │ - Communication style   │ │    │
+│   │ ┌─────────────────┐ │                │ │ - Working hours         │ │    │
+│   │ │ Qdrant (local)  │ │                │ │ - Tool preferences      │ │    │
+│   │ └─────────────────┘ │                │ └─────────────────────────┘ │    │
+│   │                     │                │             │               │    │
+│   │ ┌─────────────────┐ │                │             ▼               │    │
+│   │ │ Ollama (local)  │ │                │ ┌─────────────────────────┐ │    │
+│   │ └─────────────────┘ │                │ │ Draagon Core            │ │    │
+│   │                     │                │ │                         │ │    │
+│   └─────────────────────┘                │ │ Memories:               │ │    │
+│                                          │ │ - Org (CareMetx-wide)   │ │    │
+│   ┌─────────────────────┐                │ │ - Project (per-repo)    │ │    │
+│   │ Doug's Work Laptop  │                │ │ - User (per-developer)  │ │    │
+│   │                     │                │ │                         │ │    │
+│   │ ┌─────────────────┐ │   WebSocket    │ │ LLM: Bedrock (Claude/   │ │    │
+│   │ │ VS Code + Claude│ │ ◄────────────► │ │      Llama hosted)      │ │    │
+│   │ │ Code Extension  │ │    (MCP)       │ └─────────────────────────┘ │    │
+│   │ └─────────────────┘ │                │             │               │    │
+│   │                     │                │             ▼               │    │
+│   └─────────────────────┘                │ ┌─────────────────────────┐ │    │
+│                                          │ │ Qdrant (self-hosted)    │ │    │
+│                                          │ │ or Qdrant Cloud w/ BAA  │ │    │
+│                                          │ └─────────────────────────┘ │    │
+│                                          │                             │    │
+│                                          └─────────────────────────────┘    │
+│                                                                              │
+│                                                                              │
+│ KEY POINTS:                                                                  │
+│                                                                              │
+│ 1. CareMetx instance is 100% self-contained                                 │
+│ 2. All LLM inference happens in AWS via Bedrock (no external API calls)     │
+│ 3. Personal Roxy can PUSH preferences to work instance                      │
+│ 4. Work instance NEVER calls out to personal Roxy                           │
+│ 5. Doug's work laptop connects ONLY to CareMetx instance                    │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ PREFERENCE SYNC PROTOCOL                                                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ Personal Roxy pushes non-sensitive preferences to work instance:            │
+│                                                                              │
+│ WHAT CAN BE SYNCED (not PHI):                                               │
+│ ┌────────────────────────────────────────────────────────────────────────┐  │
+│ │ - Coding style preferences (tabs vs spaces, naming conventions)        │  │
+│ │ - Communication preferences (verbosity, explanation depth)             │  │
+│ │ - Working hours (for scheduling, not health-related)                   │  │
+│ │ - Tool preferences (editor settings, CLI preferences)                  │  │
+│ │ - General beliefs about code quality (NOT project-specific)            │  │
+│ └────────────────────────────────────────────────────────────────────────┘  │
+│                                                                              │
+│ WHAT CANNOT BE SYNCED:                                                       │
+│ ┌────────────────────────────────────────────────────────────────────────┐  │
+│ │ - Anything from work → personal (work memories, code, decisions)       │  │
+│ │ - Health information (even your own, if work-related)                  │  │
+│ │ - Project-specific context (could reveal PHI handling patterns)        │  │
+│ │ - Team member information                                               │  │
+│ └────────────────────────────────────────────────────────────────────────┘  │
+│                                                                              │
+│ SYNC API:                                                                    │
+│                                                                              │
+│ ```python                                                                    │
+│ # Personal Roxy pushes to work instance                                     │
+│ # Runs on a schedule (daily) or on-demand                                   │
+│                                                                              │
+│ @dataclass                                                                   │
+│ class PreferenceSync:                                                        │
+│     """Non-PHI preferences that can cross boundary."""                      │
+│     coding_style: dict          # {"indent": "spaces", "width": 4}          │
+│     communication_prefs: dict   # {"verbosity": "concise"}                  │
+│     tool_preferences: dict      # {"editor": "vscode", "shell": "zsh"}      │
+│     general_beliefs: list[str]  # ["prefer composition over inheritance"]  │
+│     updated_at: datetime                                                     │
+│                                                                              │
+│ class PreferenceSyncClient:                                                  │
+│     def __init__(self, work_instance_url: str, api_key: str):               │
+│         self.url = work_instance_url                                        │
+│         self.api_key = api_key  # Scoped to preference sync only           │
+│                                                                              │
+│     async def push_preferences(self, prefs: PreferenceSync) -> bool:        │
+│         """Push personal preferences to work instance."""                   │
+│         # mTLS + API key authentication                                     │
+│         response = await self.client.post(                                  │
+│             f"{self.url}/api/v1/users/doug/preferences",                    │
+│             json=prefs.to_dict(),                                           │
+│             headers={"Authorization": f"Bearer {self.api_key}"}             │
+│         )                                                                    │
+│         return response.status == 200                                       │
+│                                                                              │
+│ # Work instance receives and stores in user scope                           │
+│ @app.post("/api/v1/users/{user_id}/preferences")                            │
+│ async def receive_preferences(                                               │
+│     user_id: str,                                                            │
+│     prefs: PreferenceSync,                                                   │
+│     api_key: str = Depends(validate_preference_sync_key)                    │
+│ ):                                                                           │
+│     """Receive preferences from external identity provider."""              │
+│     # Validate this is a preference-sync-only key                           │
+│     # Store in user's preference scope (not general memory)                 │
+│     await memory.store(                                                      │
+│         content=prefs.to_dict(),                                            │
+│         scope=MemoryScope.USER_PREFERENCES,  # Special restricted scope     │
+│         user_id=user_id,                                                     │
+│         source="external_identity_sync"                                     │
+│     )                                                                        │
+│     return {"status": "synced"}                                             │
+│ ```                                                                          │
+│                                                                              │
+│ AUTHENTICATION:                                                              │
+│                                                                              │
+│ - mTLS (mutual TLS): Both sides authenticate with certificates             │
+│ - API key scoped to preference-sync only (cannot read/write memories)      │
+│ - IP allowlist: Only your home IP can call the sync endpoint               │
+│ - Rate limited: Max 10 syncs per day                                        │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ AWS ARCHITECTURE FOR CAREMETX                                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ Using Bedrock + existing CircleCI/Terraform patterns:                       │
+│                                                                              │
+│   ┌─────────────────────────────────────────────────────────────────────┐   │
+│   │                        AWS Account (HIPAA-eligible)                  │   │
+│   │                                                                      │   │
+│   │  ┌─────────────────────────────────────────────────────────────┐    │   │
+│   │  │                     VPC (Private)                            │    │   │
+│   │  │                                                              │    │   │
+│   │  │  ┌─────────────┐    ┌─────────────┐    ┌─────────────────┐  │    │   │
+│   │  │  │ ALB         │    │ ECS Fargate │    │ RDS PostgreSQL  │  │    │   │
+│   │  │  │ (WebSocket) │───►│ (Draagon)   │───►│ (users, keys,   │  │    │   │
+│   │  │  │             │    │             │    │  audit logs)    │  │    │   │
+│   │  │  └─────────────┘    └──────┬──────┘    └─────────────────┘  │    │   │
+│   │  │                            │                                 │    │   │
+│   │  │                            │                                 │    │   │
+│   │  │               ┌────────────┼────────────┐                   │    │   │
+│   │  │               │            │            │                   │    │   │
+│   │  │               ▼            ▼            ▼                   │    │   │
+│   │  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │    │   │
+│   │  │  │ Qdrant      │  │ ElastiCache │  │ Bedrock             │ │    │   │
+│   │  │  │ (EC2 or ECS)│  │ (Redis)     │  │                     │ │    │   │
+│   │  │  │             │  │             │  │ - Claude 3.5 Sonnet │ │    │   │
+│   │  │  │ Vectors     │  │ - Cache     │  │ - Llama 3.1 70B     │ │    │   │
+│   │  │  │ + metadata  │  │ - Sessions  │  │ - Embeddings        │ │    │   │
+│   │  │  │             │  │ - Rate lim  │  │                     │ │    │   │
+│   │  │  └─────────────┘  └─────────────┘  └─────────────────────┘ │    │   │
+│   │  │                                                              │    │   │
+│   │  │  ┌─────────────────────────────────────────────────────┐    │    │   │
+│   │  │  │ Secrets Manager                                      │    │    │   │
+│   │  │  │ - Preference sync API keys                           │    │    │   │
+│   │  │  │ - mTLS certificates                                  │    │    │   │
+│   │  │  │ - Database credentials                               │    │    │   │
+│   │  │  └─────────────────────────────────────────────────────┘    │    │   │
+│   │  │                                                              │    │   │
+│   │  │  ┌─────────────────────────────────────────────────────┐    │    │   │
+│   │  │  │ CloudWatch                                           │    │    │   │
+│   │  │  │ - Audit logs (all memory operations)                 │    │    │   │
+│   │  │  │ - Access logs                                        │    │    │   │
+│   │  │  │ - HIPAA compliance dashboards                        │    │    │   │
+│   │  │  └─────────────────────────────────────────────────────┘    │    │   │
+│   │  │                                                              │    │   │
+│   │  └──────────────────────────────────────────────────────────────┘    │   │
+│   │                                                                      │   │
+│   │  External access (via VPN or Direct Connect):                       │   │
+│   │  - Developer laptops connect via corporate VPN                      │   │
+│   │  - Preference sync endpoint: allowlisted IPs only                  │   │
+│   │                                                                      │   │
+│   └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                              │
+│                                                                              │
+│ BEDROCK MODELS (HIPAA-eligible):                                            │
+│                                                                              │
+│ - Claude 3.5 Sonnet: Complex reasoning, code review                        │
+│ - Claude 3 Haiku: Fast, cheap for simple tasks                             │
+│ - Llama 3.1 70B: Cost-effective for routine tasks                          │
+│ - Titan Embeddings: Vector generation (stays in AWS)                       │
+│                                                                              │
+│ NO EXTERNAL API CALLS: All inference stays within AWS boundary             │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ TERRAFORM STRUCTURE                                                          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ infrastructure/                                                              │
+│ ├── terraform/                                                               │
+│ │   ├── environments/                                                        │
+│ │   │   ├── dev/                                                             │
+│ │   │   │   └── terraform.tfvars                                            │
+│ │   │   ├── staging/                                                         │
+│ │   │   │   └── terraform.tfvars                                            │
+│ │   │   └── prod/                                                            │
+│ │   │       └── terraform.tfvars                                            │
+│ │   │                                                                        │
+│ │   ├── modules/                                                             │
+│ │   │   ├── vpc/                    # Private VPC, subnets, security groups │
+│ │   │   ├── ecs/                    # Fargate cluster, task definitions     │
+│ │   │   ├── rds/                    # PostgreSQL with encryption           │
+│ │   │   ├── elasticache/            # Redis cluster                        │
+│ │   │   ├── qdrant/                 # Self-hosted Qdrant on EC2/ECS        │
+│ │   │   ├── alb/                    # Load balancer with WebSocket support │
+│ │   │   ├── bedrock/                # IAM roles for Bedrock access         │
+│ │   │   ├── secrets/                # Secrets Manager configuration        │
+│ │   │   ├── cloudwatch/             # Logging, dashboards, alarms          │
+│ │   │   └── preference-sync/        # External sync endpoint (optional)    │
+│ │   │                                                                        │
+│ │   ├── main.tf                                                              │
+│ │   ├── variables.tf                                                         │
+│ │   └── outputs.tf                                                           │
+│ │                                                                            │
+│ └── docker/                                                                  │
+│     └── Dockerfile                  # Draagon API container                 │
+│                                                                              │
+│                                                                              │
+│ KEY TERRAFORM CONFIGS:                                                       │
+│                                                                              │
+│ ```hcl                                                                       │
+│ # modules/bedrock/main.tf                                                    │
+│ resource "aws_iam_role" "draagon_bedrock" {                                 │
+│   name = "draagon-bedrock-access"                                           │
+│                                                                              │
+│   assume_role_policy = jsonencode({                                         │
+│     Version = "2012-10-17"                                                  │
+│     Statement = [{                                                          │
+│       Action = "sts:AssumeRole"                                             │
+│       Effect = "Allow"                                                      │
+│       Principal = {                                                         │
+│         Service = "ecs-tasks.amazonaws.com"                                 │
+│       }                                                                      │
+│     }]                                                                       │
+│   })                                                                         │
+│ }                                                                            │
+│                                                                              │
+│ resource "aws_iam_role_policy" "bedrock_invoke" {                           │
+│   name = "bedrock-invoke"                                                   │
+│   role = aws_iam_role.draagon_bedrock.id                                    │
+│                                                                              │
+│   policy = jsonencode({                                                     │
+│     Version = "2012-10-17"                                                  │
+│     Statement = [{                                                          │
+│       Effect = "Allow"                                                      │
+│       Action = [                                                            │
+│         "bedrock:InvokeModel",                                              │
+│         "bedrock:InvokeModelWithResponseStream"                             │
+│       ]                                                                      │
+│       Resource = [                                                          │
+│         "arn:aws:bedrock:*::foundation-model/anthropic.claude-3-5-sonnet*", │
+│         "arn:aws:bedrock:*::foundation-model/anthropic.claude-3-haiku*",    │
+│         "arn:aws:bedrock:*::foundation-model/meta.llama3-1-70b*",           │
+│         "arn:aws:bedrock:*::foundation-model/amazon.titan-embed*"           │
+│       ]                                                                      │
+│     }]                                                                       │
+│   })                                                                         │
+│ }                                                                            │
+│                                                                              │
+│ # modules/qdrant/main.tf                                                     │
+│ resource "aws_ecs_task_definition" "qdrant" {                               │
+│   family                   = "draagon-qdrant"                               │
+│   network_mode             = "awsvpc"                                       │
+│   requires_compatibilities = ["FARGATE"]                                    │
+│   cpu                      = 2048                                           │
+│   memory                   = 4096                                           │
+│                                                                              │
+│   container_definitions = jsonencode([{                                     │
+│     name  = "qdrant"                                                        │
+│     image = "qdrant/qdrant:latest"                                          │
+│     portMappings = [{                                                       │
+│       containerPort = 6333                                                  │
+│       protocol      = "tcp"                                                 │
+│     }]                                                                       │
+│     mountPoints = [{                                                        │
+│       sourceVolume  = "qdrant-storage"                                      │
+│       containerPath = "/qdrant/storage"                                     │
+│     }]                                                                       │
+│   }])                                                                        │
+│                                                                              │
+│   volume {                                                                   │
+│     name = "qdrant-storage"                                                 │
+│     efs_volume_configuration {                                              │
+│       file_system_id = aws_efs_file_system.qdrant.id                        │
+│     }                                                                        │
+│   }                                                                          │
+│ }                                                                            │
+│ ```                                                                          │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ CIRCLECI PIPELINE                                                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ .circleci/config.yml:                                                        │
+│                                                                              │
+│ ```yaml                                                                      │
+│ version: 2.1                                                                 │
+│                                                                              │
+│ orbs:                                                                        │
+│   aws-cli: circleci/aws-cli@4.0                                             │
+│   terraform: circleci/terraform@3.0                                         │
+│                                                                              │
+│ workflows:                                                                   │
+│   deploy:                                                                    │
+│     jobs:                                                                    │
+│       - test:                                                                │
+│           filters:                                                           │
+│             branches:                                                        │
+│               only: [main, develop]                                         │
+│                                                                              │
+│       - build-and-push:                                                      │
+│           requires: [test]                                                  │
+│           filters:                                                           │
+│             branches:                                                        │
+│               only: [main, develop]                                         │
+│                                                                              │
+│       - terraform-plan:                                                      │
+│           requires: [build-and-push]                                        │
+│           context: aws-caremetx                                              │
+│                                                                              │
+│       - terraform-apply:                                                     │
+│           requires: [terraform-plan]                                        │
+│           context: aws-caremetx                                              │
+│           filters:                                                           │
+│             branches:                                                        │
+│               only: main                                                    │
+│                                                                              │
+│ jobs:                                                                        │
+│   test:                                                                      │
+│     docker:                                                                  │
+│       - image: python:3.12                                                  │
+│     steps:                                                                   │
+│       - checkout                                                             │
+│       - run: pip install -e ".[test]"                                       │
+│       - run: pytest tests/ -v --cov=draagon_ai                              │
+│                                                                              │
+│   build-and-push:                                                            │
+│     docker:                                                                  │
+│       - image: cimg/base:current                                            │
+│     steps:                                                                   │
+│       - checkout                                                             │
+│       - setup_remote_docker                                                  │
+│       - aws-cli/setup                                                        │
+│       - run:                                                                 │
+│           name: Build and push to ECR                                       │
+│           command: |                                                        │
+│             aws ecr get-login-password | docker login --username AWS \      │
+│               --password-stdin $ECR_REGISTRY                                │
+│             docker build -t $ECR_REGISTRY/draagon:$CIRCLE_SHA1 .            │
+│             docker push $ECR_REGISTRY/draagon:$CIRCLE_SHA1                  │
+│                                                                              │
+│   terraform-plan:                                                            │
+│     executor: terraform/default                                             │
+│     steps:                                                                   │
+│       - checkout                                                             │
+│       - terraform/init:                                                      │
+│           path: infrastructure/terraform                                    │
+│       - terraform/plan:                                                      │
+│           path: infrastructure/terraform                                    │
+│           var_file: environments/prod/terraform.tfvars                      │
+│                                                                              │
+│   terraform-apply:                                                           │
+│     executor: terraform/default                                             │
+│     steps:                                                                   │
+│       - checkout                                                             │
+│       - terraform/init:                                                      │
+│           path: infrastructure/terraform                                    │
+│       - terraform/apply:                                                     │
+│           path: infrastructure/terraform                                    │
+│           var_file: environments/prod/terraform.tfvars                      │
+│ ```                                                                          │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ HOW PERSONAL ROXY AUGMENTS WORK INSTANCE                                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ SCENARIO: Doug opens VS Code at work and starts coding                      │
+│                                                                              │
+│   ┌────────────────────────────────────────────────────────────────────┐    │
+│   │ WHAT DOUG EXPERIENCES:                                              │    │
+│   │                                                                     │    │
+│   │ Claude Code (connected to CareMetx Draagon instance):              │    │
+│   │                                                                     │    │
+│   │ > "I see you prefer 4-space indentation and concise comments.     │    │
+│   │    I also know that CareMetx uses the repository pattern for      │    │
+│   │    data access and requires HIPAA audit logging on all PHI        │    │
+│   │    operations.                                                     │    │
+│   │                                                                     │    │
+│   │    Based on the team's recent decision, new services should       │    │
+│   │    use the async handler pattern from PatientService.             │    │
+│   │                                                                     │    │
+│   │    Would you like me to scaffold a new handler following          │    │
+│   │    these conventions?"                                             │    │
+│   │                                                                     │    │
+│   │ CONTEXT LAYERS:                                                     │    │
+│   │ ├── Personal (synced from Roxy): Coding style, preferences        │    │
+│   │ ├── Organization: HIPAA requirements, security standards          │    │
+│   │ ├── Project: Repository patterns, service conventions             │    │
+│   │ └── Team: Recent decisions, current architecture                  │    │
+│   │                                                                     │    │
+│   └────────────────────────────────────────────────────────────────────┘    │
+│                                                                              │
+│ THE MAGIC: Personal preferences flow in, but work context stays out.       │
+│                                                                              │
+│                                                                              │
+│ DAILY SYNC (automated):                                                      │
+│                                                                              │
+│   ┌─────────────────────────────────────────────────────────────────────┐   │
+│   │ Personal Roxy (9:00 AM daily cron)                                  │   │
+│   ├─────────────────────────────────────────────────────────────────────┤   │
+│   │                                                                      │   │
+│   │ 1. Extract non-PHI preferences from local memory                    │   │
+│   │    - coding_style: {indent: 4, quotes: "double", ...}              │   │
+│   │    - communication: {verbosity: "concise", ...}                    │   │
+│   │    - beliefs: ["prefer async/await", "explicit > implicit"]        │   │
+│   │                                                                      │   │
+│   │ 2. Hash preferences to detect changes                               │   │
+│   │    - If no changes since last sync, skip                           │   │
+│   │                                                                      │   │
+│   │ 3. Push to CareMetx instance via preference sync API               │   │
+│   │    - mTLS + API key authentication                                 │   │
+│   │    - Allowlisted IP (home network)                                 │   │
+│   │                                                                      │   │
+│   │ 4. CareMetx instance updates Doug's user scope                     │   │
+│   │    - Stores as "external_preference" type                          │   │
+│   │    - Available to all Doug's work sessions                         │   │
+│   │                                                                      │   │
+│   └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                              │
+│                                                                              │
+│ WHEN DOUG GOES HOME:                                                         │
+│                                                                              │
+│   ┌─────────────────────────────────────────────────────────────────────┐   │
+│   │ Personal Roxy (at home):                                            │   │
+│   │                                                                      │   │
+│   │ "How was your day?"                                                 │   │
+│   │                                                                      │   │
+│   │ Doug: "Busy, worked on the patient intake service."                │   │
+│   │                                                                      │   │
+│   │ Roxy: "Got it. Is there anything from today you'd like me to       │   │
+│   │        remember? I can't see your work context, but you can        │   │
+│   │        tell me things you've learned."                              │   │
+│   │                                                                      │   │
+│   │ Doug: "Yeah, I learned that the async handler pattern works        │   │
+│   │        really well for high-throughput services."                   │   │
+│   │                                                                      │   │
+│   │ Roxy: "I'll remember that as a general preference for async        │   │
+│   │        handlers. I'll include it in tomorrow's sync."               │   │
+│   │                                                                      │   │
+│   └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                              │
+│ KEY: Doug can manually transfer learnings if he chooses to.                 │
+│      The system never automatically moves work → personal.                  │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ ALTERNATIVE: PROXY PATTERN (More Complex)                                    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ If you want Personal Roxy to actively participate in work sessions          │
+│ (rather than just syncing preferences), you could use a proxy:              │
+│                                                                              │
+│   ┌────────────────────────────────────────────────────────────────────┐    │
+│   │                                                                     │    │
+│   │   Work Laptop                                                       │    │
+│   │   ┌─────────────┐                                                   │    │
+│   │   │ VS Code     │                                                   │    │
+│   │   │ + Claude    │──┐                                                │    │
+│   │   │   Code      │  │                                                │    │
+│   │   └─────────────┘  │                                                │    │
+│   │                    │ MCP                                            │    │
+│   │                    ▼                                                │    │
+│   │   ┌─────────────────────────────┐                                   │    │
+│   │   │ Local Roxy Proxy            │                                   │    │
+│   │   │ (runs on work laptop)       │                                   │    │
+│   │   │                             │                                   │    │
+│   │   │ 1. Intercepts MCP requests  │                                   │    │
+│   │   │ 2. Adds personal context    │──────┐                            │    │
+│   │   │ 3. Forwards to CareMetx     │      │                            │    │
+│   │   │ 4. Returns response         │      │ Preference                 │    │
+│   │   │                             │      │ enrichment                 │    │
+│   │   │ NEVER stores work data      │      │ only                       │    │
+│   │   └──────────────┬──────────────┘      │                            │    │
+│   │                  │                     │                            │    │
+│   │                  │ MCP (forwarded)     │                            │    │
+│   │                  ▼                     │                            │    │
+│   │   ┌─────────────────────────────┐      │                            │    │
+│   │   │ CareMetx Draagon            │◄─────┘                            │    │
+│   │   │ (AWS)                       │                                   │    │
+│   │   │                             │                                   │    │
+│   │   │ Receives:                   │                                   │    │
+│   │   │ - Original request          │                                   │    │
+│   │   │ - Personal preferences      │                                   │    │
+│   │   │   (injected by proxy)       │                                   │    │
+│   │   │                             │                                   │    │
+│   │   │ Does NOT know about:        │                                   │    │
+│   │   │ - Personal Roxy             │                                   │    │
+│   │   │ - Home network              │                                   │    │
+│   │   └─────────────────────────────┘                                   │    │
+│   │                                                                     │    │
+│   └────────────────────────────────────────────────────────────────────┘    │
+│                                                                              │
+│ PROS:                                                                        │
+│ - Real-time preference injection                                            │
+│ - No sync delay                                                             │
+│                                                                              │
+│ CONS:                                                                        │
+│ - More complex                                                               │
+│ - Proxy running on work laptop (IT policy?)                                 │
+│ - Potential security concerns                                               │
+│                                                                              │
+│ RECOMMENDATION: Start with daily sync, evaluate proxy later if needed.     │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ IMPLEMENTATION PRIORITY FOR CAREMETX                                         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│ PHASE 1: Core Work Instance (Weeks 1-4)                                      │
+│ □ Terraform modules for AWS infrastructure                                  │
+│ □ ECS task definition for Draagon API                                       │
+│ □ Bedrock integration (replace Groq/Anthropic direct)                       │
+│ □ Self-hosted Qdrant on Fargate + EFS                                       │
+│ □ Basic auth (API keys for team members)                                    │
+│ □ CircleCI pipeline                                                          │
+│                                                                              │
+│ PHASE 2: Memory & Beliefs (Weeks 5-8)                                        │
+│ □ Organization scope (CareMetx-wide conventions)                            │
+│ □ Project scope (per-repository context)                                    │
+│ □ User scope (per-developer preferences)                                    │
+│ □ Belief system for code patterns                                           │
+│ □ HIPAA audit logging                                                        │
+│                                                                              │
+│ PHASE 3: Personal Integration (Weeks 9-10)                                   │
+│ □ Preference sync API endpoint                                               │
+│ □ mTLS certificate generation                                               │
+│ □ Personal Roxy sync client                                                 │
+│ □ Daily sync automation                                                      │
+│                                                                              │
+│ PHASE 4: Team Rollout (Weeks 11-12)                                          │
+│ □ Onboard team members                                                       │
+│ □ Seed with CareMetx conventions                                            │
+│ □ Collect feedback                                                           │
+│ □ Iterate                                                                    │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+

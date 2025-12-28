@@ -9,13 +9,12 @@
 
 ## 1. Overview
 
-### 1.1 Current State
-- **Roxy** has `autonomous_agent.py` with background cognitive processing
-- We created `draagon_ai_ext_autonomous` extension package
-- There's also an adapter/factory pattern in Roxy to use extension
-- The extension is NOT part of core draagon-ai
+### 1.1 Current State ✅ COMPLETE
+- **draagon-ai core** has autonomous agent at `draagon_ai.orchestration.autonomous`
+- Roxy uses adapters to implement the protocols with its services
+- Extension has been removed (migrated to core)
 
-### 1.2 Target State
+### 1.2 Target State ✅ ACHIEVED
 Per the architecture document, autonomous agent should be **core**, not extension:
 > "Autonomous agent should be core, not extension - It's a fundamental assistant capability"
 

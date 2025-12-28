@@ -2197,3 +2197,421 @@ class TestRoxyLearningAdapterIntegration:
 
         # Without a LearningExtension, should return empty list
         assert result == []
+
+
+# =============================================================================
+# REQ-003-05: Identity Manager Adapters
+# =============================================================================
+
+
+class TestRoxyIdentityStorageAdapter:
+    """Tests for RoxyIdentityStorageAdapter.
+
+    REQ-003-05: Adapter for IdentityStorage protocol.
+    """
+
+    @pytest.mark.anyio
+    async def test_load_identity_returns_stored_data(self, mock_roxy_memory):
+        """Test loading identity returns stored data."""
+        from draagon_ai.adapters.roxy_cognition import RoxyIdentityStorageAdapter
+
+        # Memory returns a result with identity data
+        mock_roxy_memory.search = AsyncMock(
+            return_value=[
+                {
+                    "record_type": "agent_identity",
+                    "agent_id": "roxy",
+                    "identity_data": {
+                        "agent_id": "roxy",
+                        "name": "Roxy",
+                        "values": {},
+                        "traits": {},
+                    },
+                }
+            ]
+        )
+
+        adapter = RoxyIdentityStorageAdapter(mock_roxy_memory)
+        result = await adapter.load_identity("roxy")
+
+        assert result is not None
+        assert result["agent_id"] == "roxy"
+        assert result["name"] == "Roxy"
+
+    @pytest.mark.anyio
+    async def test_load_identity_returns_none_when_not_found(self, mock_roxy_memory):
+        """Test loading identity returns None when not found."""
+        from draagon_ai.adapters.roxy_cognition import RoxyIdentityStorageAdapter
+
+        mock_roxy_memory.search = AsyncMock(return_value=[])
+
+        adapter = RoxyIdentityStorageAdapter(mock_roxy_memory)
+        result = await adapter.load_identity("roxy")
+
+        assert result is None
+
+    @pytest.mark.anyio
+    async def test_load_identity_handles_wrong_record_type(self, mock_roxy_memory):
+        """Test loading identity ignores wrong record types."""
+        from draagon_ai.adapters.roxy_cognition import RoxyIdentityStorageAdapter
+
+        mock_roxy_memory.search = AsyncMock(
+            return_value=[
+                {
+                    "record_type": "some_other_type",
+                    "agent_id": "roxy",
+                    "identity_data": {"name": "Other"},
+                }
+            ]
+        )
+
+        adapter = RoxyIdentityStorageAdapter(mock_roxy_memory)
+        result = await adapter.load_identity("roxy")
+
+        assert result is None
+
+    @pytest.mark.anyio
+    async def test_save_identity_stores_data(self, mock_roxy_memory):
+        """Test saving identity stores the data correctly."""
+        from draagon_ai.adapters.roxy_cognition import RoxyIdentityStorageAdapter
+
+        mock_roxy_memory.store = AsyncMock()
+
+        adapter = RoxyIdentityStorageAdapter(mock_roxy_memory)
+        await adapter.save_identity("roxy", {"agent_id": "roxy", "name": "Roxy"})
+
+        mock_roxy_memory.store.assert_called_once()
+        call_kwargs = mock_roxy_memory.store.call_args[1]
+        assert call_kwargs["user_id"] == "agent_roxy"
+        assert call_kwargs["metadata"]["record_type"] == "agent_identity"
+        assert call_kwargs["metadata"]["agent_id"] == "roxy"
+
+    @pytest.mark.anyio
+    async def test_load_user_preferences_returns_stored_data(self, mock_roxy_memory):
+        """Test loading user preferences returns stored data."""
+        from draagon_ai.adapters.roxy_cognition import RoxyIdentityStorageAdapter
+
+        mock_roxy_memory.search = AsyncMock(
+            return_value=[
+                {
+                    "record_type": "user_interaction_prefs",
+                    "agent_id": "roxy",
+                    "prefs_user_id": "doug",
+                    "prefs_data": {
+                        "user_id": "doug",
+                        "prefers_debate": 0.7,
+                        "verbosity_preference": "concise",
+                    },
+                }
+            ]
+        )
+
+        adapter = RoxyIdentityStorageAdapter(mock_roxy_memory)
+        result = await adapter.load_user_preferences("roxy", "doug")
+
+        assert result is not None
+        assert result["user_id"] == "doug"
+        assert result["prefers_debate"] == 0.7
+
+    @pytest.mark.anyio
+    async def test_load_user_preferences_returns_none_when_not_found(self, mock_roxy_memory):
+        """Test loading user preferences returns None when not found."""
+        from draagon_ai.adapters.roxy_cognition import RoxyIdentityStorageAdapter
+
+        mock_roxy_memory.search = AsyncMock(return_value=[])
+
+        adapter = RoxyIdentityStorageAdapter(mock_roxy_memory)
+        result = await adapter.load_user_preferences("roxy", "doug")
+
+        assert result is None
+
+    @pytest.mark.anyio
+    async def test_save_user_preferences_stores_data(self, mock_roxy_memory):
+        """Test saving user preferences stores the data correctly."""
+        from draagon_ai.adapters.roxy_cognition import RoxyIdentityStorageAdapter
+
+        mock_roxy_memory.store = AsyncMock()
+
+        adapter = RoxyIdentityStorageAdapter(mock_roxy_memory)
+        await adapter.save_user_preferences(
+            "roxy",
+            "doug",
+            {"user_id": "doug", "prefers_debate": 0.8}
+        )
+
+        mock_roxy_memory.store.assert_called_once()
+        call_kwargs = mock_roxy_memory.store.call_args[1]
+        assert call_kwargs["metadata"]["record_type"] == "user_interaction_prefs"
+        assert call_kwargs["metadata"]["agent_id"] == "roxy"
+        assert call_kwargs["metadata"]["prefs_user_id"] == "doug"
+
+
+class TestRoxyFullIdentityAdapter:
+    """Tests for RoxyFullIdentityAdapter.
+
+    REQ-003-05: Main adapter wrapping IdentityManager.
+    """
+
+    @pytest.mark.anyio
+    async def test_initialization(self, mock_roxy_llm, mock_roxy_memory):
+        """Test adapter can be initialized."""
+        from draagon_ai.adapters.roxy_cognition import RoxyFullIdentityAdapter
+
+        adapter = RoxyFullIdentityAdapter(
+            llm=mock_roxy_llm,
+            memory=mock_roxy_memory,
+            agent_name="Roxy",
+            agent_id="roxy",
+        )
+
+        assert adapter.agent_name == "Roxy"
+        assert adapter.agent_id == "roxy"
+        assert adapter._manager is None  # Lazy initialization
+
+    @pytest.mark.anyio
+    async def test_load_creates_manager_and_loads(self, mock_roxy_llm, mock_roxy_memory):
+        """Test load() creates manager and loads identity."""
+        from draagon_ai.adapters.roxy_cognition import RoxyFullIdentityAdapter
+
+        # Mock search to return no existing identity (will create default)
+        mock_roxy_memory.search = AsyncMock(return_value=[])
+        mock_roxy_memory.store = AsyncMock()
+
+        adapter = RoxyFullIdentityAdapter(
+            llm=mock_roxy_llm,
+            memory=mock_roxy_memory,
+            agent_name="Roxy",
+            agent_id="roxy",
+        )
+
+        identity = await adapter.load()
+
+        # Should have created and cached the manager
+        assert adapter._manager is not None
+        # Should return an AgentIdentity
+        assert identity.name == "Roxy"
+        assert identity.agent_id == "roxy"
+
+    @pytest.mark.anyio
+    async def test_get_cached_returns_none_before_load(self, mock_roxy_llm, mock_roxy_memory):
+        """Test get_cached returns None before load is called."""
+        from draagon_ai.adapters.roxy_cognition import RoxyFullIdentityAdapter
+
+        adapter = RoxyFullIdentityAdapter(
+            llm=mock_roxy_llm,
+            memory=mock_roxy_memory,
+        )
+
+        # Force manager creation without loading
+        manager = adapter._get_manager()
+        result = adapter.get_cached()
+
+        # Should be None because load() hasn't been called
+        assert result is None
+
+    @pytest.mark.anyio
+    async def test_get_cached_returns_identity_after_load(self, mock_roxy_llm, mock_roxy_memory):
+        """Test get_cached returns identity after load."""
+        from draagon_ai.adapters.roxy_cognition import RoxyFullIdentityAdapter
+
+        mock_roxy_memory.search = AsyncMock(return_value=[])
+        mock_roxy_memory.store = AsyncMock()
+
+        adapter = RoxyFullIdentityAdapter(
+            llm=mock_roxy_llm,
+            memory=mock_roxy_memory,
+        )
+
+        await adapter.load()
+        cached = adapter.get_cached()
+
+        assert cached is not None
+        assert cached.name == "Roxy"  # Default name from adapter
+
+    @pytest.mark.anyio
+    async def test_get_trait_value_returns_default(self, mock_roxy_llm, mock_roxy_memory):
+        """Test get_trait_value returns default for unknown trait."""
+        from draagon_ai.adapters.roxy_cognition import RoxyFullIdentityAdapter
+
+        mock_roxy_memory.search = AsyncMock(return_value=[])
+        mock_roxy_memory.store = AsyncMock()
+
+        adapter = RoxyFullIdentityAdapter(
+            llm=mock_roxy_llm,
+            memory=mock_roxy_memory,
+        )
+
+        await adapter.load()
+        value = adapter.get_trait_value("unknown_trait", default=0.42)
+
+        assert value == 0.42
+
+    @pytest.mark.anyio
+    async def test_get_value_strength_returns_default(self, mock_roxy_llm, mock_roxy_memory):
+        """Test get_value_strength returns default for unknown value."""
+        from draagon_ai.adapters.roxy_cognition import RoxyFullIdentityAdapter
+
+        mock_roxy_memory.search = AsyncMock(return_value=[])
+        mock_roxy_memory.store = AsyncMock()
+
+        adapter = RoxyFullIdentityAdapter(
+            llm=mock_roxy_llm,
+            memory=mock_roxy_memory,
+        )
+
+        await adapter.load()
+        value = adapter.get_value_strength("unknown_value", default=0.33)
+
+        assert value == 0.33
+
+    @pytest.mark.anyio
+    async def test_mark_dirty_marks_manager_dirty(self, mock_roxy_llm, mock_roxy_memory):
+        """Test mark_dirty marks the manager as dirty."""
+        from draagon_ai.adapters.roxy_cognition import RoxyFullIdentityAdapter
+
+        mock_roxy_memory.search = AsyncMock(return_value=[])
+        mock_roxy_memory.store = AsyncMock()
+
+        adapter = RoxyFullIdentityAdapter(
+            llm=mock_roxy_llm,
+            memory=mock_roxy_memory,
+        )
+
+        await adapter.load()
+        adapter.mark_dirty()
+
+        # The manager should now be dirty
+        assert adapter._manager._dirty is True
+
+    @pytest.mark.anyio
+    async def test_save_if_dirty_saves_when_dirty(self, mock_roxy_llm, mock_roxy_memory):
+        """Test save_if_dirty saves when dirty."""
+        from draagon_ai.adapters.roxy_cognition import RoxyFullIdentityAdapter
+
+        mock_roxy_memory.search = AsyncMock(return_value=[])
+        mock_roxy_memory.store = AsyncMock()
+
+        adapter = RoxyFullIdentityAdapter(
+            llm=mock_roxy_llm,
+            memory=mock_roxy_memory,
+        )
+
+        await adapter.load()
+        adapter.mark_dirty()
+        result = await adapter.save_if_dirty()
+
+        assert result is True
+        # Store should have been called (once for initial save, once for dirty save)
+        assert mock_roxy_memory.store.call_count >= 1
+
+    @pytest.mark.anyio
+    async def test_save_if_dirty_does_not_save_when_clean(self, mock_roxy_llm, mock_roxy_memory):
+        """Test save_if_dirty does not save when clean."""
+        from draagon_ai.adapters.roxy_cognition import RoxyFullIdentityAdapter
+
+        mock_roxy_memory.search = AsyncMock(return_value=[])
+        mock_roxy_memory.store = AsyncMock()
+
+        adapter = RoxyFullIdentityAdapter(
+            llm=mock_roxy_llm,
+            memory=mock_roxy_memory,
+        )
+
+        await adapter.load()
+        # Reset call count after initial save
+        initial_count = mock_roxy_memory.store.call_count
+
+        result = await adapter.save_if_dirty()
+
+        assert result is False
+        # Store should not have been called again
+        assert mock_roxy_memory.store.call_count == initial_count
+
+    @pytest.mark.anyio
+    async def test_build_personality_context_returns_string(self, mock_roxy_llm, mock_roxy_memory):
+        """Test build_personality_context returns a string."""
+        from draagon_ai.adapters.roxy_cognition import RoxyFullIdentityAdapter
+
+        mock_roxy_memory.search = AsyncMock(return_value=[])
+        mock_roxy_memory.store = AsyncMock()
+
+        adapter = RoxyFullIdentityAdapter(
+            llm=mock_roxy_llm,
+            memory=mock_roxy_memory,
+            agent_name="Roxy",
+        )
+
+        await adapter.load()
+        context = adapter.build_personality_context()
+
+        assert isinstance(context, str)
+        assert "Roxy" in context
+
+
+class TestRoxyFullIdentityAdapterIntegration:
+    """Integration tests for RoxyFullIdentityAdapter.
+
+    REQ-003-05: Full identity manager flow.
+    """
+
+    @pytest.mark.anyio
+    async def test_full_identity_lifecycle(self, mock_roxy_llm, mock_roxy_memory):
+        """Test full identity lifecycle: load, modify, save."""
+        from draagon_ai.adapters.roxy_cognition import RoxyFullIdentityAdapter
+
+        mock_roxy_memory.search = AsyncMock(return_value=[])
+        mock_roxy_memory.store = AsyncMock()
+
+        adapter = RoxyFullIdentityAdapter(
+            llm=mock_roxy_llm,
+            memory=mock_roxy_memory,
+            agent_name="Roxy",
+            agent_id="roxy",
+        )
+
+        # Load identity
+        identity = await adapter.load()
+        assert identity.name == "Roxy"
+
+        # Get trait value (should use default)
+        trait_val = adapter.get_trait_value("curiosity_intensity", default=0.5)
+        assert trait_val == 0.5
+
+        # Get cached
+        cached = adapter.get_cached()
+        assert cached is not None
+
+        # Mark dirty and save
+        adapter.mark_dirty()
+        saved = await adapter.save_if_dirty()
+        assert saved is True
+
+        # Verify storage was called
+        assert mock_roxy_memory.store.call_count >= 1
+
+    @pytest.mark.anyio
+    async def test_user_preferences_flow(self, mock_roxy_llm, mock_roxy_memory):
+        """Test user preferences flow: load defaults, save."""
+        from draagon_ai.adapters.roxy_cognition import RoxyFullIdentityAdapter
+
+        mock_roxy_memory.search = AsyncMock(return_value=[])
+        mock_roxy_memory.store = AsyncMock()
+
+        adapter = RoxyFullIdentityAdapter(
+            llm=mock_roxy_llm,
+            memory=mock_roxy_memory,
+        )
+
+        await adapter.load()
+
+        # Get user prefs (should create default)
+        prefs = await adapter.get_user_prefs("doug")
+
+        assert prefs.user_id == "doug"
+        assert hasattr(prefs, "prefers_debate")
+
+        # Save prefs
+        await adapter.save_user_prefs("doug")
+
+        # Should have stored the prefs
+        assert mock_roxy_memory.store.call_count >= 1
