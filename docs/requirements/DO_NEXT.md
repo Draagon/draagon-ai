@@ -10,8 +10,8 @@ I'll read this file, do the current task, update status, and move to the next st
 
 ```
 PHASE: 6 - Roxy Thin Client
-REQ: REQ-006-02
-NAME: Personality config (YAML)
+REQ: REQ-006-03
+NAME: Voice/TTS channel handling
 STEP: IMPLEMENT
 ```
 
@@ -124,8 +124,8 @@ STEP: IMPLEMENT
 | # | Requirement | Implement | Test | Review | Complete |
 |---|-------------|-----------|------|--------|----------|
 | 01 | All adapters using draagon-ai | [x] | [x] | [x] | [x] |
-| 02 | Personality config (YAML) | [>] | [ ] | [ ] | [ ] |
-| 03 | Voice/TTS channel handling | [ ] | [ ] | [ ] | [ ] |
+| 02 | Personality config (YAML) | [x] | [x] | [x] | [x] |
+| 03 | Voice/TTS channel handling | [>] | [ ] | [ ] | [ ] |
 | 04 | Home Assistant integration | [ ] | [ ] | [ ] | [ ] |
 | 05 | Wyoming protocol support | [ ] | [ ] | [ ] | [ ] |
 | 06 | Remove all duplicated code | [ ] | [ ] | [ ] | [ ] |
@@ -134,11 +134,56 @@ STEP: IMPLEMENT
 | 09 | Performance comparison | [ ] | [ ] | [ ] | [ ] |
 | 10 | Documentation update | [ ] | [ ] | [ ] | [ ] |
 
-**Phase 6 Status:** IN PROGRESS (1/10)
+**Phase 6 Status:** IN PROGRESS (2/10)
 
 ---
 
 ## CURRENT WORK LOG
+
+### REQ-006-02: Personality config (YAML)
+
+**Status:** ✅ COMPLETED
+
+**Work Done:**
+- Created `config/roxy_persona.yaml` with complete personality configuration:
+  - Core values (truth_seeking, epistemic_humility, helpfulness, respect_privacy, transparency)
+  - Personality traits (verification_threshold, curiosity_intensity, debate_persistence, etc.)
+  - Communication style (formality, humor, verbosity, empathy)
+  - Voice settings (TTS, max words, abbreviation expansion, spoken numbers)
+  - Autonomous agent settings (enabled, shadow_mode, cycle_minutes, daily_budget)
+  - Proactive question timing (max_per_day, min_gap_minutes)
+  - Home context (household_name, timezone, address, members)
+  - Integration configs (home_assistant, calendar, search)
+
+- Created `src/roxy/config/personality.py` with:
+  - PersonalityConfig dataclass with nested configuration classes
+  - YAML loading with `load()` and `load_or_default()`
+  - Validation on load (0.0-1.0 ranges for all trait values)
+  - `to_identity()` method for draagon-ai Identity conversion
+  - `get_trait_value()` for dynamic trait access
+  - `get_personality_intro()` for prompt generation
+  - Singleton pattern with `get_personality()` and `reload_personality()`
+
+- Updated `settings.py` with `persona_path` setting
+
+- 26 unit tests covering:
+  - Default value validation
+  - Custom value handling
+  - Range validation (errors for values outside 0.0-1.0)
+  - YAML loading and error handling
+  - Dictionary conversion
+  - Identity conversion
+  - Singleton behavior
+
+**Test Results:** ✅ 25/26 PASSED (1 skipped - draagon-ai types not in test env)
+
+**Acceptance Criteria:**
+- [x] All personality config in YAML
+- [x] YAML is validated on load
+- [x] Changes to YAML take effect on restart
+- [x] Defaults are sensible
+
+---
 
 ### REQ-006-01: All adapters using draagon-ai
 
