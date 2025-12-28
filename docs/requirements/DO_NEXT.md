@@ -10,8 +10,8 @@ I'll read this file, do the current task, update status, and move to the next st
 
 ```
 PHASE: 6 - Roxy Thin Client
-REQ: REQ-006-05
-NAME: Wyoming protocol support
+REQ: REQ-006-06
+NAME: Remove all duplicated code
 STEP: IMPLEMENT
 ```
 
@@ -127,18 +127,44 @@ STEP: IMPLEMENT
 | 02 | Personality config (YAML) | [x] | [x] | [x] | [x] |
 | 03 | Voice/TTS channel handling | [x] | [x] | [x] | [x] |
 | 04 | Home Assistant integration | [x] | [x] | [x] | [x] |
-| 05 | Wyoming protocol support | [>] | [ ] | [ ] | [ ] |
-| 06 | Remove all duplicated code | [ ] | [ ] | [ ] | [ ] |
+| 05 | Wyoming protocol support | [x] | [x] | [x] | [x] |
+| 06 | Remove all duplicated code | [>] | [ ] | [ ] | [ ] |
 | 07 | FastAPI shell only | [ ] | [ ] | [ ] | [ ] |
 | 08 | Full regression test suite | [ ] | [ ] | [ ] | [ ] |
 | 09 | Performance comparison | [ ] | [ ] | [ ] | [ ] |
 | 10 | Documentation update | [ ] | [ ] | [ ] | [ ] |
 
-**Phase 6 Status:** IN PROGRESS (4/10)
+**Phase 6 Status:** IN PROGRESS (5/10)
 
 ---
 
 ## CURRENT WORK LOG
+
+### REQ-006-05: Wyoming protocol support
+
+**Status:** ✅ COMPLETED
+
+**Work Done:**
+- Created `src/roxy/channels/wyoming/` module with Wyoming protocol support:
+  - `events.py`: Event types matching Wyoming protocol spec (audio-chunk, transcript, detection, synthesize, etc.)
+  - `handler.py`: WyomingHandler for processing protocol events (wake word, STT, TTS)
+  - `satellite.py`: SatelliteManager for satellite discovery and announcements
+
+- WyomingEvent system:
+  - Base class with JSON-line + binary payload support
+  - Specific event types: AudioChunkEvent, TranscriptEvent, DetectionEvent, SynthesizeEvent
+  - AudioFormat dataclass for PCM audio specification
+
+- SatelliteManager features:
+  - Auto-discovery of satellites from Home Assistant
+  - Area-to-satellite mapping
+  - announce() and broadcast() for voice satellite announcements
+
+**Reference:** https://github.com/rhasspy/rhasspy3/blob/master/docs/wyoming.md
+
+**Test Results:** ✅ 37/37 PASSED
+
+---
 
 ### REQ-006-04: Home Assistant integration
 
