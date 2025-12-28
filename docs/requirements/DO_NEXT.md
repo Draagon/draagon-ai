@@ -10,8 +10,8 @@ I'll read this file, do the current task, update status, and move to the next st
 
 ```
 PHASE: 3 - Cognitive Services
-REQ: REQ-003-01
-NAME: Belief reconciliation using core service
+REQ: REQ-003-02
+NAME: Curiosity engine using core service
 STEP: IMPLEMENT
 ```
 
@@ -67,7 +67,7 @@ STEP: IMPLEMENT
 
 | # | Requirement | Implement | Test | Review | Complete |
 |---|-------------|-----------|------|--------|----------|
-| 01 | Belief reconciliation using core service | [ ] | [ ] | [ ] | [ ] |
+| 01 | Belief reconciliation using core service | [x] | [x] | [x] | [x] |
 | 02 | Curiosity engine using core service | [ ] | [ ] | [ ] | [ ] |
 | 03 | Opinion formation using core service | [ ] | [ ] | [ ] | [ ] |
 | 04 | Learning service using core service | [ ] | [ ] | [ ] | [ ] |
@@ -77,7 +77,7 @@ STEP: IMPLEMENT
 | 08 | Unit tests (≥90% coverage) | [ ] | [ ] | [ ] | [ ] |
 | 09 | Integration tests | [ ] | [ ] | [ ] | [ ] |
 
-**Phase 3 Status:** NOT STARTED
+**Phase 3 Status:** IN PROGRESS (1/9)
 
 ---
 
@@ -139,6 +139,47 @@ STEP: IMPLEMENT
 ---
 
 ## CURRENT WORK LOG
+
+### REQ-003-01: Belief reconciliation using core service
+
+**Status:** ✅ COMPLETED
+
+**Work Done:**
+- Created `RoxyBeliefAdapter` in `src/draagon_ai/adapters/roxy_cognition.py`
+- Adapter wraps draagon-ai's `BeliefReconciliationService` for Roxy
+- Created protocol adapters:
+  - `RoxyLLMAdapter` - Adapts Roxy's LLMService to LLMProvider protocol
+  - `RoxyMemoryAdapter` - Adapts Roxy's MemoryService to MemoryProvider protocol
+  - `RoxyCredibilityAdapter` - Adapts Roxy's UserService for credibility lookup
+- Full test coverage with 20 unit tests
+
+**Key Components:**
+
+| Adapter | Purpose |
+|---------|---------|
+| `RoxyLLMAdapter` | Wraps Roxy's LLM service for draagon-ai |
+| `RoxyMemoryAdapter` | Maps Roxy's memory API to draagon-ai's MemoryProvider |
+| `RoxyCredibilityAdapter` | Provides user credibility for belief confidence adjustment |
+| `RoxyBeliefAdapter` | Main entry point - wraps BeliefReconciliationService |
+
+**Acceptance Criteria:**
+- [x] Roxy uses `BeliefReconciliationService` from draagon-ai
+- [x] Adapter provides Roxy's LLM and Memory as protocols
+- [x] Conflict detection works across users
+- [x] Belief confidence is adjusted by source credibility
+- [x] All existing belief tests pass (20/20)
+
+**Files Created:**
+- `src/draagon_ai/adapters/roxy_cognition.py` (NEW - ~700 lines)
+- `tests/unit/adapters/test_roxy_cognition.py` (NEW - ~500 lines)
+- `tests/unit/adapters/__init__.py` (NEW)
+
+**Files Updated:**
+- `src/draagon_ai/adapters/__init__.py` (UPDATED - added exports)
+
+**Test Results:** ✅ 20/20 PASSED | ✅ 1335/1335 full suite PASSED
+
+---
 
 ### REQ-002-10: Multi-step reasoning E2E tests
 
