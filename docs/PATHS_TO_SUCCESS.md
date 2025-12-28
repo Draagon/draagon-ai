@@ -4,6 +4,18 @@
 
 ---
 
+> **UPDATE (December 28, 2025):** This document was written with a narrower understanding of Draagon-AI's scope.
+>
+> **What's still valid:** The research on solo founders, Pieter Levels, Mem0's path, exit strategies, and funding options remains accurate and useful.
+>
+> **What's outdated:** Exit valuations and specific recommendations were based on comparing to Mem0/Zep as competitors. Draagon-AI is actually a 53K-line agentic framework, not a memory system.
+>
+> **Revised exit range:** $5-20M (up from $2-10M)
+>
+> **See:** `REVISED_MASTER_STRATEGY.md` for the corrected strategy.
+
+---
+
 ## Part 1: What Made Solo Founders Successful (Beyond the Idea)
 
 ### The Pattern: Distribution > Product

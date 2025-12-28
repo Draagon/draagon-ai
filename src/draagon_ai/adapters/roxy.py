@@ -47,6 +47,12 @@ from draagon_ai.memory.base import (
     SearchResult,
 )
 from draagon_ai.memory.providers.layered import LayeredMemoryProvider
+from draagon_ai.memory.retrieval import (
+    RetrievalAugmenter,
+    RetrievalConfig,
+    SelfRAGResult,
+    CRAGResult,
+)
 
 if TYPE_CHECKING:
     pass
@@ -166,13 +172,31 @@ class RoxyLayeredAdapter:
         )
     """
 
-    def __init__(self, provider: LayeredMemoryProvider) -> None:
+    def __init__(
+        self,
+        provider: LayeredMemoryProvider,
+        llm_provider: Any | None = None,
+        retrieval_config: RetrievalConfig | None = None,
+    ) -> None:
         """Initialize the adapter.
 
         Args:
             provider: A configured and initialized LayeredMemoryProvider instance.
+            llm_provider: Optional LLM provider for Self-RAG/CRAG (must have chat() method)
+            retrieval_config: Configuration for retrieval augmentation
         """
         self._provider = provider
+        self._llm = llm_provider
+        self._retrieval_config = retrieval_config or RetrievalConfig()
+
+        # Create retrieval augmenter if LLM is provided
+        self._augmenter: RetrievalAugmenter | None = None
+        if llm_provider is not None:
+            self._augmenter = RetrievalAugmenter(
+                llm=llm_provider,
+                memory=provider,
+                config=self._retrieval_config,
+            )
 
     @property
     def provider(self) -> LayeredMemoryProvider:
@@ -420,31 +444,128 @@ class RoxyLayeredAdapter:
         user_id: str,
         limit: int = 5,
         detect_contradictions: bool = True,
+        auto_invalidate: bool = True,
     ) -> dict[str, Any]:
-        """Search with self-RAG grading (simplified for adapter).
+        """Search with Self-RAG quality assessment and contradiction detection.
 
-        This is a simplified version that delegates to standard search.
-        Full self-RAG implementation would require LLM integration.
+        If an LLM provider was passed to the adapter, this uses full Self-RAG
+        with relevance assessment, query refinement, and contradiction detection.
+        Otherwise, falls back to basic search.
 
         Args:
             query: Search query
             user_id: User ID
             limit: Maximum results
             detect_contradictions: Whether to detect contradictions
+            auto_invalidate: Whether to auto-invalidate contradicting memories
 
         Returns:
-            Dict with "results", "relevant_count", etc.
+            Dict with "results", "assessment", "contradictions", etc.
         """
+        # Use full Self-RAG if augmenter is available
+        if self._augmenter is not None:
+            result: SelfRAGResult = await self._augmenter.search_with_self_rag(
+                query=query,
+                user_id=user_id,
+                limit=limit,
+                detect_contradictions=detect_contradictions,
+                auto_invalidate=auto_invalidate,
+            )
+
+            return {
+                "results": [self._result_to_roxy_format(r) for r in result.results],
+                "assessment": {
+                    "score": result.assessment.score,
+                    "action": result.assessment.action,
+                    "reason": result.assessment.reason,
+                },
+                "refined_query": result.refined_query,
+                "retrieval_attempts": result.retrieval_attempts,
+                "timings": result.timings,
+                "contradictions": [
+                    {
+                        "memory_id_1": c.memory_id_1,
+                        "memory_id_2": c.memory_id_2,
+                        "content_1": c.content_1,
+                        "content_2": c.content_2,
+                        "conflict_type": c.conflict_type,
+                        "to_invalidate": c.to_invalidate,
+                        "reason": c.reason,
+                    }
+                    for c in result.contradictions
+                ],
+                "has_contradictions": result.has_contradictions,
+            }
+
+        # Fallback to basic search
         results = await self.search(query, user_id, limit=limit)
 
         return {
             "results": results,
-            "relevant_count": len(results),
-            "irrelevant_count": 0,
-            "ambiguous_count": 0,
-            "knowledge_strips": [],
+            "assessment": {
+                "score": 0.5,
+                "action": "use",
+                "reason": "Basic search (no LLM for Self-RAG)",
+            },
+            "refined_query": None,
+            "retrieval_attempts": 1,
+            "timings": {},
             "contradictions": [],
             "has_contradictions": False,
+        }
+
+    async def search_with_crag(
+        self,
+        query: str,
+        user_id: str,
+        limit: int = 5,
+    ) -> dict[str, Any]:
+        """Search with Corrective RAG chunk grading.
+
+        If an LLM provider was passed to the adapter, this uses full CRAG
+        with chunk grading and knowledge strip extraction.
+        Otherwise, falls back to basic search.
+
+        Args:
+            query: Search query
+            user_id: User ID
+            limit: Maximum results
+
+        Returns:
+            Dict with "results", "knowledge_strips", "grading", etc.
+        """
+        # Use full CRAG if augmenter is available
+        if self._augmenter is not None:
+            result: CRAGResult = await self._augmenter.search_with_crag(
+                query=query,
+                user_id=user_id,
+                limit=limit,
+            )
+
+            return {
+                "results": [
+                    {
+                        **self._result_to_roxy_format(c.result),
+                        "grade": c.grade,
+                        "knowledge_strip": c.knowledge_strip,
+                    }
+                    for c in result.results
+                ],
+                "knowledge_strips": result.knowledge_strips,
+                "grading": result.grading,
+                "needs_web_search": result.needs_web_search,
+                "timings": result.timings,
+            }
+
+        # Fallback to basic search
+        results = await self.search(query, user_id, limit=limit)
+
+        return {
+            "results": results,
+            "knowledge_strips": [],
+            "grading": {"relevant": len(results), "irrelevant": 0, "ambiguous": 0},
+            "needs_web_search": len(results) == 0,
+            "timings": {},
         }
 
     # =========================================================================
@@ -520,4 +641,6 @@ __all__ = [
     "RoxyMemoryScope",
     "ROXY_TYPE_MAPPING",
     "ROXY_SCOPE_MAPPING",
+    # Re-exported for convenience
+    "RetrievalConfig",
 ]

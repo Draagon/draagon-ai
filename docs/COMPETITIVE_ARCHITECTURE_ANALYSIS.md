@@ -4,13 +4,25 @@
 
 ---
 
+> **UPDATE (December 28, 2025):** This document was written before fully understanding Draagon-AI's scope. It incorrectly frames Draagon-AI as primarily a memory system.
+>
+> **The correction:** Draagon-AI is a **53,117-line agentic framework** with self-evolution capabilities, not an 8,500-line memory system. Mem0 and Zep are potential **storage backends**, not competitors.
+>
+> **See instead:** `REVISED_MASTER_STRATEGY.md` and `FULL_SYSTEM_COMPARISON.md` for the corrected analysis.
+>
+> This document is retained for its technical research on Mem0 and Zep architectures.
+
+---
+
 ## Executive Summary
 
-After analyzing all three architectures, the strategic recommendation is:
+~~After analyzing all three architectures, the strategic recommendation is:~~
 
-**Don't align. Don't compete directly. Complement and differentiate.**
+~~**Don't align. Don't compete directly. Complement and differentiate.**~~
 
-Draagon-AI has unique cognitive capabilities (belief reconciliation, curiosity engine) that Mem0 and Zep lack. The optimal strategy is to position Draagon-AI as a **cognitive layer** that can sit *on top of* Mem0 or Zep, rather than replacing their storage/retrieval primitives.
+**REVISED:** Mem0 and Zep are memory systems (~5-10K lines). Draagon-AI is a complete agentic framework (53K lines) that includes self-evolution, multi-agent orchestration, and behavior generation. They are not comparable.
+
+The technical research on Mem0/Zep below remains useful for understanding potential storage backends.
 
 ---
 

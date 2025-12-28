@@ -97,6 +97,17 @@ from draagon_ai.memory.providers import (
     LayeredMemoryConfig,
 )
 
+# Retrieval Augmentation (Self-RAG, CRAG)
+from draagon_ai.memory.retrieval import (
+    RetrievalAugmenter,
+    RetrievalConfig,
+    RelevanceAssessment,
+    GradedChunk,
+    Contradiction,
+    SelfRAGResult,
+    CRAGResult,
+)
+
 __all__ = [
     # Base memory interfaces
     "MemoryProvider",
@@ -158,4 +169,12 @@ __all__ = [
     # Memory Providers
     "LayeredMemoryProvider",
     "LayeredMemoryConfig",
+    # Retrieval Augmentation
+    "RetrievalAugmenter",
+    "RetrievalConfig",
+    "RelevanceAssessment",
+    "GradedChunk",
+    "Contradiction",
+    "SelfRAGResult",
+    "CRAGResult",
 ]
