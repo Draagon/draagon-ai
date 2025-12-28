@@ -52,6 +52,8 @@ try:
         MatchAny,
         HasIdCondition,
         PayloadSchemaType,
+        PointIdsList,
+        FilterSelector,
     )
     QDRANT_AVAILABLE = True
 except ImportError:
@@ -478,17 +480,17 @@ class QdrantGraphStore(TemporalCognitiveGraph):
         )
 
         if result and self._client:
-            # Delete node from Qdrant
+            # Delete node from Qdrant using PointIdsList
             await self._client.delete(
                 collection_name=self.config.nodes_collection,
-                points_selector=HasIdCondition(has_id=[node_id]),
+                points_selector=PointIdsList(points=[node_id]),
             )
 
             # Delete connected edges from Qdrant
             if edge_ids_to_delete:
                 await self._client.delete(
                     collection_name=self.config.edges_collection,
-                    points_selector=HasIdCondition(has_id=list(edge_ids_to_delete)),
+                    points_selector=PointIdsList(points=list(edge_ids_to_delete)),
                 )
 
             logger.debug(f"Deleted node {node_id} and {len(edge_ids_to_delete)} edges from Qdrant")
@@ -582,7 +584,7 @@ class QdrantGraphStore(TemporalCognitiveGraph):
         if result and self._client:
             await self._client.delete(
                 collection_name=self.config.edges_collection,
-                points_selector=HasIdCondition(has_id=[edge_id]),
+                points_selector=PointIdsList(points=[edge_id]),
             )
             logger.debug(f"Deleted edge {edge_id} from Qdrant")
 
@@ -629,18 +631,19 @@ class QdrantGraphStore(TemporalCognitiveGraph):
             include_ancestor_scopes=include_ancestor_scopes,
         )
 
-        # Search Qdrant
+        # Search Qdrant using query_points (async API)
         search_filter = Filter(must=filter_conditions) if filter_conditions else None
 
-        results = await self._client.search(
+        query_result = await self._client.query_points(
             collection_name=self.config.nodes_collection,
-            query_vector=query_embedding,
+            query=query_embedding,
             query_filter=search_filter,
             limit=limit,
             score_threshold=min_score,
             with_payload=True,
             with_vectors=True,
         )
+        results = query_result.points
 
         # Convert to GraphSearchResult
         search_results = []

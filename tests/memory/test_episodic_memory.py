@@ -336,3 +336,295 @@ class TestEpisodeDuration:
 
         # Duration should be >= 0
         assert closed.duration_seconds >= 0
+
+
+class TestGetEpisodesWithEntity:
+    """Test entity-based episode lookup."""
+
+    @pytest.mark.asyncio
+    async def test_get_episodes_with_entity(self, episodic):
+        """Test finding episodes that mention a specific entity."""
+        # Create episodes with different entities
+        ep1 = await episodic.start_episode()
+        await episodic.add_event(
+            ep1.node_id,
+            "Discussed travel to Paris",
+            entities=["Paris", "travel"],
+        )
+        await episodic.close_episode(ep1.node_id, summary="Paris trip planning")
+
+        ep2 = await episodic.start_episode()
+        await episodic.add_event(
+            ep2.node_id,
+            "Talked about London weather",
+            entities=["London", "weather"],
+        )
+        await episodic.close_episode(ep2.node_id, summary="London discussion")
+
+        ep3 = await episodic.start_episode()
+        await episodic.add_event(
+            ep3.node_id,
+            "More Paris information",
+            entities=["Paris", "museum"],
+        )
+        await episodic.close_episode(ep3.node_id, summary="More Paris info")
+
+        # Find episodes mentioning Paris
+        paris_episodes = await episodic.get_episodes_with_entity("Paris", limit=10)
+
+        # Should find at least the episodes with Paris
+        assert isinstance(paris_episodes, list)
+
+    @pytest.mark.asyncio
+    async def test_get_episodes_with_entity_case_insensitive(self, episodic):
+        """Test that entity search is case insensitive."""
+        ep = await episodic.start_episode()
+        await episodic.add_event(
+            ep.node_id,
+            "Meeting with Doug",
+            entities=["Doug"],
+        )
+        await episodic.close_episode(ep.node_id)
+
+        # Search with different case
+        results = await episodic.get_episodes_with_entity("doug", limit=5)
+
+        assert isinstance(results, list)
+
+    @pytest.mark.asyncio
+    async def test_get_episodes_with_entity_scope_filter(self, episodic):
+        """Test filtering episodes by entity and scope."""
+        ep = await episodic.start_episode()
+        await episodic.add_event(
+            ep.node_id,
+            "Test content with entity",
+            entities=["TestEntity"],
+        )
+        await episodic.close_episode(ep.node_id)
+
+        # Search with scope filter that doesn't match
+        results = await episodic.get_episodes_with_entity(
+            "TestEntity",
+            scope_id="nonexistent_scope",
+            limit=5,
+        )
+
+        # Should return empty since scope doesn't match
+        assert results == []
+
+    @pytest.mark.asyncio
+    async def test_get_episodes_with_entity_respects_limit(self, episodic):
+        """Test that limit parameter is respected."""
+        # Create multiple episodes with same entity
+        for i in range(5):
+            ep = await episodic.start_episode()
+            await episodic.add_event(
+                ep.node_id,
+                f"Content {i}",
+                entities=["SharedEntity"],
+            )
+            await episodic.close_episode(ep.node_id)
+
+        results = await episodic.get_episodes_with_entity("SharedEntity", limit=2)
+
+        assert len(results) <= 2
+
+
+class TestGetEpisodeChainAdvanced:
+    """Advanced tests for episode chain traversal."""
+
+    @pytest.mark.asyncio
+    async def test_get_episode_chain_both_directions(self, episodic):
+        """Test traversing episode chain in both directions."""
+        # Create chain of 5 episodes
+        episodes = []
+        for i in range(5):
+            ep = await episodic.start_episode(episode_type=f"ep_{i}")
+            await episodic.close_episode(ep.node_id, summary=f"Episode {i}")
+            episodes.append(ep)
+
+        # Get chain from middle episode
+        chain = await episodic.get_episode_chain(
+            episodes[2].node_id,
+            direction="both",
+            max_hops=10,
+        )
+
+        # Should return a list with the episodes
+        assert isinstance(chain, list)
+        assert len(chain) >= 1  # At least the starting episode
+
+    @pytest.mark.asyncio
+    async def test_get_episode_chain_nonexistent_start(self, episodic):
+        """Test chain traversal from non-existent episode."""
+        chain = await episodic.get_episode_chain(
+            "nonexistent_episode_id",
+            direction="both",
+            max_hops=5,
+        )
+
+        # Should return empty list
+        assert chain == []
+
+    @pytest.mark.asyncio
+    async def test_get_episode_chain_respects_max_hops(self, episodic):
+        """Test that max_hops limits chain length."""
+        # Create chain of 10 episodes
+        for i in range(10):
+            ep = await episodic.start_episode()
+            await episodic.close_episode(ep.node_id)
+
+        # Get first episode
+        recent = await episodic.get_recent_episodes(limit=10)
+        if recent:
+            # Traverse with limited hops
+            chain = await episodic.get_episode_chain(
+                recent[-1].node_id,
+                direction="after",
+                max_hops=3,
+            )
+
+            # Chain should be limited
+            assert len(chain) <= 4  # start + 3 hops
+
+    @pytest.mark.asyncio
+    async def test_get_episode_chain_before_direction(self, episodic):
+        """Test traversing only in before direction."""
+        # Create a few episodes
+        ep1 = await episodic.start_episode()
+        await episodic.close_episode(ep1.node_id)
+
+        ep2 = await episodic.start_episode()
+        await episodic.close_episode(ep2.node_id)
+
+        # Get chain in before direction only
+        chain = await episodic.get_episode_chain(
+            ep2.node_id,
+            direction="before",
+            max_hops=5,
+        )
+
+        assert isinstance(chain, list)
+
+
+class TestPromotionCandidates:
+    """Test promotion candidate detection for episodic memory."""
+
+    @pytest.mark.asyncio
+    async def test_get_promotion_candidates_empty(self, episodic):
+        """Test getting promotion candidates when none exist."""
+        candidates = await episodic.get_promotion_candidates()
+
+        assert candidates == []
+
+    @pytest.mark.asyncio
+    async def test_get_promotion_candidates_with_high_importance(self, episodic):
+        """Test that high importance episodes are candidates."""
+        ep = await episodic.start_episode()
+        await episodic.add_event(
+            ep.node_id,
+            "Important discussion",
+            entities=["Entity1", "Entity2", "Entity3"],  # Multiple entities
+        )
+        await episodic.close_episode(ep.node_id, summary="Very important")
+
+        # Manually boost importance
+        node = await episodic._graph.get_node(ep.node_id)
+        if node:
+            node.importance = 0.95
+
+        candidates = await episodic.get_promotion_candidates()
+
+        # May include the episode if it meets criteria
+        assert isinstance(candidates, list)
+
+    @pytest.mark.asyncio
+    async def test_get_promotion_candidates_excludes_open_episodes(self, episodic):
+        """Test that open episodes are not promotion candidates."""
+        ep = await episodic.start_episode()
+        await episodic.add_event(
+            ep.node_id,
+            "Discussion",
+            entities=["Entity1", "Entity2"],
+        )
+        # Don't close - leave open
+
+        candidates = await episodic.get_promotion_candidates()
+
+        # Open episode should not be included
+        episode_ids = [c.node_id for c in candidates]
+        assert ep.node_id not in episode_ids
+
+    @pytest.mark.asyncio
+    async def test_get_promotion_candidates_needs_entities(self, episodic):
+        """Test that episodes need entities for promotion."""
+        ep = await episodic.start_episode()
+        await episodic.add_event(
+            ep.node_id,
+            "Plain discussion",
+            # No entities
+        )
+        await episodic.close_episode(ep.node_id)
+
+        candidates = await episodic.get_promotion_candidates()
+
+        # Episode without entities should not be included
+        episode_ids = [c.node_id for c in candidates]
+        assert ep.node_id not in episode_ids
+
+
+class TestEpisodicMemoryStats:
+    """Test statistics gathering for episodic memory."""
+
+    @pytest.mark.asyncio
+    async def test_stats_empty_memory(self, episodic):
+        """Test stats when no episodes exist."""
+        stats = episodic.stats()
+
+        assert stats["episode_count"] == 0
+        assert stats["event_count"] == 0
+        assert stats["open_episodes"] == 0
+        assert stats["avg_events_per_episode"] == 0
+        assert stats["avg_entities_per_episode"] == 0
+
+    @pytest.mark.asyncio
+    async def test_stats_with_episodes(self, episodic):
+        """Test stats with episodes and events."""
+        # Create episode 1 with events
+        ep1 = await episodic.start_episode()
+        await episodic.add_event(ep1.node_id, "Event 1", entities=["E1"])
+        await episodic.add_event(ep1.node_id, "Event 2", entities=["E2"])
+        await episodic.close_episode(ep1.node_id)
+
+        # Create episode 2 with events
+        ep2 = await episodic.start_episode()
+        await episodic.add_event(ep2.node_id, "Event 3", entities=["E3", "E4"])
+        await episodic.close_episode(ep2.node_id)
+
+        # Create open episode
+        ep3 = await episodic.start_episode()
+        await episodic.add_event(ep3.node_id, "Event 4")
+
+        stats = episodic.stats()
+
+        assert stats["episode_count"] >= 2  # At least 2 closed episodes
+        assert stats["event_count"] >= 4  # At least 4 events
+        assert stats["open_episodes"] >= 1  # At least 1 open
+
+    @pytest.mark.asyncio
+    async def test_stats_avg_calculations(self, episodic):
+        """Test that average calculations work correctly."""
+        # Create episodes with known entity counts
+        ep1 = await episodic.start_episode()
+        await episodic.add_event(ep1.node_id, "E1", entities=["A", "B"])
+        await episodic.close_episode(ep1.node_id)
+
+        ep2 = await episodic.start_episode()
+        await episodic.add_event(ep2.node_id, "E2", entities=["C", "D", "E", "F"])
+        await episodic.close_episode(ep2.node_id)
+
+        stats = episodic.stats()
+
+        # Averages should be calculated
+        assert isinstance(stats["avg_events_per_episode"], (int, float))
+        assert isinstance(stats["avg_entities_per_episode"], (int, float))

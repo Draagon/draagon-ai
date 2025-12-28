@@ -921,7 +921,7 @@ class LayeredMemoryProvider(MemoryProvider):
                                 user_id=user_id,
                                 importance=item.attention_weight,
                             ),
-                            relevance=item.attention_weight,
+                            score=item.attention_weight,
                         )
                     )
 
@@ -946,7 +946,7 @@ class LayeredMemoryProvider(MemoryProvider):
                                 user_id=user_id,
                                 importance=node.importance,
                             ),
-                            relevance=relevance,
+                            score=relevance,
                         )
                     )
 
@@ -972,7 +972,7 @@ class LayeredMemoryProvider(MemoryProvider):
                                 confidence=node.confidence,
                                 entities=node.entities,
                             ),
-                            relevance=relevance,
+                            score=relevance,
                         )
                     )
 
@@ -996,12 +996,12 @@ class LayeredMemoryProvider(MemoryProvider):
                                 scope=MemoryScope.AGENT,
                                 importance=node.importance,
                             ),
-                            relevance=relevance,
+                            score=relevance,
                         )
                     )
 
-        # Sort by relevance and limit
-        results.sort(key=lambda r: r.relevance, reverse=True)
+        # Sort by score and limit
+        results.sort(key=lambda r: r.score, reverse=True)
         return results[:limit]
 
     async def get(self, memory_id: str) -> Memory | None:

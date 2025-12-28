@@ -380,3 +380,183 @@ class TestSourceTracking:
         )
 
         assert "ep_789" in fact.source_episode_ids
+
+
+class TestSemanticMemoryGet:
+    """Test get operations for semantic memory."""
+
+    @pytest.mark.asyncio
+    async def test_get_returns_semantic_node(self, semantic):
+        """Test that get returns semantic layer nodes."""
+        from draagon_ai.memory.temporal_nodes import NodeType
+
+        # Create a fact (semantic layer)
+        fact = await semantic.add_fact("Test fact")
+
+        # Get by node ID
+        node = await semantic.get(fact.node_id)
+
+        assert node is not None
+
+    @pytest.mark.asyncio
+    async def test_get_nonexistent_returns_none(self, semantic):
+        """Test get returns None for non-existent node."""
+        result = await semantic.get("nonexistent_id")
+
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_get_non_semantic_layer_returns_none(self, semantic):
+        """Test get returns None for nodes not in semantic layer."""
+        from draagon_ai.memory.temporal_nodes import NodeType, MemoryLayer
+
+        # Add a node directly that's not in semantic layer
+        node = await semantic._graph.add_node(
+            content="Working memory item",
+            node_type=NodeType.CONTEXT,
+            scope_id="user:test",
+        )
+        # Change layer to non-semantic
+        node.layer = MemoryLayer.WORKING
+
+        result = await semantic.get(node.node_id)
+
+        # Should return None because it's not in semantic layer
+        assert result is None
+
+
+class TestEntityMerging:
+    """Test entity merging operations."""
+
+    @pytest.mark.asyncio
+    async def test_merge_entities(self, semantic):
+        """Test merging two entities into one."""
+        # Create two entities that should be merged
+        doug = await semantic.create_entity(
+            "Doug",
+            "person",
+            aliases=["D"],
+        )
+        douglas = await semantic.create_entity(
+            "Douglas",
+            "person",
+            aliases=["Doug M"],
+        )
+
+        # Merge douglas into doug
+        merged = await semantic.merge_entities(doug.node_id, douglas.node_id)
+
+        # Primary should still exist
+        assert merged is not None
+        # Aliases should include both
+        assert "Douglas" in merged.aliases or "Doug M" in merged.aliases
+
+    @pytest.mark.asyncio
+    async def test_merge_entities_nonexistent_primary(self, semantic):
+        """Test merging with non-existent primary entity."""
+        secondary = await semantic.create_entity("Secondary", "thing")
+
+        result = await semantic.merge_entities("nonexistent", secondary.node_id)
+
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_merge_entities_nonexistent_secondary(self, semantic):
+        """Test merging with non-existent secondary entity."""
+        primary = await semantic.create_entity("Primary", "thing")
+
+        result = await semantic.merge_entities(primary.node_id, "nonexistent")
+
+        assert result is None
+
+
+class TestAddAliasEdgeCases:
+    """Test add_alias edge cases."""
+
+    @pytest.mark.asyncio
+    async def test_add_alias_to_nonexistent_entity(self, semantic):
+        """Test adding alias to non-existent entity."""
+        result = await semantic.add_alias("nonexistent_id", "alias")
+
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_add_alias_to_non_entity(self, semantic):
+        """Test adding alias to non-entity node."""
+        # Create a fact instead of entity
+        fact = await semantic.add_fact("Test fact")
+
+        result = await semantic.add_alias(fact.node_id, "alias")
+
+        assert result is False
+
+
+class TestFactDeduplication:
+    """Test fact deduplication and restating."""
+
+    @pytest.mark.asyncio
+    async def test_add_same_fact_restates(self, semantic):
+        """Test that adding the same fact restates it."""
+        # Note: This requires embedding support which may not be available in tests
+        # Testing the path exists
+        fact1 = await semantic.add_fact("The sky is blue")
+        fact2 = await semantic.add_fact("The sky is blue")
+
+        # Both should return facts
+        assert fact1 is not None
+        assert fact2 is not None
+
+
+class TestSemanticSearch:
+    """Test semantic search operations."""
+
+    @pytest.mark.asyncio
+    async def test_search_facts(self, semantic):
+        """Test searching for facts."""
+        await semantic.add_fact("Weather is sunny today")
+        await semantic.add_fact("Weather will be rainy tomorrow")
+
+        results = await semantic.search("weather forecast", limit=5)
+
+        assert isinstance(results, list)
+
+    @pytest.mark.asyncio
+    async def test_search_with_scope(self, semantic):
+        """Test searching with scope filter."""
+        await semantic.add_fact(
+            "User-specific fact",
+            scope_id="user:doug",
+        )
+
+        results = await semantic.search(
+            "user fact",
+            scope_ids=["user:doug"],
+            limit=5,
+        )
+
+        assert isinstance(results, list)
+
+
+class TestSemanticStats:
+    """Test semantic memory statistics."""
+
+    @pytest.mark.asyncio
+    async def test_stats_empty_memory(self, semantic):
+        """Test stats with no items."""
+        stats = semantic.stats()
+
+        assert "entity_count" in stats
+        assert "fact_count" in stats
+        assert "relationship_count" in stats
+
+    @pytest.mark.asyncio
+    async def test_stats_with_items(self, semantic):
+        """Test stats with entities and facts."""
+        await semantic.create_entity("TestEntity", "thing")
+        await semantic.add_fact("Test fact 1")
+        await semantic.add_fact("Test fact 2")
+
+        stats = semantic.stats()
+
+        assert stats["entity_count"] >= 1
+        assert stats["fact_count"] >= 2

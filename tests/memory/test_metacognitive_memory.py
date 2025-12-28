@@ -401,3 +401,176 @@ class TestStats:
         assert stats["strategy_count"] == 1
         assert stats["insight_count"] == 1
         assert stats["behavior_count"] == 1
+
+
+class TestBehaviorProperties:
+    """Test Behavior model properties."""
+
+    @pytest.mark.asyncio
+    async def test_behavior_effectiveness_score(self, metacognitive):
+        """Test behavior effectiveness score calculation."""
+        behavior = await metacognitive.register_behavior(
+            "test_behavior",
+            "Test Behavior",
+            "A test behavior",
+        )
+
+        # Initially no success/failure - should be 0.5
+        assert behavior.effectiveness_score == 0.5
+
+    @pytest.mark.asyncio
+    async def test_behavior_effectiveness_with_results(self, metacognitive):
+        """Test effectiveness score with success/failure counts."""
+        behavior = await metacognitive.register_behavior(
+            "test_behavior",
+            "Test Behavior 2",
+            "Another test behavior",
+        )
+
+        # Manually set success/failure counts
+        behavior.success_count = 8
+        behavior.failure_count = 2
+
+        # Should be 8/10 = 0.8
+        assert behavior.effectiveness_score == 0.8
+
+    @pytest.mark.asyncio
+    async def test_behavior_ready_for_improvement_initial(self, metacognitive):
+        """Test behavior ready_for_improvement when can_self_improve is True."""
+        behavior = await metacognitive.register_behavior(
+            "improvable",
+            "Improvable Behavior",
+            "Can self improve",
+        )
+        behavior.can_self_improve = True
+        behavior.last_improvement = None
+
+        # Should be ready since last_improvement is None
+        assert behavior.ready_for_improvement is True
+
+    @pytest.mark.asyncio
+    async def test_behavior_not_ready_when_cannot_self_improve(self, metacognitive):
+        """Test behavior not ready when can_self_improve is False."""
+        behavior = await metacognitive.register_behavior(
+            "static",
+            "Static Behavior",
+            "Cannot self improve",
+        )
+        behavior.can_self_improve = False
+
+        assert behavior.ready_for_improvement is False
+
+    @pytest.mark.asyncio
+    async def test_behavior_ready_after_cooldown(self, metacognitive):
+        """Test behavior ready after improvement cooldown passes."""
+        from datetime import datetime, timedelta
+
+        behavior = await metacognitive.register_behavior(
+            "cooled",
+            "Cooled Behavior",
+            "Ready after cooldown",
+        )
+        behavior.can_self_improve = True
+        behavior.improvement_cooldown = timedelta(hours=1)
+        behavior.last_improvement = datetime.now() - timedelta(hours=2)
+
+        # Should be ready since cooldown passed
+        assert behavior.ready_for_improvement is True
+
+
+class TestSkillModelProperties:
+    """Test Skill model properties."""
+
+    @pytest.mark.asyncio
+    async def test_skill_needs_improvement_property(self, metacognitive):
+        """Test skill needs_improvement property exists and can be accessed."""
+        skill = await metacognitive.add_skill(
+            "reliable_skill",
+            "command",
+            "docker ps",
+        )
+
+        # Property should exist and return a boolean
+        assert hasattr(skill, "needs_improvement")
+        assert isinstance(skill.needs_improvement, bool)
+        # With 0 attempts, should be False (not enough data)
+        assert skill.needs_improvement is False
+
+
+class TestMetacognitiveGet:
+    """Test get operations for metacognitive memory."""
+
+    @pytest.mark.asyncio
+    async def test_add_skill_returns_skill(self, metacognitive):
+        """Test that add_skill returns a Skill object."""
+        skill = await metacognitive.add_skill(
+            "test_skill",
+            "command",
+            "echo test",
+        )
+
+        assert skill is not None
+        assert skill.skill_name == "test_skill"
+        assert skill.skill_type == "command"
+
+    @pytest.mark.asyncio
+    async def test_add_strategy_returns_strategy(self, metacognitive):
+        """Test that add_strategy returns a Strategy object."""
+        strategy = await metacognitive.add_strategy(
+            "test_strategy",
+            "reasoning",
+            "A test strategy description",
+        )
+
+        assert strategy is not None
+        assert strategy.strategy_name == "test_strategy"
+
+    @pytest.mark.asyncio
+    async def test_add_insight_returns_insight(self, metacognitive):
+        """Test that add_insight returns an Insight object."""
+        insight = await metacognitive.add_insight(
+            "Users prefer concise responses",
+            "behavioral",
+        )
+
+        assert insight is not None
+
+
+class TestSkillVersioning:
+    """Test skill versioning and evolution."""
+
+    @pytest.mark.asyncio
+    async def test_skill_initial_version(self, metacognitive):
+        """Test that skills start at version 1."""
+        skill = await metacognitive.add_skill(
+            "versioned_skill",
+            "command",
+            "initial procedure",
+        )
+
+        assert skill.version == 1
+
+    @pytest.mark.asyncio
+    async def test_skill_has_procedure(self, metacognitive):
+        """Test that skill has procedure attribute."""
+        skill = await metacognitive.add_skill(
+            "test_procedure",
+            "command",
+            "echo hello",
+        )
+
+        assert skill.procedure == "echo hello"
+
+
+class TestSkillSearch:
+    """Test skill search operations."""
+
+    @pytest.mark.asyncio
+    async def test_search_returns_skills(self, metacognitive):
+        """Test that search returns skill results."""
+        await metacognitive.add_skill("search_skill1", "command", "docker ps")
+        await metacognitive.add_skill("search_skill2", "command", "docker logs")
+
+        results = await metacognitive.search("docker", limit=5)
+
+        assert isinstance(results, list)
