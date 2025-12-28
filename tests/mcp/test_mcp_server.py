@@ -24,6 +24,9 @@ from draagon_ai.mcp.config import (
     get_scope_level,
 )
 from draagon_ai.mcp.server import (
+    AuthResult,
+    AuthAuditEntry,
+    MCPAuthenticator,
     MemoryMCPServer,
     create_memory_mcp_server,
     map_scope_to_draagon,
@@ -978,3 +981,195 @@ class TestClientContextManagement:
 
         # Should fall back to config defaults
         assert mcp_server._get_user_id(None) == mcp_server.config.default_user_id
+
+
+# =============================================================================
+# Test Authentication
+# =============================================================================
+
+
+class TestMCPAuthenticator:
+    """Tests for MCPAuthenticator."""
+
+    @pytest.fixture
+    def auth_config(self):
+        """Create config with authentication enabled."""
+        config = MCPConfig(require_auth=True)
+        config.add_client(
+            api_key="test-api-key-12345",
+            client_id="test-client",
+            name="Test Client",
+            scopes=[MCPScope.PRIVATE, MCPScope.SHARED],
+            user_id="test-user",
+        )
+        return config
+
+    @pytest.fixture
+    def authenticator(self, auth_config):
+        """Create authenticator with test config."""
+        return MCPAuthenticator(auth_config)
+
+    def test_auth_not_required(self):
+        """Test authentication when not required."""
+        config = MCPConfig(require_auth=False)
+        auth = MCPAuthenticator(config)
+
+        result = auth.authenticate(None)
+        assert result.authenticated is True
+        assert result.error is None
+
+    def test_auth_required_no_key(self, authenticator):
+        """Test auth required but no key provided."""
+        result = authenticator.authenticate(None)
+        assert result.authenticated is False
+        assert "Authentication required" in result.error
+
+    def test_auth_invalid_key(self, authenticator):
+        """Test auth with invalid key."""
+        result = authenticator.authenticate("invalid-key")
+        assert result.authenticated is False
+        assert "Invalid API key" in result.error
+
+    def test_auth_valid_key(self, authenticator):
+        """Test auth with valid key."""
+        result = authenticator.authenticate("test-api-key-12345")
+        assert result.authenticated is True
+        assert result.client_config is not None
+        assert result.client_config.client_id == "test-client"
+
+    def test_auth_client_config(self, authenticator):
+        """Test client config is returned on success."""
+        result = authenticator.authenticate("test-api-key-12345")
+        assert result.client_config.allowed_scopes == [MCPScope.PRIVATE, MCPScope.SHARED]
+        assert result.client_config.default_user_id == "test-user"
+
+
+class TestAuthAuditLog:
+    """Tests for authentication audit logging."""
+
+    @pytest.fixture
+    def auth_config(self):
+        """Create config with authentication enabled."""
+        config = MCPConfig(require_auth=True)
+        config.add_client(
+            api_key="valid-key-12345678",
+            client_id="test-client",
+            name="Test Client",
+        )
+        return config
+
+    @pytest.fixture
+    def authenticator(self, auth_config):
+        """Create authenticator with test config."""
+        return MCPAuthenticator(auth_config)
+
+    def test_successful_auth_logged(self, authenticator):
+        """Test successful auth is logged."""
+        authenticator.authenticate("valid-key-12345678")
+        log = authenticator.get_audit_log()
+        assert len(log) == 1
+        assert log[0]["success"] is True
+        assert log[0]["client_id"] == "test-client"
+
+    def test_failed_auth_logged(self, authenticator):
+        """Test failed auth is logged."""
+        authenticator.authenticate("invalid-key")
+        log = authenticator.get_audit_log()
+        assert len(log) == 1
+        assert log[0]["success"] is False
+        assert log[0]["error"] == "Invalid API key"
+
+    def test_api_key_masked(self, authenticator):
+        """Test API key is masked in log."""
+        authenticator.authenticate("valid-key-12345678")
+        log = authenticator.get_audit_log()
+        # Key should be masked (first 4 + ... + last 4)
+        assert "vali" in log[0]["api_key_prefix"]
+        assert "5678" in log[0]["api_key_prefix"]
+        assert "..." in log[0]["api_key_prefix"]
+        # Full key should NOT appear
+        assert "valid-key-12345678" not in log[0]["api_key_prefix"]
+
+    def test_short_key_masked(self, authenticator):
+        """Test short API key is masked."""
+        authenticator.authenticate("short")
+        log = authenticator.get_audit_log()
+        # Short keys show first 2 chars + ...
+        assert log[0]["api_key_prefix"].startswith("sh")
+        assert "..." in log[0]["api_key_prefix"]
+
+    def test_audit_log_limit(self, authenticator):
+        """Test audit log limit."""
+        for i in range(10):
+            authenticator.authenticate(f"key-{i}")
+
+        log = authenticator.get_audit_log(limit=5)
+        assert len(log) == 5
+
+    def test_no_key_logged(self, authenticator):
+        """Test no key is logged as (none)."""
+        authenticator.authenticate(None)
+        log = authenticator.get_audit_log()
+        assert log[0]["api_key_prefix"] == "(none)"
+
+
+class TestServerAuthentication:
+    """Tests for server-level authentication integration."""
+
+    @pytest.fixture
+    def auth_server(self, mock_memory_provider):
+        """Create server with auth enabled."""
+        config = MCPConfig(
+            require_auth=True,
+            qdrant_url="http://test:6333",
+            log_level="ERROR",
+        )
+        config.add_client(
+            api_key="server-test-key-1234",
+            client_id="server-client",
+            name="Server Client",
+            scopes=[MCPScope.PRIVATE],
+            user_id="auth-user",
+        )
+        return MemoryMCPServer(config=config, memory_provider=mock_memory_provider)
+
+    def test_server_has_authenticator(self, auth_server):
+        """Test server has authenticator."""
+        assert hasattr(auth_server, "authenticator")
+        assert isinstance(auth_server.authenticator, MCPAuthenticator)
+
+    def test_server_authenticate_success(self, auth_server):
+        """Test server authentication sets context."""
+        result = auth_server.authenticate("server-test-key-1234")
+
+        assert result.authenticated is True
+        assert auth_server._client_context is not None
+        assert auth_server._client_context.client_id == "server-client"
+
+    def test_server_authenticate_failure(self, auth_server):
+        """Test server authentication failure."""
+        result = auth_server.authenticate("wrong-key")
+
+        assert result.authenticated is False
+        # Context should not be set on failure
+        assert auth_server._client_context is None
+
+    def test_server_get_audit_log(self, auth_server):
+        """Test server audit log access."""
+        auth_server.authenticate("server-test-key-1234")
+        auth_server.authenticate("invalid-key")
+
+        log = auth_server.get_auth_audit_log()
+        assert len(log) == 2
+
+    def test_authenticated_client_scope_enforcement(self, auth_server):
+        """Test authenticated client has scope restrictions."""
+        auth_server.authenticate("server-test-key-1234")
+
+        # Client only has PRIVATE scope
+        allowed, error = auth_server._check_write_permission("private")
+        assert allowed is True
+
+        allowed, error = auth_server._check_write_permission("shared")
+        assert allowed is False
+        assert "Permission denied" in error

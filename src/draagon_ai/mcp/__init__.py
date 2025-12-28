@@ -43,7 +43,13 @@ from draagon_ai.mcp.config import (
     get_readable_scopes,
     get_scope_level,
 )
-from draagon_ai.mcp.server import MemoryMCPServer, create_memory_mcp_server
+from draagon_ai.mcp.server import (
+    AuthResult,
+    AuthAuditEntry,
+    MCPAuthenticator,
+    MemoryMCPServer,
+    create_memory_mcp_server,
+)
 
 __all__ = [
     # Config
@@ -56,6 +62,10 @@ __all__ = [
     "can_write_scope",
     "get_readable_scopes",
     "get_scope_level",
+    # Authentication
+    "AuthResult",
+    "AuthAuditEntry",
+    "MCPAuthenticator",
     # Server
     "MemoryMCPServer",
     "create_memory_mcp_server",

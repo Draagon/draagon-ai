@@ -10,8 +10,8 @@ I'll read this file, do the current task, update status, and move to the next st
 
 ```
 PHASE: 5 - Memory MCP Server
-REQ: REQ-005-07
-NAME: Authentication/authorization
+REQ: REQ-005-08
+NAME: Claude Code integration test
 STEP: IMPLEMENT
 ```
 
@@ -110,12 +110,12 @@ STEP: IMPLEMENT
 | 04 | memory.list tool | [x] | [x] | [x] | [x] |
 | 05 | beliefs.reconcile tool | [x] | [x] | [x] | [x] |
 | 06 | Scope-based access control | [x] | [x] | [x] | [x] |
-| 07 | Authentication/authorization | [ ] | [ ] | [ ] | [ ] |
+| 07 | Authentication/authorization | [x] | [x] | [x] | [x] |
 | 08 | Claude Code integration test | [ ] | [ ] | [ ] | [ ] |
 | 09 | Unit tests (≥90% coverage) | [x] | [x] | [x] | [x] |
 | 10 | Integration tests | [ ] | [ ] | [ ] | [ ] |
 
-**Phase 5 Status:** IN PROGRESS (7/10)
+**Phase 5 Status:** IN PROGRESS (8/10)
 
 ---
 

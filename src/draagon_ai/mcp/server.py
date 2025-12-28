@@ -26,12 +26,158 @@ import asyncio
 import logging
 import os
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import Any
 
 from mcp.server.fastmcp import FastMCP
+
+
+# =============================================================================
+# Authentication
+# =============================================================================
+
+
+@dataclass
+class AuthResult:
+    """Result of authentication attempt."""
+
+    authenticated: bool
+    client_config: Any | None = None
+    error: str | None = None
+
+
+@dataclass
+class AuthAuditEntry:
+    """Audit log entry for authentication attempts."""
+
+    timestamp: datetime
+    api_key_prefix: str  # Only first/last 4 chars for security
+    success: bool
+    client_id: str | None
+    error: str | None = None
+
+
+class MCPAuthenticator:
+    """Handles API key authentication for MCP server.
+
+    Attributes:
+        config: MCP server configuration.
+        audit_log: List of recent auth attempts.
+    """
+
+    def __init__(self, config: Any):
+        """Initialize authenticator with config.
+
+        Args:
+            config: MCPConfig instance.
+        """
+        self.config = config
+        self.audit_log: list[AuthAuditEntry] = []
+        self._max_audit_entries = 1000
+
+    def authenticate(self, api_key: str | None) -> AuthResult:
+        """Authenticate a request using API key.
+
+        Args:
+            api_key: The API key from request headers.
+
+        Returns:
+            AuthResult with authentication status and client config.
+        """
+        # If auth not required, return success with default context
+        if not self.config.require_auth:
+            return AuthResult(authenticated=True, client_config=None)
+
+        # Auth required but no key provided
+        if not api_key:
+            self._log_auth_attempt(None, False, None, "No API key provided")
+            return AuthResult(
+                authenticated=False,
+                error="Authentication required. Provide API key in X-API-Key header.",
+            )
+
+        # Look up client config
+        client_config = self.config.get_client(api_key)
+
+        if client_config is None:
+            self._log_auth_attempt(api_key, False, None, "Invalid API key")
+            return AuthResult(
+                authenticated=False,
+                error="Invalid API key.",
+            )
+
+        # Success
+        self._log_auth_attempt(api_key, True, client_config.client_id)
+        return AuthResult(
+            authenticated=True,
+            client_config=client_config,
+        )
+
+    def _log_auth_attempt(
+        self,
+        api_key: str | None,
+        success: bool,
+        client_id: str | None,
+        error: str | None = None,
+    ) -> None:
+        """Log an authentication attempt.
+
+        Args:
+            api_key: The API key used (will be masked).
+            success: Whether auth succeeded.
+            client_id: Client ID if authenticated.
+            error: Error message if failed.
+        """
+        # Mask API key for security
+        if api_key and len(api_key) >= 8:
+            masked_key = f"{api_key[:4]}...{api_key[-4:]}"
+        elif api_key:
+            masked_key = f"{api_key[:2]}..."
+        else:
+            masked_key = "(none)"
+
+        entry = AuthAuditEntry(
+            timestamp=datetime.utcnow(),
+            api_key_prefix=masked_key,
+            success=success,
+            client_id=client_id,
+            error=error,
+        )
+
+        self.audit_log.append(entry)
+
+        # Trim log if too large
+        if len(self.audit_log) > self._max_audit_entries:
+            self.audit_log = self.audit_log[-self._max_audit_entries:]
+
+        # Log to standard logger
+        if success:
+            logger.info(f"Auth success: client={client_id}, key={masked_key}")
+        else:
+            logger.warning(f"Auth failed: key={masked_key}, error={error}")
+
+    def get_audit_log(self, limit: int = 100) -> list[dict]:
+        """Get recent audit log entries.
+
+        Args:
+            limit: Maximum entries to return.
+
+        Returns:
+            List of audit entries as dicts.
+        """
+        entries = self.audit_log[-limit:]
+        return [
+            {
+                "timestamp": e.timestamp.isoformat(),
+                "api_key_prefix": e.api_key_prefix,
+                "success": e.success,
+                "client_id": e.client_id,
+                "error": e.error,
+            }
+            for e in entries
+        ]
 
 from draagon_ai.mcp.config import (
     ClientConfig,
@@ -144,6 +290,9 @@ class MemoryMCPServer:
         self._memory_provider = memory_provider
         self._memory_initialized = False
         self._client_context: ClientConfig | None = None
+
+        # Create authenticator
+        self.authenticator = MCPAuthenticator(self.config)
 
         # Create FastMCP server
         self.mcp = FastMCP(
@@ -362,6 +511,33 @@ class MemoryMCPServer:
             f"Client context set: id={client_config.client_id}, "
             f"scopes={[s.value for s in client_config.allowed_scopes]}"
         )
+
+    def authenticate(self, api_key: str | None) -> AuthResult:
+        """Authenticate a request and set client context if successful.
+
+        Args:
+            api_key: API key from request headers.
+
+        Returns:
+            AuthResult with authentication status.
+        """
+        result = self.authenticator.authenticate(api_key)
+
+        if result.authenticated and result.client_config:
+            self.set_client_context(result.client_config)
+
+        return result
+
+    def get_auth_audit_log(self, limit: int = 100) -> list[dict]:
+        """Get authentication audit log.
+
+        Args:
+            limit: Maximum entries to return.
+
+        Returns:
+            List of audit log entries.
+        """
+        return self.authenticator.get_audit_log(limit)
 
     def _register_tools(self) -> None:
         """Register all MCP tools."""
