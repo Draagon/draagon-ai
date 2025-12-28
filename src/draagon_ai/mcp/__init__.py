@@ -33,11 +33,30 @@ Configuration for Claude Code (~/.config/claude-code/claude_code_config.json):
     }
 """
 
-from draagon_ai.mcp.config import MCPConfig
+from draagon_ai.mcp.config import (
+    ClientConfig,
+    MCPConfig,
+    MCPScope,
+    SCOPE_HIERARCHY,
+    can_read_scope,
+    can_write_scope,
+    get_readable_scopes,
+    get_scope_level,
+)
 from draagon_ai.mcp.server import MemoryMCPServer, create_memory_mcp_server
 
 __all__ = [
+    # Config
+    "ClientConfig",
     "MCPConfig",
+    "MCPScope",
+    # Scope access control
+    "SCOPE_HIERARCHY",
+    "can_read_scope",
+    "can_write_scope",
+    "get_readable_scopes",
+    "get_scope_level",
+    # Server
     "MemoryMCPServer",
     "create_memory_mcp_server",
 ]

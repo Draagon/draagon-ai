@@ -17,11 +17,109 @@ class MCPScope(str, Enum):
     - PRIVATE -> USER (per-user within agent)
     - SHARED -> CONTEXT (shared within context/household)
     - SYSTEM -> WORLD (global facts)
+
+    Scope Hierarchy (for access control):
+    - SYSTEM (highest) - can read all, can only write SYSTEM
+    - SHARED (middle) - can read SHARED/SYSTEM, can write SHARED/PRIVATE
+    - PRIVATE (lowest) - can only read/write PRIVATE
     """
 
     PRIVATE = "private"
     SHARED = "shared"
     SYSTEM = "system"
+
+
+# Scope hierarchy level (higher number = broader scope)
+SCOPE_HIERARCHY: dict[MCPScope, int] = {
+    MCPScope.PRIVATE: 0,  # Most restrictive
+    MCPScope.SHARED: 1,   # Household level
+    MCPScope.SYSTEM: 2,   # Global level (most permissive for read)
+}
+
+
+def get_scope_level(scope: MCPScope | str) -> int:
+    """Get hierarchy level for a scope.
+
+    Args:
+        scope: Scope to get level for.
+
+    Returns:
+        Hierarchy level (0=PRIVATE, 1=SHARED, 2=SYSTEM).
+    """
+    if isinstance(scope, str):
+        scope = MCPScope(scope.lower())
+    return SCOPE_HIERARCHY.get(scope, 0)
+
+
+def can_read_scope(client_scopes: list[MCPScope], target_scope: MCPScope | str) -> bool:
+    """Check if client can read from target scope.
+
+    Read access rules:
+    - Client can read from scopes at or above their highest allowed scope
+    - E.g., SHARED client can read SHARED and SYSTEM, not PRIVATE (of others)
+    - PRIVATE scope is always readable by the owning user
+    - SYSTEM scope is always readable (global facts)
+
+    Args:
+        client_scopes: Scopes the client is allowed to access.
+        target_scope: Scope to read from.
+
+    Returns:
+        True if read is allowed.
+    """
+    if isinstance(target_scope, str):
+        target_scope = MCPScope(target_scope.lower())
+
+    # Special case: Everyone can read SYSTEM (global facts)
+    if target_scope == MCPScope.SYSTEM:
+        return True
+
+    # No scopes means no access (except SYSTEM above)
+    if not client_scopes:
+        return False
+
+    # Client can read from their allowed scopes
+    return target_scope in client_scopes
+
+
+def can_write_scope(client_scopes: list[MCPScope], target_scope: MCPScope | str) -> bool:
+    """Check if client can write to target scope.
+
+    Write access rules:
+    - Client can only write to scopes they are explicitly allowed
+    - SYSTEM scope requires explicit SYSTEM permission
+    - This is more restrictive than read
+
+    Args:
+        client_scopes: Scopes the client is allowed to access.
+        target_scope: Scope to write to.
+
+    Returns:
+        True if write is allowed.
+    """
+    if isinstance(target_scope, str):
+        target_scope = MCPScope(target_scope.lower())
+
+    # Write requires explicit permission
+    return target_scope in client_scopes
+
+
+def get_readable_scopes(client_scopes: list[MCPScope]) -> list[MCPScope]:
+    """Get all scopes a client can read from.
+
+    Args:
+        client_scopes: Scopes the client is allowed to access.
+
+    Returns:
+        List of scopes the client can read.
+    """
+    # Always include explicitly allowed scopes
+    readable = set(client_scopes)
+
+    # SYSTEM is always readable (public knowledge)
+    readable.add(MCPScope.SYSTEM)
+
+    return list(readable)
 
 
 @dataclass

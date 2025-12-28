@@ -13,7 +13,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from dataclasses import dataclass
 from typing import Any
 
-from draagon_ai.mcp.config import MCPConfig, ClientConfig, MCPScope
+from draagon_ai.mcp.config import (
+    MCPConfig,
+    ClientConfig,
+    MCPScope,
+    SCOPE_HIERARCHY,
+    can_read_scope,
+    can_write_scope,
+    get_readable_scopes,
+    get_scope_level,
+)
 from draagon_ai.mcp.server import (
     MemoryMCPServer,
     create_memory_mcp_server,
@@ -656,3 +665,316 @@ class TestToolRegistration:
 
         # Should have 6 tools
         assert len(tools) == 6
+
+
+# =============================================================================
+# Test Scope Hierarchy Functions
+# =============================================================================
+
+
+class TestScopeHierarchy:
+    """Tests for scope hierarchy and access control functions."""
+
+    def test_scope_hierarchy_values(self):
+        """Test scope hierarchy levels are correct."""
+        assert SCOPE_HIERARCHY[MCPScope.PRIVATE] == 0
+        assert SCOPE_HIERARCHY[MCPScope.SHARED] == 1
+        assert SCOPE_HIERARCHY[MCPScope.SYSTEM] == 2
+
+    def test_get_scope_level(self):
+        """Test get_scope_level function."""
+        assert get_scope_level(MCPScope.PRIVATE) == 0
+        assert get_scope_level(MCPScope.SHARED) == 1
+        assert get_scope_level(MCPScope.SYSTEM) == 2
+
+    def test_get_scope_level_string(self):
+        """Test get_scope_level with string input."""
+        assert get_scope_level("private") == 0
+        assert get_scope_level("shared") == 1
+        assert get_scope_level("system") == 2
+
+    def test_can_read_scope_system_always_readable(self):
+        """Test SYSTEM scope is always readable."""
+        # Even with only PRIVATE access, can read SYSTEM
+        assert can_read_scope([MCPScope.PRIVATE], MCPScope.SYSTEM) is True
+        assert can_read_scope([MCPScope.SHARED], MCPScope.SYSTEM) is True
+        assert can_read_scope([MCPScope.SYSTEM], MCPScope.SYSTEM) is True
+
+    def test_can_read_scope_own_scopes(self):
+        """Test reading from own scopes is allowed."""
+        assert can_read_scope([MCPScope.PRIVATE], MCPScope.PRIVATE) is True
+        assert can_read_scope([MCPScope.SHARED], MCPScope.SHARED) is True
+        assert can_read_scope([MCPScope.SYSTEM], MCPScope.SYSTEM) is True
+
+    def test_can_read_scope_denied(self):
+        """Test reading from non-allowed scopes is denied."""
+        # PRIVATE only client cannot read SHARED
+        assert can_read_scope([MCPScope.PRIVATE], MCPScope.SHARED) is False
+
+    def test_can_read_scope_empty_list(self):
+        """Test empty scope list denies all reads."""
+        assert can_read_scope([], MCPScope.PRIVATE) is False
+        assert can_read_scope([], MCPScope.SHARED) is False
+        # System is always readable
+        assert can_read_scope([], MCPScope.SYSTEM) is True
+
+    def test_can_write_scope_allowed(self):
+        """Test writing to allowed scopes works."""
+        assert can_write_scope([MCPScope.PRIVATE], MCPScope.PRIVATE) is True
+        assert can_write_scope([MCPScope.SHARED], MCPScope.SHARED) is True
+        assert can_write_scope([MCPScope.SYSTEM], MCPScope.SYSTEM) is True
+
+    def test_can_write_scope_denied(self):
+        """Test writing to non-allowed scopes is denied."""
+        assert can_write_scope([MCPScope.PRIVATE], MCPScope.SHARED) is False
+        assert can_write_scope([MCPScope.PRIVATE], MCPScope.SYSTEM) is False
+        assert can_write_scope([MCPScope.SHARED], MCPScope.SYSTEM) is False
+
+    def test_can_write_scope_multiple_allowed(self):
+        """Test multiple allowed scopes for write."""
+        scopes = [MCPScope.PRIVATE, MCPScope.SHARED]
+        assert can_write_scope(scopes, MCPScope.PRIVATE) is True
+        assert can_write_scope(scopes, MCPScope.SHARED) is True
+        assert can_write_scope(scopes, MCPScope.SYSTEM) is False
+
+    def test_get_readable_scopes_private_only(self):
+        """Test readable scopes for PRIVATE-only client."""
+        readable = get_readable_scopes([MCPScope.PRIVATE])
+        assert MCPScope.PRIVATE in readable
+        assert MCPScope.SYSTEM in readable  # Always readable
+        assert MCPScope.SHARED not in readable
+
+    def test_get_readable_scopes_shared(self):
+        """Test readable scopes for SHARED client."""
+        readable = get_readable_scopes([MCPScope.SHARED])
+        assert MCPScope.SHARED in readable
+        assert MCPScope.SYSTEM in readable
+
+    def test_get_readable_scopes_all(self):
+        """Test readable scopes for full-access client."""
+        all_scopes = [MCPScope.PRIVATE, MCPScope.SHARED, MCPScope.SYSTEM]
+        readable = get_readable_scopes(all_scopes)
+        assert len(readable) == 3
+        assert all(s in readable for s in all_scopes)
+
+
+# =============================================================================
+# Test Scope Enforcement in Server
+# =============================================================================
+
+
+class TestScopeEnforcement:
+    """Tests for scope enforcement in MemoryMCPServer."""
+
+    @pytest.fixture
+    def restricted_client(self):
+        """Create a client with only PRIVATE scope."""
+        return ClientConfig(
+            client_id="restricted",
+            name="Restricted Client",
+            allowed_scopes=[MCPScope.PRIVATE],
+        )
+
+    @pytest.fixture
+    def shared_client(self):
+        """Create a client with PRIVATE and SHARED scopes."""
+        return ClientConfig(
+            client_id="shared",
+            name="Shared Client",
+            allowed_scopes=[MCPScope.PRIVATE, MCPScope.SHARED],
+        )
+
+    @pytest.fixture
+    def full_access_client(self):
+        """Create a client with all scopes."""
+        return ClientConfig(
+            client_id="full",
+            name="Full Access Client",
+            allowed_scopes=[MCPScope.PRIVATE, MCPScope.SHARED, MCPScope.SYSTEM],
+        )
+
+    def test_get_allowed_scopes_no_context(self, mcp_server):
+        """Test allowed scopes without client context."""
+        # Uses config's allowed_scopes
+        scopes = mcp_server._get_allowed_scopes()
+        assert len(scopes) == 3  # Default config has all scopes
+
+    def test_get_allowed_scopes_with_context(self, mcp_server, restricted_client):
+        """Test allowed scopes with client context."""
+        mcp_server.set_client_context(restricted_client)
+        scopes = mcp_server._get_allowed_scopes()
+        assert scopes == [MCPScope.PRIVATE]
+
+    def test_check_write_permission_allowed(self, mcp_server, restricted_client):
+        """Test write permission check when allowed."""
+        mcp_server.set_client_context(restricted_client)
+        allowed, error = mcp_server._check_write_permission("private")
+        assert allowed is True
+        assert error is None
+
+    def test_check_write_permission_denied(self, mcp_server, restricted_client):
+        """Test write permission check when denied."""
+        mcp_server.set_client_context(restricted_client)
+        allowed, error = mcp_server._check_write_permission("shared")
+        assert allowed is False
+        assert "Permission denied" in error
+        assert "shared" in error.lower()
+
+    def test_check_write_permission_invalid_scope(self, mcp_server):
+        """Test write permission check with invalid scope."""
+        allowed, error = mcp_server._check_write_permission("invalid")
+        assert allowed is False
+        assert "Invalid scope" in error
+
+    def test_check_read_permission_allowed(self, mcp_server, shared_client):
+        """Test read permission check when allowed."""
+        mcp_server.set_client_context(shared_client)
+        # SHARED client can read SHARED
+        allowed, error = mcp_server._check_read_permission("shared")
+        assert allowed is True
+        assert error is None
+
+    def test_check_read_permission_system_always_allowed(self, mcp_server, restricted_client):
+        """Test SYSTEM scope is always readable."""
+        mcp_server.set_client_context(restricted_client)
+        allowed, error = mcp_server._check_read_permission("system")
+        assert allowed is True
+        assert error is None
+
+    def test_check_read_permission_denied(self, mcp_server, restricted_client):
+        """Test read permission check when denied."""
+        mcp_server.set_client_context(restricted_client)
+        allowed, error = mcp_server._check_read_permission("shared")
+        assert allowed is False
+        assert "Permission denied" in error
+
+    def test_get_search_scopes_all_readable(self, mcp_server, shared_client):
+        """Test search scopes returns all readable scopes."""
+        mcp_server.set_client_context(shared_client)
+        scopes = mcp_server._get_search_scopes(None)
+        # Should include SHARED, PRIVATE, and SYSTEM (always readable)
+        assert len(scopes) == 3
+
+    def test_get_search_scopes_specific_allowed(self, mcp_server, shared_client):
+        """Test search scopes with specific allowed scope."""
+        mcp_server.set_client_context(shared_client)
+        scopes = mcp_server._get_search_scopes("shared")
+        assert scopes == ["CONTEXT"]  # Mapped scope
+
+    def test_get_search_scopes_specific_denied(self, mcp_server, restricted_client):
+        """Test search scopes falls back when specific scope denied."""
+        mcp_server.set_client_context(restricted_client)
+        # Request SHARED but only have PRIVATE access
+        scopes = mcp_server._get_search_scopes("shared")
+        # Should fall back to all readable scopes
+        assert "USER" in scopes  # PRIVATE
+        assert "WORLD" in scopes  # SYSTEM (always readable)
+
+
+class TestScopeEnforcementInTools:
+    """Tests for scope enforcement in MCP tools."""
+
+    @pytest.fixture
+    def restricted_server(self, mcp_config, mock_memory_provider):
+        """Create server with restricted client."""
+        server = MemoryMCPServer(config=mcp_config, memory_provider=mock_memory_provider)
+        server.set_client_context(
+            ClientConfig(
+                client_id="restricted",
+                name="Restricted",
+                allowed_scopes=[MCPScope.PRIVATE],
+            )
+        )
+        return server
+
+    @pytest.mark.asyncio
+    async def test_store_denied_for_system_scope(self, restricted_server):
+        """Test store is denied for unauthorized scope."""
+        store_tool = lookup_tool(restricted_server, "memory_store")
+
+        result = await store_tool.fn(
+            content="Test content",
+            memory_type="fact",
+            scope="system",  # Not allowed for restricted client
+        )
+
+        assert result["success"] is False
+        assert "Permission denied" in result["error"]
+
+    @pytest.mark.asyncio
+    async def test_store_allowed_for_private_scope(self, restricted_server, mock_memory_provider):
+        """Test store is allowed for authorized scope."""
+        # Re-add mock since fixture creates new server
+        restricted_server._memory_provider = mock_memory_provider
+
+        store_tool = lookup_tool(restricted_server, "memory_store")
+
+        result = await store_tool.fn(
+            content="Test content",
+            memory_type="fact",
+            scope="private",  # Allowed
+        )
+
+        assert result["success"] is True
+
+    @pytest.mark.asyncio
+    async def test_search_filters_to_readable_scopes(self, restricted_server, mock_memory_provider):
+        """Test search only includes readable scopes."""
+        restricted_server._memory_provider = mock_memory_provider
+
+        search_tool = lookup_tool(restricted_server, "memory_search")
+        await search_tool.fn(query="test")
+
+        # Verify scopes passed to memory provider
+        call_kwargs = mock_memory_provider.search.call_args.kwargs
+        scopes = call_kwargs.get("scopes", [])
+        # Should only include readable scopes (USER + WORLD)
+        assert "USER" in scopes or "WORLD" in scopes
+
+    @pytest.mark.asyncio
+    async def test_search_denies_explicit_unauthorized_scope(self, restricted_server):
+        """Test search denies explicit unauthorized scope."""
+        search_tool = lookup_tool(restricted_server, "memory_search")
+
+        result = await search_tool.fn(
+            query="test",
+            scope="shared",  # Not allowed for restricted client
+        )
+
+        assert result["success"] is False
+        assert "Permission denied" in result["error"]
+
+
+# =============================================================================
+# Test Client Context Management
+# =============================================================================
+
+
+class TestClientContextManagement:
+    """Tests for client context management."""
+
+    def test_set_client_context(self, mcp_server):
+        """Test setting client context."""
+        client = ClientConfig(
+            client_id="test-client",
+            name="Test",
+            allowed_scopes=[MCPScope.PRIVATE, MCPScope.SHARED],
+            default_user_id="context-user",
+        )
+
+        mcp_server.set_client_context(client)
+
+        assert mcp_server._client_context is client
+        assert mcp_server._get_user_id(None) == "context-user"
+        assert mcp_server._get_allowed_scopes() == [MCPScope.PRIVATE, MCPScope.SHARED]
+
+    def test_clear_client_context(self, mcp_server):
+        """Test clearing client context."""
+        client = ClientConfig(client_id="test", name="Test")
+        mcp_server.set_client_context(client)
+
+        # Clear by setting to None
+        mcp_server._client_context = None
+
+        # Should fall back to config defaults
+        assert mcp_server._get_user_id(None) == mcp_server.config.default_user_id

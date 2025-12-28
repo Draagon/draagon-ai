@@ -33,7 +33,14 @@ from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
-from draagon_ai.mcp.config import ClientConfig, MCPConfig, MCPScope
+from draagon_ai.mcp.config import (
+    ClientConfig,
+    MCPConfig,
+    MCPScope,
+    can_read_scope,
+    can_write_scope,
+    get_readable_scopes,
+)
 
 # Optional dependencies - memory provider
 try:
@@ -238,6 +245,124 @@ class MemoryMCPServer:
             return self._client_context.default_agent_id
         return self.config.default_agent_id
 
+    def _get_allowed_scopes(self) -> list[MCPScope]:
+        """Get allowed scopes for current client.
+
+        Returns:
+            List of scopes the client can access.
+        """
+        if self._client_context:
+            return self._client_context.allowed_scopes
+        return self.config.allowed_scopes
+
+    def _check_write_permission(self, scope: str) -> tuple[bool, str | None]:
+        """Check if client has permission to write to scope.
+
+        Args:
+            scope: Target scope for write operation.
+
+        Returns:
+            Tuple of (allowed, error_message).
+        """
+        try:
+            target_scope = MCPScope(scope.lower())
+        except ValueError:
+            return False, f"Invalid scope: {scope}"
+
+        allowed_scopes = self._get_allowed_scopes()
+        if can_write_scope(allowed_scopes, target_scope):
+            return True, None
+
+        # Log the violation
+        client_id = (
+            self._client_context.client_id
+            if self._client_context
+            else self.config.default_client_id
+        )
+        logger.warning(
+            f"Scope violation: client={client_id} attempted write to "
+            f"scope={scope}, allowed_scopes={[s.value for s in allowed_scopes]}"
+        )
+        return False, (
+            f"Permission denied: cannot write to scope '{scope}'. "
+            f"Allowed scopes: {[s.value for s in allowed_scopes]}"
+        )
+
+    def _check_read_permission(self, scope: str) -> tuple[bool, str | None]:
+        """Check if client has permission to read from scope.
+
+        Args:
+            scope: Target scope for read operation.
+
+        Returns:
+            Tuple of (allowed, error_message).
+        """
+        try:
+            target_scope = MCPScope(scope.lower())
+        except ValueError:
+            return False, f"Invalid scope: {scope}"
+
+        allowed_scopes = self._get_allowed_scopes()
+        if can_read_scope(allowed_scopes, target_scope):
+            return True, None
+
+        # Log the violation
+        client_id = (
+            self._client_context.client_id
+            if self._client_context
+            else self.config.default_client_id
+        )
+        logger.warning(
+            f"Scope violation: client={client_id} attempted read from "
+            f"scope={scope}, allowed_scopes={[s.value for s in allowed_scopes]}"
+        )
+        return False, (
+            f"Permission denied: cannot read from scope '{scope}'. "
+            f"Allowed scopes: {[s.value for s in allowed_scopes]}"
+        )
+
+    def _get_search_scopes(self, requested_scope: str | None) -> list[str]:
+        """Get scopes to search based on client permissions.
+
+        Args:
+            requested_scope: Specific scope requested (optional).
+
+        Returns:
+            List of draagon-ai scope strings to search.
+        """
+        allowed_scopes = self._get_allowed_scopes()
+        readable_scopes = get_readable_scopes(allowed_scopes)
+
+        if requested_scope:
+            # Validate the requested scope
+            try:
+                target = MCPScope(requested_scope.lower())
+                if target in readable_scopes:
+                    return [map_scope_to_draagon(requested_scope)]
+                else:
+                    # Not allowed to read this scope - return only allowed ones
+                    logger.warning(
+                        f"Client requested scope {requested_scope} but only "
+                        f"allowed to read {[s.value for s in readable_scopes]}"
+                    )
+            except ValueError:
+                pass  # Invalid scope, fall through to default
+
+        # Return all readable scopes mapped to draagon-ai format
+        return [map_scope_to_draagon(s.value) for s in readable_scopes]
+
+    def set_client_context(self, client_config: ClientConfig) -> None:
+        """Set the client context for scope enforcement.
+
+        Args:
+            client_config: Client configuration with allowed scopes.
+        """
+        self._client_context = client_config
+        logger.info(
+            f"Client context set: id={client_config.client_id}, "
+            f"scopes={[s.value for s in client_config.allowed_scopes]}"
+        )
+
     def _register_tools(self) -> None:
         """Register all MCP tools."""
 
@@ -272,6 +397,14 @@ class MemoryMCPServer:
                 Dict with memory_id and success status.
             """
             try:
+                # Check write permission for scope
+                allowed, error = self._check_write_permission(scope)
+                if not allowed:
+                    return {
+                        "success": False,
+                        "error": error,
+                    }
+
                 memory = await self._get_memory()
 
                 # Map types
@@ -344,6 +477,16 @@ class MemoryMCPServer:
                 Dict with list of matching memories and their scores.
             """
             try:
+                # Check read permission for scope if specified
+                if scope:
+                    allowed, error = self._check_read_permission(scope)
+                    if not allowed:
+                        return {
+                            "success": False,
+                            "error": error,
+                            "results": [],
+                        }
+
                 memory = await self._get_memory()
 
                 # Clamp limit
@@ -358,10 +501,8 @@ class MemoryMCPServer:
                 if memory_types:
                     draagon_types = [map_type_to_draagon(t) for t in memory_types]
 
-                # Map scope if provided
-                draagon_scope = None
-                if scope:
-                    draagon_scope = map_scope_to_draagon(scope)
+                # Get scopes to search (filtered by client permissions)
+                search_scopes = self._get_search_scopes(scope)
 
                 # Search
                 results = await memory.search(
@@ -370,7 +511,7 @@ class MemoryMCPServer:
                     user_id=effective_user,
                     agent_id=effective_agent,
                     memory_types=draagon_types,
-                    scopes=[draagon_scope] if draagon_scope else None,
+                    scopes=search_scopes if search_scopes else None,
                 )
 
                 # Format results
