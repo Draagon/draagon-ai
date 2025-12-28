@@ -9,10 +9,10 @@ I'll read this file, do the current task, update status, and move to the next st
 ## CURRENT TASK
 
 ```
-PHASE: 5 - Memory MCP Server
-REQ: REQ-005-10
-NAME: Integration tests
-STEP: REVIEW
+PHASE: 6 - Roxy Thin Client
+REQ: REQ-006-01
+NAME: All adapters using draagon-ai
+STEP: IMPLEMENT
 ```
 
 ---
@@ -113,9 +113,9 @@ STEP: REVIEW
 | 07 | Authentication/authorization | [x] | [x] | [x] | [x] |
 | 08 | Claude Code integration test | [x] | [x] | [x] | [x] |
 | 09 | Unit tests (≥90% coverage) | [x] | [x] | [x] | [x] |
-| 10 | Integration tests | [x] | [x] | [ ] | [ ] |
+| 10 | Integration tests | [x] | [x] | [x] | [x] |
 
-**Phase 5 Status:** IN PROGRESS (9/10)
+**Phase 5 Status:** ✅ COMPLETE (10/10)
 
 ---
 
