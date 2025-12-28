@@ -10,8 +10,8 @@ I'll read this file, do the current task, update status, and move to the next st
 
 ```
 PHASE: 6 - Roxy Thin Client
-REQ: REQ-006-01
-NAME: All adapters using draagon-ai
+REQ: REQ-006-02
+NAME: Personality config (YAML)
 STEP: IMPLEMENT
 ```
 
@@ -123,8 +123,8 @@ STEP: IMPLEMENT
 
 | # | Requirement | Implement | Test | Review | Complete |
 |---|-------------|-----------|------|--------|----------|
-| 01 | All adapters using draagon-ai | [ ] | [ ] | [ ] | [ ] |
-| 02 | Personality config (YAML) | [ ] | [ ] | [ ] | [ ] |
+| 01 | All adapters using draagon-ai | [x] | [x] | [x] | [x] |
+| 02 | Personality config (YAML) | [>] | [ ] | [ ] | [ ] |
 | 03 | Voice/TTS channel handling | [ ] | [ ] | [ ] | [ ] |
 | 04 | Home Assistant integration | [ ] | [ ] | [ ] | [ ] |
 | 05 | Wyoming protocol support | [ ] | [ ] | [ ] | [ ] |
@@ -134,11 +134,63 @@ STEP: IMPLEMENT
 | 09 | Performance comparison | [ ] | [ ] | [ ] | [ ] |
 | 10 | Documentation update | [ ] | [ ] | [ ] | [ ] |
 
-**Phase 6 Status:** NOT STARTED
+**Phase 6 Status:** IN PROGRESS (1/10)
 
 ---
 
 ## CURRENT WORK LOG
+
+### REQ-006-01: All adapters using draagon-ai
+
+**Status:** ✅ COMPLETED
+
+**Analysis Summary:**
+The adapters were already implemented and tested in a previous session:
+
+**Roxy Adapters (roxy-voice-assistant/src/roxy/adapters/):**
+1. **RoxyMemoryAdapter** (`memory_adapter.py`)
+   - Implements `draagon_ai.memory.MemoryProvider` protocol
+   - Maps draagon-ai types (FACT, SKILL, etc.) to Roxy types and vice versa
+   - Maps scopes (WORLD→system, CONTEXT→shared, USER→private)
+   - 25+ unit tests
+
+2. **RoxyLLMAdapter** (`llm_adapter.py`)
+   - Implements `draagon_ai.llm.LLMProvider` and `EmbeddingProvider` protocols
+   - Maps tiers: LOCAL→Groq 8B, COMPLEX→Groq 70B, DEEP→Claude
+   - Embedding dimension: 768 (nomic-embed-text)
+   - 20+ unit tests
+
+3. **Factory Functions** (`factory.py`)
+   - `create_learning_service()` - Uses draagon-ai LearningService
+   - `create_belief_reconciliation_service()` - Uses draagon-ai BeliefReconciliationService
+   - `create_curiosity_engine()` - Uses draagon-ai CuriosityEngine
+   - `create_opinion_formation_service()` - Uses draagon-ai OpinionFormationService
+   - 35+ unit tests
+
+4. **Autonomous Agent Adapters** (`autonomous_adapter.py`, `autonomous_factory.py`)
+   - RoxyLLMAdapter, RoxySearchAdapter, RoxyMemoryStoreAdapter
+   - RoxyContextAdapter, RoxyNotificationAdapter
+   - Uses `draagon_ai.orchestration.autonomous.AutonomousAgentService`
+   - 25+ unit tests
+
+**Compatibility Shims (roxy-voice-assistant/src/roxy/services/):**
+- `belief_reconciliation.py` - Re-exports draagon-ai BeliefReconciliationService
+- `curiosity_engine.py` - Re-exports draagon-ai CuriosityEngine
+- `learning.py` - Re-exports draagon-ai LearningService
+- `opinion_formation.py` - Re-exports draagon-ai OpinionFormationService
+- `proactive_questions.py` - Re-exports draagon-ai ProactiveQuestionTimingService
+- 42+ shim tests
+
+**Test Results:** ✅ 168/168 PASSED (adapter tests)
+**Test Results:** ✅ 14/14 PASSED (cognitive integration tests)
+
+**Acceptance Criteria:**
+- [x] Each adapter exists and is tested
+- [x] Adapters implement correct protocols
+- [x] No business logic in adapters (just protocol adaptation)
+- [x] All adapters use dependency injection
+
+---
 
 ### REQ-005-01 through REQ-005-05: Memory MCP Server Implementation
 
