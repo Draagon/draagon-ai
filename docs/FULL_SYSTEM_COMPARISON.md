@@ -375,7 +375,7 @@ Mem0 and Zep can be storage backends. But the value is in:
 ### Open Source Strategy: Layered Release
 
 ```
-LAYER 0 - OPEN SOURCE (Apache 2.0):
+LAYER 0 - OPEN SOURCE (MIT):
 ├── Memory (with Mem0/Zep adapters)
 ├── Basic cognition (beliefs, curiosity)
 ├── Basic orchestration (single agent)

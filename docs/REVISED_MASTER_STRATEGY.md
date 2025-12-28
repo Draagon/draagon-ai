@@ -179,7 +179,7 @@ No competitor has:
 │  • Priority support                                         │
 ├─────────────────────────────────────────────────────────────┤
 │                   TIER 1: OPEN SOURCE                       │
-│                   (Apache 2.0)                              │
+│                      (MIT)                                  │
 │                                                             │
 │  • Layered memory system                                    │
 │  • Temporal cognitive graph                                 │
@@ -230,7 +230,7 @@ No competitor has:
 
 ```
 draagon-ai/
-├── src/draagon_ai/           # Apache 2.0 (open source)
+├── src/draagon_ai/           # MIT (open source)
 │   ├── memory/
 │   ├── cognition/ (basic)
 │   ├── orchestration/ (basic)
@@ -280,7 +280,7 @@ draagon-ai/
 **Launch Strategy:**
 
 1. **Hacker News Post:**
-   > "Draagon-AI: An agentic framework where AI builds its own features (53K lines, Apache 2.0)"
+   > "Draagon-AI: An agentic framework where AI builds its own features (53K lines, MIT)"
 
 2. **Key Differentiators to Highlight:**
    - "Unlike LangChain, agents can evolve their own prompts"

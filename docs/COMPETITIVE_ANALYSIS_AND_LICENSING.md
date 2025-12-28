@@ -301,7 +301,7 @@ Let me give you three concrete options:
 ### Option A: Full Open Source (LangChain Model)
 
 ```
-OPEN SOURCE (Apache 2.0):
+OPEN SOURCE (MIT):
 ├── Everything in the core framework
 ├── Promptbreeder, Behavior Architect, all of it
 └── Compete on ecosystem and speed
@@ -320,7 +320,7 @@ PAID PRODUCT (Closed):
 ### Option B: Open Core (CrewAI Model)
 
 ```
-OPEN SOURCE (Apache 2.0):
+OPEN SOURCE (MIT):
 ├── Memory system
 ├── Basic cognition (beliefs, curiosity)
 ├── Single-agent orchestration
@@ -350,7 +350,7 @@ BSL LICENSE:
 │   ├── Competing AI agent platforms
 │   ├── Hosted service offerings
 │   └── Self-evolution features in production
-└── Converts to Apache 2.0 after 4 years
+└── Converts to MIT after 4 years
 ```
 
 **Best if:** You want visibility without giving away production rights
