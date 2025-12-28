@@ -112,8 +112,13 @@ class MockAsyncQdrantClient:
         if collection_name not in self.points:
             return
 
-        # Handle HasIdCondition
-        if hasattr(points_selector, 'has_id'):
+        # Handle PointIdsList (new Qdrant client API)
+        if hasattr(points_selector, 'points'):
+            for point_id in points_selector.points:
+                if point_id in self.points[collection_name]:
+                    del self.points[collection_name][point_id]
+        # Handle HasIdCondition (legacy)
+        elif hasattr(points_selector, 'has_id'):
             for point_id in points_selector.has_id:
                 if point_id in self.points[collection_name]:
                     del self.points[collection_name][point_id]
@@ -170,6 +175,21 @@ class MockAsyncQdrantClient:
                 results.append(record)
 
         return results[:limit]
+
+    async def query_points(self, collection_name: str, query: list, **kwargs):
+        """Search for similar points using query_points API.
+
+        Returns an object with .points attribute containing results.
+        """
+        # Delegate to search and wrap results
+        results = await self.search(collection_name, query, **kwargs)
+
+        # Create a mock result object with .points attribute
+        class QueryResult:
+            def __init__(self, points):
+                self.points = points
+
+        return QueryResult(results)
 
     def _apply_filter(self, records: list, filter_obj) -> list:
         """Apply a mock filter to records."""
