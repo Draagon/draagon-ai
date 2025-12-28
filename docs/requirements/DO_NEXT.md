@@ -10,8 +10,8 @@ I'll read this file, do the current task, update status, and move to the next st
 
 ```
 PHASE: 4 - Autonomous Agent
-REQ: REQ-004-02
-NAME: Protocol-based dependency injection
+REQ: REQ-004-06
+NAME: Roxy adapter implementation
 STEP: IMPLEMENT
 ```
 
@@ -86,17 +86,17 @@ STEP: IMPLEMENT
 | # | Requirement | Implement | Test | Review | Complete |
 |---|-------------|-----------|------|--------|----------|
 | 01 | Move autonomous agent to draagon-ai core | [x] | [x] | [x] | [x] |
-| 02 | Protocol-based dependency injection | [ ] | [ ] | [ ] | [ ] |
-| 03 | Guardrail system with tiers | [ ] | [ ] | [ ] | [ ] |
-| 04 | Self-monitoring capability | [ ] | [ ] | [ ] | [ ] |
-| 05 | Action logging and dashboard | [ ] | [ ] | [ ] | [ ] |
+| 02 | Protocol-based dependency injection | [x] | [x] | [x] | [x] |
+| 03 | Guardrail system with tiers | [x] | [x] | [x] | [x] |
+| 04 | Self-monitoring capability | [x] | [x] | [x] | [x] |
+| 05 | Action logging and dashboard | [x] | [x] | [x] | [x] |
 | 06 | Roxy adapter implementation | [ ] | [ ] | [ ] | [ ] |
 | 07 | Remove extension version | [ ] | [ ] | [ ] | [ ] |
 | 08 | Unit tests (≥90% coverage) | [ ] | [ ] | [ ] | [ ] |
 | 09 | Integration tests | [ ] | [ ] | [ ] | [ ] |
 | 10 | Safety E2E tests | [ ] | [ ] | [ ] | [ ] |
 
-**Phase 4 Status:** IN PROGRESS (1/10)
+**Phase 4 Status:** IN PROGRESS (5/10)
 
 ---
 
@@ -180,7 +180,40 @@ from draagon_ai.orchestration.autonomous import (
 - [x] Works without Roxy-specific dependencies
 - [x] All existing tests pass
 
-**Note:** Protocols already existed in extension and are well-designed for dependency injection. REQ-004-02 (Protocol-based dependency injection) may already be satisfied - needs verification.
+---
+
+### REQ-004-02 through REQ-004-05: Already Implemented
+
+**Status:** ✅ COMPLETED (verified existing implementation)
+
+The extension code already had complete implementations for:
+
+**REQ-004-02: Protocol-based dependency injection**
+- 5 protocols defined with `@runtime_checkable`: LLMProvider, SearchProvider, MemoryStoreProvider, ContextProvider, NotificationProvider
+- No Roxy imports in autonomous module
+- Type checking works with `isinstance()` for protocol conformance
+
+**REQ-004-03: Guardrail system with tiers**
+- 5 tiers implemented (Tier 0-4)
+- 4-layer guardrail chain: tier check → rate limit → harm check → semantic safety
+- `_filter_through_guardrails()` applies all checks
+- `_is_allowed_tier()` validates action tier
+- `_check_for_harm()` LLM-based harm assessment
+- `_semantic_safety_check()` final semantic validation
+
+**REQ-004-04: Self-monitoring capability**
+- `_self_monitor()` reviews each cycle
+- `SelfMonitoringFinding` for individual issues
+- `SelfMonitoringResult` for cycle summary
+- High-severity findings persisted to memory
+- User notifications queued when needed
+
+**REQ-004-05: Action logging and dashboard**
+- `ActionLog` dataclass with full details
+- `get_action_logs()` for transparency API
+- `get_blocked_logs()` for audit trail
+- `get_stats()` for dashboard metrics
+- Logs persisted via MemoryStoreProvider
 
 ---
 
