@@ -9,9 +9,9 @@ I'll read this file, do the current task, update status, and move to the next st
 ## CURRENT TASK
 
 ```
-PHASE: 4 - Autonomous Agent
-REQ: REQ-004-10
-NAME: Safety E2E tests
+PHASE: 5 - Memory MCP Server
+REQ: REQ-005-01
+NAME: MCP server scaffolding
 STEP: IMPLEMENT
 ```
 
@@ -94,9 +94,9 @@ STEP: IMPLEMENT
 | 07 | Remove extension version | [x] | [x] | [x] | [x] |
 | 08 | Unit tests (≥90% coverage) | [x] | [x] | [x] | [x] |
 | 09 | Integration tests | [x] | [x] | [x] | [x] |
-| 10 | Safety E2E tests | [ ] | [ ] | [ ] | [ ] |
+| 10 | Safety E2E tests | [x] | [x] | [x] | [x] |
 
-**Phase 4 Status:** IN PROGRESS (9/10)
+**Phase 4 Status:** ✅ COMPLETE (10/10)
 
 ---
 
@@ -238,6 +238,50 @@ The extension code already had complete implementations for:
 - `RoxyMemoryStoreAdapter` - Implements MemoryStoreProvider using Qdrant
 - `RoxyContextAdapter` - Implements ContextProvider gathering Roxy context
 - `RoxyNotificationAdapter` - Implements NotificationProvider using notification queue
+
+---
+
+### REQ-004-10: Safety E2E tests
+
+**Status:** ✅ COMPLETED
+
+**Work Done:**
+- Created comprehensive safety E2E test suite in `tests/orchestration/test_autonomous_safety_e2e.py`
+- **24 total tests** across 8 test classes verifying critical safety guarantees:
+  - Tier safety guarantees (cannot send messages, control devices, perform financial/security actions)
+  - Harm check safety guarantees (harmful research blocked, privacy violations blocked)
+  - Semantic safety guarantees (catches subtle harm, can be required via config)
+  - Budget safety guarantees (enforced strictly, prevents excessive cycles, resets daily)
+  - Rate limit safety guarantees (prevents same-type spam, allows variety)
+  - Self-monitoring safety guarantees (detects issues, runs after cycle)
+  - Transparency safety guarantees (all actions logged, clear block reasons)
+  - Defense in depth (multiple layers block harmful actions)
+
+**Test Scenarios Covered:**
+
+| Scenario | Tests | Description |
+|----------|-------|-------------|
+| Tier Guarantees | 5 | Tier 3-4 actions always blocked regardless of LLM |
+| Harm Check | 3 | Harmful Tier 0 research blocked |
+| Semantic Safety | 2 | Final layer catches subtle harm |
+| Budget | 3 | Daily budget strictly enforced |
+| Rate Limits | 2 | Prevents repetitive behavior |
+| Self-Monitoring | 2 | Detects and reports issues |
+| Transparency | 3 | Complete audit trail |
+| Defense in Depth | 4 | Multiple layers work together |
+
+**Test Results:** ✅ 24/24 PASSED
+
+**Files Created:**
+- `tests/orchestration/test_autonomous_safety_e2e.py` (NEW - ~650 lines)
+
+**Acceptance Criteria:**
+- [x] Tier restrictions verified end-to-end
+- [x] Harmful actions blocked regardless of tier
+- [x] Budget and rate limits prevent runaway behavior
+- [x] Self-monitoring catches issues
+- [x] Transparency maintained for all actions
+- [x] Defense in depth verified (all guardrails must pass)
 
 ---
 
