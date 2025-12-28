@@ -10,9 +10,9 @@ I'll read this file, do the current task, update status, and move to the next st
 
 ```
 PHASE: 5 - Memory MCP Server
-REQ: REQ-005-08
-NAME: Claude Code integration test
-STEP: IMPLEMENT
+REQ: REQ-005-10
+NAME: Integration tests
+STEP: REVIEW
 ```
 
 ---
@@ -111,11 +111,11 @@ STEP: IMPLEMENT
 | 05 | beliefs.reconcile tool | [x] | [x] | [x] | [x] |
 | 06 | Scope-based access control | [x] | [x] | [x] | [x] |
 | 07 | Authentication/authorization | [x] | [x] | [x] | [x] |
-| 08 | Claude Code integration test | [ ] | [ ] | [ ] | [ ] |
+| 08 | Claude Code integration test | [x] | [x] | [x] | [x] |
 | 09 | Unit tests (≥90% coverage) | [x] | [x] | [x] | [x] |
-| 10 | Integration tests | [ ] | [ ] | [ ] | [ ] |
+| 10 | Integration tests | [x] | [x] | [ ] | [ ] |
 
-**Phase 5 Status:** IN PROGRESS (8/10)
+**Phase 5 Status:** IN PROGRESS (9/10)
 
 ---
 
