@@ -6,16 +6,112 @@ The agent loop ties together all components to process queries:
 3. Execute action (using tools)
 4. Synthesize response (format for output)
 5. Post-processing (learning, metrics)
+
+Supports two execution modes:
+- Simple: Single decision → action → response (fast path)
+- ReAct: Multi-step reasoning with THOUGHT → ACTION → OBSERVATION loop
+
+ReAct Pattern (REQ-002-01):
+    loop:
+        THOUGHT: "I need to check the user's calendar for conflicts"
+        ACTION: search_calendar(days=7)
+        OBSERVATION: [3 events found]
+
+        THOUGHT: "Now I see there's an overlap on Tuesday..."
+        ACTION: get_event_details(event_id="...")
+        OBSERVATION: {details}
+
+        THOUGHT: "I have enough information to answer"
+        FINAL_ANSWER: "You have a conflict on Tuesday at 3pm..."
 """
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any
+from enum import Enum
+from typing import Any, Literal
+import asyncio
+import logging
 
 from ..behaviors import Action, Behavior
 from .protocols import LLMMessage, LLMProvider, MemoryProvider
 from .decision import DecisionContext, DecisionEngine, DecisionResult
 from .execution import ActionExecutor, ActionResult
+
+logger = logging.getLogger(__name__)
+
+
+class LoopMode(Enum):
+    """Execution mode for the agent loop."""
+
+    SIMPLE = "simple"  # Single-step: decision → action → response
+    REACT = "react"  # Multi-step: THOUGHT → ACTION → OBSERVATION loop
+    AUTO = "auto"  # Automatically detect based on query complexity
+
+
+class StepType(Enum):
+    """Type of step in a ReAct trace."""
+
+    THOUGHT = "thought"
+    ACTION = "action"
+    OBSERVATION = "observation"
+    FINAL_ANSWER = "final_answer"
+
+
+@dataclass
+class ReActStep:
+    """A single step in a ReAct reasoning trace.
+
+    Captures the THOUGHT, ACTION, or OBSERVATION at each iteration.
+    """
+
+    type: StepType
+    content: str
+    timestamp: datetime = field(default_factory=datetime.now)
+    duration_ms: float = 0.0
+
+    # For ACTION steps
+    action_name: str | None = None
+    action_args: dict[str, Any] = field(default_factory=dict)
+
+    # For OBSERVATION steps
+    observation_success: bool = True
+    observation_error: str | None = None
+
+
+@dataclass
+class AgentLoopConfig:
+    """Configuration for the agent loop.
+
+    Controls execution mode, iteration limits, and timeouts.
+    """
+
+    # Execution mode
+    mode: LoopMode = LoopMode.AUTO
+
+    # ReAct loop settings
+    max_iterations: int = 10
+    iteration_timeout_seconds: float = 30.0
+
+    # Auto-mode detection settings
+    complexity_threshold: float = 0.7  # Query complexity for auto-mode
+
+    # Debug settings
+    log_thought_traces: bool = True
+
+    # Complexity keywords that suggest multi-step reasoning
+    complexity_keywords: list[str] = field(
+        default_factory=lambda: [
+            "and then",
+            "after that",
+            "also",
+            "first",
+            "next",
+            "finally",
+            "check",
+            "compare",
+            "analyze",
+        ]
+    )
 
 
 @dataclass
@@ -35,9 +131,36 @@ class AgentContext:
     conversation_history: list[dict] = field(default_factory=list)
     pending_details: str | None = None
 
+    # ReAct observations (accumulated during multi-step reasoning)
+    observations: list[str] = field(default_factory=list)
+
     # Metadata
     debug: bool = False
     metadata: dict[str, Any] = field(default_factory=dict)
+
+    def add_observation(self, observation: str) -> None:
+        """Add an observation to the context for multi-step reasoning.
+
+        Args:
+            observation: The observation to add
+        """
+        self.observations.append(observation)
+
+    def clear_observations(self) -> None:
+        """Clear all observations (call at start of new query)."""
+        self.observations.clear()
+
+    def get_observations_text(self) -> str:
+        """Get observations as formatted text for prompts.
+
+        Returns:
+            Formatted observations string
+        """
+        if not self.observations:
+            return ""
+        return "\n".join(
+            f"Observation {i + 1}: {obs}" for i, obs in enumerate(self.observations)
+        )
 
 
 @dataclass
@@ -58,6 +181,11 @@ class AgentResponse:
     # Decision details
     decision: DecisionResult | None = None
 
+    # ReAct reasoning trace (REQ-002-01)
+    react_steps: list[ReActStep] = field(default_factory=list)
+    loop_mode: LoopMode = LoopMode.SIMPLE
+    iterations_used: int = 0
+
     # Timing
     latency_ms: float = 0.0
     started_at: datetime = field(default_factory=datetime.now)
@@ -68,12 +196,73 @@ class AgentResponse:
     # Debug info
     debug_info: dict[str, Any] = field(default_factory=dict)
 
+    def add_react_step(
+        self,
+        step_type: StepType,
+        content: str,
+        duration_ms: float = 0.0,
+        action_name: str | None = None,
+        action_args: dict | None = None,
+        success: bool = True,
+        error: str | None = None,
+    ) -> ReActStep:
+        """Add a ReAct step to the reasoning trace.
+
+        Args:
+            step_type: Type of step (THOUGHT, ACTION, OBSERVATION, FINAL_ANSWER)
+            content: Content of the step
+            duration_ms: Duration of this step in milliseconds
+            action_name: For ACTION steps, the action name
+            action_args: For ACTION steps, the action arguments
+            success: For OBSERVATION steps, whether the action succeeded
+            error: For OBSERVATION steps, any error message
+
+        Returns:
+            The created ReActStep
+        """
+        step = ReActStep(
+            type=step_type,
+            content=content,
+            duration_ms=duration_ms,
+            action_name=action_name,
+            action_args=action_args or {},
+            observation_success=success,
+            observation_error=error,
+        )
+        self.react_steps.append(step)
+        return step
+
+    def get_thought_trace(self) -> list[dict[str, Any]]:
+        """Get the thought trace as a list of dicts for debugging/logging.
+
+        Returns:
+            List of step dictionaries with type, content, timing
+        """
+        return [
+            {
+                "step": i + 1,
+                "type": step.type.value,
+                "content": step.content,
+                "timestamp": step.timestamp.isoformat(),
+                "duration_ms": step.duration_ms,
+                "action_name": step.action_name,
+                "action_args": step.action_args,
+                "success": step.observation_success,
+                "error": step.observation_error,
+            }
+            for i, step in enumerate(self.react_steps)
+        ]
+
 
 class AgentLoop:
     """The main agent processing loop.
 
     This class orchestrates the entire agent interaction:
     query -> context -> decision -> execution -> synthesis -> response
+
+    Supports two execution modes (REQ-002-01):
+    - Simple: Single decision → action → response (fast path)
+    - ReAct: Multi-step THOUGHT → ACTION → OBSERVATION loop
 
     It is designed to be used by the Agent class but can also
     be used directly for more control.
@@ -85,6 +274,7 @@ class AgentLoop:
         memory: MemoryProvider | None = None,
         decision_engine: DecisionEngine | None = None,
         action_executor: ActionExecutor | None = None,
+        config: AgentLoopConfig | None = None,
     ):
         """Initialize the agent loop.
 
@@ -93,11 +283,13 @@ class AgentLoop:
             memory: Optional memory provider
             decision_engine: Optional decision engine (created if not provided)
             action_executor: Optional action executor
+            config: Optional loop configuration (defaults to AgentLoopConfig())
         """
         self.llm = llm
         self.memory = memory
         self.decision_engine = decision_engine or DecisionEngine(llm)
         self.action_executor = action_executor
+        self.config = config or AgentLoopConfig()
 
     async def process(
         self,
@@ -105,20 +297,105 @@ class AgentLoop:
         behavior: Behavior,
         context: AgentContext,
         assistant_intro: str = "",
+        mode_override: LoopMode | None = None,
     ) -> AgentResponse:
         """Process a query through the full agent loop.
+
+        Dispatches to either simple (single-step) or ReAct (multi-step) mode
+        based on configuration or query complexity.
 
         Args:
             query: User's query
             behavior: Behavior defining available actions
             context: Agent context (user, session, history)
             assistant_intro: Personality/identity introduction
+            mode_override: Optional mode override (ignores config)
 
         Returns:
             AgentResponse with the result
         """
         start_time = datetime.now()
-        response = AgentResponse(response="", started_at=start_time)
+
+        # Clear observations from previous queries
+        context.clear_observations()
+
+        # Determine which mode to use
+        mode = mode_override or self.config.mode
+        if mode == LoopMode.AUTO:
+            mode = self._detect_complexity(query)
+
+        if context.debug:
+            logger.debug(f"Processing query in {mode.value} mode: {query[:50]}...")
+
+        # Dispatch to appropriate handler
+        if mode == LoopMode.REACT:
+            return await self._run_react(
+                query=query,
+                behavior=behavior,
+                context=context,
+                assistant_intro=assistant_intro,
+                start_time=start_time,
+            )
+        else:
+            return await self._run_simple(
+                query=query,
+                behavior=behavior,
+                context=context,
+                assistant_intro=assistant_intro,
+                start_time=start_time,
+            )
+
+    def _detect_complexity(self, query: str) -> LoopMode:
+        """Detect if a query requires multi-step reasoning.
+
+        Uses keyword matching to detect queries that likely need
+        multiple steps (searches, comparisons, etc.).
+
+        Args:
+            query: The user's query
+
+        Returns:
+            REACT for complex queries, SIMPLE for simple ones
+        """
+        query_lower = query.lower()
+
+        # Check for complexity keywords
+        keyword_matches = sum(
+            1 for kw in self.config.complexity_keywords if kw in query_lower
+        )
+
+        # Calculate complexity score (0-1)
+        complexity = min(keyword_matches / 3, 1.0)
+
+        if complexity >= self.config.complexity_threshold:
+            return LoopMode.REACT
+        return LoopMode.SIMPLE
+
+    async def _run_simple(
+        self,
+        query: str,
+        behavior: Behavior,
+        context: AgentContext,
+        assistant_intro: str,
+        start_time: datetime,
+    ) -> AgentResponse:
+        """Run the simple (single-step) agent loop.
+
+        This is the original process() logic for fast single-step queries.
+
+        Args:
+            query: User's query
+            behavior: Behavior defining available actions
+            context: Agent context
+            assistant_intro: Personality/identity introduction
+            start_time: When processing started
+
+        Returns:
+            AgentResponse with the result
+        """
+        response = AgentResponse(
+            response="", started_at=start_time, loop_mode=LoopMode.SIMPLE
+        )
 
         try:
             # 1. Gather context
@@ -378,3 +655,248 @@ class AgentLoop:
         except Exception:
             # Log but don't fail the response
             pass
+
+    async def _run_react(
+        self,
+        query: str,
+        behavior: Behavior,
+        context: AgentContext,
+        assistant_intro: str,
+        start_time: datetime,
+    ) -> AgentResponse:
+        """Run the ReAct (multi-step reasoning) agent loop.
+
+        Implements the ReAct pattern:
+        1. THOUGHT: Reason about what to do next
+        2. ACTION: Execute the decided action
+        3. OBSERVATION: Record the result
+        4. Repeat until FINAL_ANSWER or max_iterations
+
+        Args:
+            query: User's query
+            behavior: Behavior defining available actions
+            context: Agent context
+            assistant_intro: Personality/identity introduction
+            start_time: When processing started
+
+        Returns:
+            AgentResponse with the result and thought trace
+        """
+        response = AgentResponse(
+            response="", started_at=start_time, loop_mode=LoopMode.REACT
+        )
+
+        # 1. Gather initial context
+        gathered_context = await self._gather_context(query, context)
+        if context.debug:
+            response.debug_info["gathered_context"] = gathered_context
+
+        # ReAct loop
+        for iteration in range(self.config.max_iterations):
+            response.iterations_used = iteration + 1
+            iteration_start = datetime.now()
+
+            try:
+                # Apply per-iteration timeout
+                async with asyncio.timeout(self.config.iteration_timeout_seconds):
+                    # THOUGHT: Decide what to do next
+                    thought_start = datetime.now()
+                    decision_context = DecisionContext(
+                        user_id=context.user_id,
+                        assistant_intro=assistant_intro,
+                        conversation_history=self._format_history(
+                            context.conversation_history
+                        ),
+                        pending_details=context.pending_details,
+                        gathered_context=self._build_react_context(
+                            gathered_context, context
+                        ),
+                        area_id=context.area_id,
+                    )
+
+                    decision = await self.decision_engine.decide(
+                        behavior=behavior,
+                        query=query,
+                        context=decision_context,
+                    )
+                    thought_duration = (
+                        datetime.now() - thought_start
+                    ).total_seconds() * 1000
+
+                    # Record the THOUGHT step
+                    response.add_react_step(
+                        step_type=StepType.THOUGHT,
+                        content=decision.reasoning or "Deciding action...",
+                        duration_ms=thought_duration,
+                    )
+
+                    if self.config.log_thought_traces:
+                        logger.debug(
+                            f"THOUGHT [{iteration + 1}]: {decision.reasoning}"
+                        )
+
+                    # Check for FINAL_ANSWER
+                    if decision.action == "answer" and decision.answer:
+                        response.add_react_step(
+                            step_type=StepType.FINAL_ANSWER,
+                            content=decision.answer,
+                        )
+
+                        if self.config.log_thought_traces:
+                            logger.debug(f"FINAL_ANSWER: {decision.answer}")
+
+                        response.response = decision.answer
+                        response.decision = decision
+                        response.action_taken = "answer"
+                        response.success = True
+
+                        # Process any memory updates
+                        if decision.memory_update:
+                            await self._process_memory_update(
+                                decision.memory_update, context
+                            )
+                            response.memories_stored.append(
+                                decision.memory_update.get("content", "")
+                            )
+
+                        response.latency_ms = (
+                            datetime.now() - start_time
+                        ).total_seconds() * 1000
+
+                        if context.debug:
+                            response.debug_info["thought_trace"] = (
+                                response.get_thought_trace()
+                            )
+
+                        return response
+
+                    # ACTION: Execute the decided action
+                    action_start = datetime.now()
+                    response.add_react_step(
+                        step_type=StepType.ACTION,
+                        content=f"{decision.action}({decision.args})",
+                        action_name=decision.action,
+                        action_args=decision.args,
+                    )
+
+                    if self.config.log_thought_traces:
+                        logger.debug(
+                            f"ACTION [{iteration + 1}]: {decision.action}({decision.args})"
+                        )
+
+                    if self.action_executor:
+                        execution_context = {
+                            "user_id": context.user_id,
+                            "area_id": context.area_id,
+                            "pending_details": context.pending_details,
+                        }
+
+                        result = await self.action_executor.execute(
+                            action_name=decision.action,
+                            args=decision.args,
+                            behavior=behavior,
+                            context=execution_context,
+                        )
+                        action_duration = (
+                            datetime.now() - action_start
+                        ).total_seconds() * 1000
+                        response.tool_results.append(result)
+
+                        # OBSERVATION: Record the result
+                        observation_content = (
+                            result.formatted_result
+                            if result.success
+                            else f"Error: {result.error}"
+                        )
+                        response.add_react_step(
+                            step_type=StepType.OBSERVATION,
+                            content=observation_content,
+                            duration_ms=action_duration,
+                            success=result.success,
+                            error=result.error,
+                        )
+
+                        # Add observation to context for next iteration
+                        context.add_observation(observation_content)
+
+                        if self.config.log_thought_traces:
+                            logger.debug(
+                                f"OBSERVATION [{iteration + 1}]: {observation_content[:100]}..."
+                            )
+                    else:
+                        # No executor - log warning
+                        logger.warning("No action executor available for ReAct loop")
+                        context.add_observation("No action executor available")
+
+                    # Record decision for later
+                    response.decision = decision
+                    response.action_taken = decision.action
+
+            except asyncio.TimeoutError:
+                logger.warning(
+                    f"ReAct iteration {iteration + 1} timed out after "
+                    f"{self.config.iteration_timeout_seconds}s"
+                )
+                response.add_react_step(
+                    step_type=StepType.OBSERVATION,
+                    content=f"Timeout after {self.config.iteration_timeout_seconds}s",
+                    success=False,
+                    error="timeout",
+                )
+                context.add_observation("Previous step timed out")
+                continue
+
+            except Exception as e:
+                logger.error(f"ReAct iteration {iteration + 1} error: {e}")
+                response.add_react_step(
+                    step_type=StepType.OBSERVATION,
+                    content=f"Error: {str(e)}",
+                    success=False,
+                    error=str(e),
+                )
+                context.add_observation(f"Error: {str(e)}")
+                # Continue to next iteration to try to recover
+                continue
+
+        # Max iterations reached without final answer
+        logger.warning(
+            f"ReAct loop reached max iterations ({self.config.max_iterations}) "
+            f"without final answer"
+        )
+
+        response.response = (
+            f"I couldn't complete this task in {self.config.max_iterations} steps. "
+            f"Here's what I found: {context.get_observations_text()}"
+        )
+        response.success = False
+
+        response.latency_ms = (datetime.now() - start_time).total_seconds() * 1000
+
+        if context.debug:
+            response.debug_info["thought_trace"] = response.get_thought_trace()
+            response.debug_info["max_iterations_reached"] = True
+
+        return response
+
+    def _build_react_context(
+        self,
+        gathered_context: str,
+        context: AgentContext,
+    ) -> str:
+        """Build context string for ReAct including observations.
+
+        Args:
+            gathered_context: Initial context from memory search
+            context: Agent context with accumulated observations
+
+        Returns:
+            Combined context string
+        """
+        parts = [gathered_context]
+
+        observations_text = context.get_observations_text()
+        if observations_text:
+            parts.append("\n\n## Previous Observations in this reasoning chain:")
+            parts.append(observations_text)
+
+        return "\n".join(parts)

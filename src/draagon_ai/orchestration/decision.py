@@ -5,20 +5,34 @@ The decision engine is responsible for:
 2. Calling the LLM to make a decision
 3. Parsing the decision output
 4. Selecting the appropriate action
+5. Validating action is in behavior's action list
+
+REQ-002-02: DecisionEngine Integration
+- Selects appropriate tool for query
+- Extracts tool arguments correctly
+- Returns confidence score with decision
+- Falls back to "no action" when appropriate
+- Supports all behavior-defined tools
 """
 
 from dataclasses import dataclass, field
 from typing import Any
+import logging
 import re
 import xml.etree.ElementTree as ET
 
 from ..behaviors import Action, Behavior
 from .protocols import LLMMessage, LLMProvider, LLMResponse
 
+logger = logging.getLogger(__name__)
+
 
 @dataclass
 class DecisionResult:
-    """Result of a decision made by the engine."""
+    """Result of a decision made by the engine.
+
+    REQ-002-02: Enhanced with validation and confidence tracking.
+    """
 
     # Primary decision
     action: str  # Action name to execute
@@ -36,8 +50,43 @@ class DecisionResult:
     # Memory operations
     memory_update: dict[str, Any] | None = None
 
+    # Validation status (REQ-002-02)
+    is_valid_action: bool = True  # Whether action is in behavior's action list
+    original_action: str | None = None  # Pre-validation action (if remapped)
+    validation_notes: str = ""  # Why action was remapped or rejected
+
     # Raw response for debugging
     raw_response: str = ""
+
+    def is_final_answer(self) -> bool:
+        """Check if this decision is a final answer.
+
+        Returns:
+            True if action is "answer" and has an answer value
+        """
+        return self.action == "answer" and self.answer is not None
+
+    def is_no_action(self) -> bool:
+        """Check if this decision is a no-action fallback.
+
+        Returns:
+            True if action is "no_action" or "none"
+        """
+        return self.action in ("no_action", "none", "")
+
+
+# Common action aliases that should map to canonical names
+ACTION_ALIASES: dict[str, str] = {
+    "respond": "answer",
+    "reply": "answer",
+    "say": "answer",
+    "search": "search_web",
+    "web_search": "search_web",
+    "lookup": "search_web",
+    "find": "search_web",
+    "no_action": "answer",
+    "none": "answer",
+}
 
 
 class DecisionEngine:
@@ -45,21 +94,37 @@ class DecisionEngine:
 
     The decision engine takes a behavior's decision prompt template,
     fills it with context, and uses an LLM to decide what action to take.
+
+    REQ-002-02: Enhanced with action validation, alias resolution, and
+    confidence tracking.
     """
 
     def __init__(
         self,
         llm: LLMProvider,
         default_model_tier: str = "local",
+        validate_actions: bool = True,
+        fallback_to_answer: bool = True,
+        action_aliases: dict[str, str] | None = None,
     ):
         """Initialize the decision engine.
 
         Args:
             llm: LLM provider for making decisions
             default_model_tier: Default model tier to use
+            validate_actions: Whether to validate actions against behavior
+            fallback_to_answer: Whether to fallback to "answer" for invalid actions
+            action_aliases: Custom action aliases (merged with defaults)
         """
         self.llm = llm
         self.default_model_tier = default_model_tier
+        self.validate_actions = validate_actions
+        self.fallback_to_answer = fallback_to_answer
+
+        # Merge custom aliases with defaults
+        self.action_aliases = ACTION_ALIASES.copy()
+        if action_aliases:
+            self.action_aliases.update(action_aliases)
 
     async def decide(
         self,
@@ -95,7 +160,91 @@ class DecisionEngine:
         result = self._parse_decision(response, behavior)
         result.raw_response = response.content
 
+        # Validate and normalize the action (REQ-002-02)
+        if self.validate_actions:
+            result = self._validate_action(result, behavior)
+
         return result
+
+    def _validate_action(
+        self,
+        result: DecisionResult,
+        behavior: Behavior,
+    ) -> DecisionResult:
+        """Validate that the action exists in the behavior and normalize aliases.
+
+        REQ-002-02: Ensures selected action is valid for the behavior.
+
+        Args:
+            result: The parsed decision result
+            behavior: The behavior with valid actions
+
+        Returns:
+            DecisionResult with validated/normalized action
+        """
+        original_action = result.action
+        action = original_action.lower().strip()
+
+        # Get valid action names from behavior
+        valid_actions = {a.name.lower() for a in behavior.actions}
+
+        # Check for alias resolution
+        if action in self.action_aliases:
+            canonical = self.action_aliases[action]
+            if canonical.lower() in valid_actions:
+                result.original_action = original_action
+                result.action = canonical
+                result.validation_notes = f"Alias '{original_action}' → '{canonical}'"
+                logger.debug(f"Resolved action alias: {original_action} → {canonical}")
+                return result
+
+        # Check if action is valid as-is
+        if action in valid_actions:
+            result.is_valid_action = True
+            return result
+
+        # Action is not valid - handle fallback
+        result.is_valid_action = False
+        result.original_action = original_action
+
+        if self.fallback_to_answer:
+            # Fall back to answer action if available
+            if "answer" in valid_actions:
+                result.action = "answer"
+                result.validation_notes = (
+                    f"Unknown action '{original_action}' → fallback to 'answer'"
+                )
+                logger.warning(
+                    f"Unknown action '{original_action}' not in behavior actions, "
+                    f"falling back to 'answer'"
+                )
+                # If we have reasoning but no answer, use reasoning as answer
+                if not result.answer and result.reasoning:
+                    result.answer = result.reasoning
+            else:
+                result.validation_notes = (
+                    f"Unknown action '{original_action}' and no 'answer' fallback"
+                )
+                logger.warning(
+                    f"Unknown action '{original_action}' and no 'answer' action "
+                    f"available in behavior"
+                )
+        else:
+            result.validation_notes = f"Unknown action '{original_action}'"
+            logger.warning(f"Unknown action '{original_action}' (no fallback enabled)")
+
+        return result
+
+    def get_valid_actions(self, behavior: Behavior) -> list[str]:
+        """Get list of valid action names for a behavior.
+
+        Args:
+            behavior: The behavior to get actions from
+
+        Returns:
+            List of valid action names
+        """
+        return [a.name for a in behavior.actions]
 
     def _build_decision_prompt(
         self,
@@ -216,6 +365,16 @@ class DecisionEngine:
             result.model_tier = (
                 model_tier_elem.text.strip() if model_tier_elem is not None else "local"
             )
+
+            # Extract confidence if present (REQ-002-02)
+            confidence_elem = root.find("confidence")
+            if confidence_elem is not None and confidence_elem.text:
+                try:
+                    result.confidence = float(confidence_elem.text.strip())
+                    # Clamp to 0-1 range
+                    result.confidence = max(0.0, min(1.0, result.confidence))
+                except ValueError:
+                    result.confidence = 1.0  # Default if parsing fails
 
             # Extract action-specific args
             result.args = self._extract_action_args(root, result.action)
@@ -355,6 +514,23 @@ class DecisionEngine:
             result.answer = data.get("answer")
             result.args = data.get("args", {})
             result.model_tier = data.get("model_tier", "local")
+
+            # Extract confidence if present (REQ-002-02)
+            if "confidence" in data:
+                try:
+                    result.confidence = float(data["confidence"])
+                    result.confidence = max(0.0, min(1.0, result.confidence))
+                except (ValueError, TypeError):
+                    result.confidence = 1.0
+
+            # Extract additional actions if present
+            if "additional_actions" in data:
+                result.additional_actions = data["additional_actions"]
+
+            # Extract memory update if present
+            if "memory_update" in data:
+                result.memory_update = data["memory_update"]
+
         except json.JSONDecodeError:
             result.answer = content
 
@@ -363,23 +539,33 @@ class DecisionEngine:
     def _parse_text_decision(self, content: str, behavior: Behavior) -> DecisionResult:
         """Parse plain text decision (fallback).
 
+        REQ-002-02: Returns lower confidence since this is a fallback parser.
+
         Args:
             content: Plain text content
             behavior: Behavior for validation
 
         Returns:
-            Parsed DecisionResult
+            Parsed DecisionResult with lower confidence
         """
         # Try to detect action keywords
         action = "answer"
+        matched_action = None
         for act in behavior.actions:
             if act.name.lower() in content.lower():
+                matched_action = act.name
                 action = act.name
                 break
+
+        # Lower confidence when using text fallback parsing
+        confidence = 0.5 if matched_action else 0.3
 
         return DecisionResult(
             action=action,
             answer=content,
+            confidence=confidence,
+            reasoning="Parsed from plain text (fallback)",
+            validation_notes="Used text fallback parser",
         )
 
     def _get_model_for_tier(self, tier: str) -> str | None:

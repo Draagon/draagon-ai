@@ -47,9 +47,24 @@ Usage:
 """
 
 from .agent import Agent, AgentConfig, MultiAgent
-from .decision import DecisionEngine, DecisionResult
+from .decision import DecisionEngine, DecisionResult, DecisionContext, ACTION_ALIASES
 from .execution import ActionExecutor, ActionResult
-from .loop import AgentLoop, AgentContext, AgentResponse
+from .registry import (
+    ToolRegistry,
+    Tool,
+    ToolParameter,
+    ToolMetrics,
+    ToolExecutionResult,
+)
+from .loop import (
+    AgentLoop,
+    AgentContext,
+    AgentResponse,
+    AgentLoopConfig,
+    LoopMode,
+    ReActStep,
+    StepType,
+)
 from .protocols import LLMProvider, MemoryProvider, ToolProvider
 from .architect_agent import (
     ArchitectAgent,
@@ -84,15 +99,27 @@ __all__ = [
     "Agent",
     "AgentConfig",
     "MultiAgent",
-    # Decision & Execution
+    # Decision & Execution (REQ-002-02)
     "DecisionEngine",
     "DecisionResult",
+    "DecisionContext",
+    "ACTION_ALIASES",
     "ActionExecutor",
     "ActionResult",
-    # Loop
+    # Tool Registry (REQ-002-03)
+    "ToolRegistry",
+    "Tool",
+    "ToolParameter",
+    "ToolMetrics",
+    "ToolExecutionResult",
+    # Loop (REQ-002-01)
     "AgentLoop",
     "AgentContext",
     "AgentResponse",
+    "AgentLoopConfig",
+    "LoopMode",
+    "ReActStep",
+    "StepType",
     # Protocols
     "LLMProvider",
     "MemoryProvider",

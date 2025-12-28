@@ -36,7 +36,7 @@ Example:
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any
+from typing import Any, TYPE_CHECKING
 from uuid import UUID
 import logging
 
@@ -59,6 +59,11 @@ try:
 except ImportError:
     QDRANT_AVAILABLE = False
     AsyncQdrantClient = None
+    # Define placeholders for type hints when qdrant not available
+    if TYPE_CHECKING:
+        from qdrant_client.http.models import FieldCondition
+    else:
+        FieldCondition = Any  # type: ignore
 
 from draagon_ai.memory.temporal_graph import (
     TemporalCognitiveGraph,

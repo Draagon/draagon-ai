@@ -44,10 +44,27 @@ from draagon_ai.adapters.roxy import (
     ROXY_SCOPE_MAPPING,
 )
 
+from draagon_ai.adapters.roxy_orchestration import (
+    RoxyOrchestrationAdapter,
+    RoxyToolDefinition,
+    RoxyResponse,
+    ToolCallInfo,
+    DebugInfo,
+    create_roxy_orchestration_adapter,
+)
+
 __all__ = [
+    # Memory adapter (REQ-001-05)
     "RoxyLayeredAdapter",
     "RoxyMemoryType",
     "RoxyMemoryScope",
     "ROXY_TYPE_MAPPING",
     "ROXY_SCOPE_MAPPING",
+    # Orchestration adapter (REQ-002-06)
+    "RoxyOrchestrationAdapter",
+    "RoxyToolDefinition",
+    "RoxyResponse",
+    "ToolCallInfo",
+    "DebugInfo",
+    "create_roxy_orchestration_adapter",
 ]
