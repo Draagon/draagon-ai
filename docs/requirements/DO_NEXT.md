@@ -10,8 +10,8 @@ I'll read this file, do the current task, update status, and move to the next st
 
 ```
 PHASE: 6 - Roxy Thin Client
-REQ: REQ-006-03
-NAME: Voice/TTS channel handling
+REQ: REQ-006-04
+NAME: Home Assistant integration
 STEP: IMPLEMENT
 ```
 
@@ -125,8 +125,8 @@ STEP: IMPLEMENT
 |---|-------------|-----------|------|--------|----------|
 | 01 | All adapters using draagon-ai | [x] | [x] | [x] | [x] |
 | 02 | Personality config (YAML) | [x] | [x] | [x] | [x] |
-| 03 | Voice/TTS channel handling | [>] | [ ] | [ ] | [ ] |
-| 04 | Home Assistant integration | [ ] | [ ] | [ ] | [ ] |
+| 03 | Voice/TTS channel handling | [x] | [x] | [x] | [x] |
+| 04 | Home Assistant integration | [>] | [ ] | [ ] | [ ] |
 | 05 | Wyoming protocol support | [ ] | [ ] | [ ] | [ ] |
 | 06 | Remove all duplicated code | [ ] | [ ] | [ ] | [ ] |
 | 07 | FastAPI shell only | [ ] | [ ] | [ ] | [ ] |
@@ -134,11 +134,40 @@ STEP: IMPLEMENT
 | 09 | Performance comparison | [ ] | [ ] | [ ] | [ ] |
 | 10 | Documentation update | [ ] | [ ] | [ ] | [ ] |
 
-**Phase 6 Status:** IN PROGRESS (2/10)
+**Phase 6 Status:** IN PROGRESS (3/10)
 
 ---
 
 ## CURRENT WORK LOG
+
+### REQ-006-03: Voice/TTS channel handling
+
+**Status:** ✅ COMPLETED
+
+**Work Done:**
+- Created `src/roxy/channels/voice/` module with complete voice processing pipeline:
+  - `tts_optimizer.py`: Thin wrapper re-exporting existing TTSOptimizer service
+  - `condenser.py`: ResponseCondenser for LLM-driven response shortening (max 40 words)
+  - `varier.py`: ResponseVarier using Jaccard similarity to prevent repetitive responses
+  - `handler.py`: VoiceHandler orchestrator combining all components
+
+- VoiceHandler.process_response() pipeline:
+  1. Condense long responses (if enabled, respects verbose mode)
+  2. Apply variation for repeated similar responses
+  3. Apply TTS optimization (time formats, abbreviations, markdown cleanup)
+
+- Created `src/roxy/channels/__init__.py` for channel package exports
+
+- 34 unit tests covering:
+  - ResponseVarier: similarity calculation, response type detection, variation templates
+  - ResponseCondenser: LLM integration, word count checks, error handling
+  - VoiceHandler: full pipeline, verbose mode, component accessors
+  - TTSOptimizer: time optimization, abbreviation expansion, markdown cleanup
+  - Module exports: both voice and channels package levels
+
+**Test Results:** ✅ 34/34 PASSED
+
+---
 
 ### REQ-006-02: Personality config (YAML)
 
