@@ -9,9 +9,9 @@ I'll read this file, do the current task, update status, and move to the next st
 ## CURRENT TASK
 
 ```
-PHASE: 2 - Orchestrator
-REQ: REQ-002-10
-NAME: Multi-step reasoning E2E tests
+PHASE: 3 - Cognitive Services
+REQ: REQ-003-01
+NAME: Belief reconciliation using core service
 STEP: IMPLEMENT
 ```
 
@@ -57,9 +57,9 @@ STEP: IMPLEMENT
 | 07 | Remove duplicate Roxy orchestrator | [x] | [x] | [x] | [x] |
 | 08 | Unit tests (≥90% coverage) | [x] | [x] | [x] | [x] |
 | 09 | Integration tests | [x] | [x] | [x] | [x] |
-| 10 | Multi-step reasoning E2E tests | [ ] | [ ] | [ ] | [ ] |
+| 10 | Multi-step reasoning E2E tests | [x] | [x] | [x] | [x] |
 
-**Phase 2 Status:** IN PROGRESS (9/10)
+**Phase 2 Status:** ✅ COMPLETE (10/10)
 
 ---
 
@@ -139,6 +139,58 @@ STEP: IMPLEMENT
 ---
 
 ## CURRENT WORK LOG
+
+### REQ-002-10: Multi-step reasoning E2E tests
+
+**Status:** ✅ COMPLETED
+
+**Work Done:**
+- Created comprehensive E2E test file: `tests/e2e/test_multistep_reasoning.py`
+- 11 tests covering all 4 REQ-002-10 scenarios with realistic mock tool chains
+- Added `e2e` pytest marker to `pyproject.toml`
+- Created `tests/e2e/__init__.py`
+- Fixed 3 failing tests (debug_info structure, get_thought_trace return type, result field access)
+
+**Test Scenarios Covered:**
+
+1. **Search-then-add (2 tests):**
+   - `test_search_calendar_then_add_event` - Search calendar, add follow-up meeting
+   - `test_web_search_then_add_to_calendar` - Search web for concert, add to calendar
+
+2. **Gather-then-analyze (2 tests):**
+   - `test_weather_and_calendar_synthesis` - Get weather + calendar, synthesize advice
+   - `test_memory_and_preferences_synthesis` - Search memory + calendar, personalized recommendation
+
+3. **Error recovery (2 tests):**
+   - `test_retry_after_service_failure` - Retry flaky service until success
+   - `test_fallback_to_alternative` - Fall back to web search when primary fails
+
+4. **Thought trace quality (3 tests):**
+   - `test_thought_traces_captured` - ReAct steps have ACTION and OBSERVATION types
+   - `test_debug_info_contains_thoughts` - debug_info["thought_trace"] populated
+   - `test_thought_trace_formatting` - get_thought_trace() returns list of step dicts
+
+5. **Complex scenarios (2 tests):**
+   - `test_four_step_planning_workflow` - Web search → weather → calendar → add event
+   - `test_conditional_branching` - Weather check → indoor search based on rain
+
+**Test Results:** ✅ 11/11 PASSED
+
+**Files Created:**
+- `tests/e2e/test_multistep_reasoning.py` (NEW - ~830 lines)
+- `tests/e2e/__init__.py` (NEW)
+
+**Files Updated:**
+- `pyproject.toml` (UPDATED - added `e2e` marker)
+
+**Acceptance Criteria:**
+- [x] Search-then-add scenario tested
+- [x] Gather-then-analyze scenario tested
+- [x] Error recovery in multi-step tested
+- [x] Thought trace quality tested
+- [x] Complex multi-step scenarios tested (4-step, conditional branching)
+
+---
 
 ### REQ-002-09: Integration tests
 
