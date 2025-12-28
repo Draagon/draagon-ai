@@ -93,6 +93,26 @@ from .multi_agent_orchestrator import (
     OrchestratorResult,
     execute_single_agent,
 )
+from .autonomous import (
+    AutonomousAgentService,
+    AutonomousConfig,
+    ActionType,
+    ActionTier,
+    ProposedAction,
+    ApprovedAction,
+    ActionResult as AutonomousActionResult,  # Rename to avoid conflict
+    ActionLog,
+    HarmCheck,
+    SafetyCheck,
+    AutonomousContext,
+    SelfMonitoringFinding,
+    SelfMonitoringResult,
+    LLMProvider as AutonomousLLMProvider,  # Different signature from orchestration.protocols
+    SearchProvider,
+    MemoryStoreProvider,
+    ContextProvider,
+    NotificationProvider,
+)
 
 __all__ = [
     # Core Agent
@@ -148,4 +168,23 @@ __all__ = [
     "AgentResult",
     "OrchestratorResult",
     "execute_single_agent",
+    # Autonomous Agent (REQ-004)
+    "AutonomousAgentService",
+    "AutonomousConfig",
+    "ActionType",
+    "ActionTier",
+    "ProposedAction",
+    "ApprovedAction",
+    "AutonomousActionResult",
+    "ActionLog",
+    "HarmCheck",
+    "SafetyCheck",
+    "AutonomousContext",
+    "SelfMonitoringFinding",
+    "SelfMonitoringResult",
+    "AutonomousLLMProvider",
+    "SearchProvider",
+    "MemoryStoreProvider",
+    "ContextProvider",
+    "NotificationProvider",
 ]
