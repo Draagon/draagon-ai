@@ -55,12 +55,15 @@ from draagon_ai.adapters.roxy_orchestration import (
 
 from draagon_ai.adapters.roxy_cognition import (
     RoxyBeliefAdapter,
+    RoxyCuriosityAdapter,
     RoxyLLMAdapter,
     RoxyMemoryAdapter,
     RoxyCredibilityAdapter,
+    RoxyTraitAdapter,
     RoxyLLMService,
     RoxyMemoryService,
     RoxyUserService,
+    RoxySelfManager,
 )
 
 __all__ = [
@@ -77,12 +80,15 @@ __all__ = [
     "ToolCallInfo",
     "DebugInfo",
     "create_roxy_orchestration_adapter",
-    # Cognition adapter (REQ-003-01)
+    # Cognition adapters (REQ-003-01, REQ-003-02)
     "RoxyBeliefAdapter",
+    "RoxyCuriosityAdapter",
     "RoxyLLMAdapter",
     "RoxyMemoryAdapter",
     "RoxyCredibilityAdapter",
+    "RoxyTraitAdapter",
     "RoxyLLMService",
     "RoxyMemoryService",
     "RoxyUserService",
+    "RoxySelfManager",
 ]

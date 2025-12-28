@@ -1,9 +1,10 @@
 """Roxy Cognition Adapters.
 
 Adapters that allow Roxy to use draagon-ai's cognitive services while providing
-Roxy-specific LLM, Memory, and Credibility implementations.
+Roxy-specific LLM, Memory, Credibility, and Trait implementations.
 
 REQ-003-01: Belief reconciliation using core service.
+REQ-003-02: Curiosity engine using core service.
 """
 
 import logging
@@ -17,6 +18,15 @@ from draagon_ai.cognition.beliefs import (
     BeliefReconciliationService,
     CredibilityProvider,
     ReconciliationResult,
+)
+from draagon_ai.cognition.curiosity import (
+    CuriosityEngine,
+    CuriousQuestion,
+    KnowledgeGap,
+    QuestionPriority,
+    QuestionPurpose,
+    QuestionType,
+    TraitProvider,
 )
 from draagon_ai.core.types import (
     AgentBelief,
@@ -113,6 +123,34 @@ class RoxyUserService(Protocol):
         """Get user credibility object.
 
         Returns object with 'credibility' float attribute, or None.
+        """
+        ...
+
+
+@runtime_checkable
+class RoxySelfManager(Protocol):
+    """Protocol for Roxy's RoxySelfManager (trait provider).
+
+    Roxy's RoxySelfManager provides trait values and worldview information.
+    """
+
+    def get_trait_value(self, trait_name: str, default: float = 0.5) -> float:
+        """Get a trait value with default fallback.
+
+        Args:
+            trait_name: Name of the trait (e.g., 'curiosity_intensity')
+            default: Default value if trait not found
+
+        Returns:
+            Trait value 0.0-1.0
+        """
+        ...
+
+    async def get_worldview_string(self) -> str:
+        """Get a string representation of the agent's worldview.
+
+        Returns:
+            Human-readable worldview string
         """
         ...
 
@@ -718,3 +756,210 @@ class RoxyBeliefAdapter:
             observations=observations,
             current_belief=current_belief,
         )
+
+
+# =============================================================================
+# Trait Adapter (REQ-003-02)
+# =============================================================================
+
+
+class RoxyTraitAdapter(TraitProvider):
+    """Adapts Roxy's RoxySelfManager to draagon-ai's TraitProvider protocol.
+
+    Roxy's RoxySelfManager provides trait values for the agent's personality.
+    This adapter bridges it to the TraitProvider protocol used by CuriosityEngine.
+    """
+
+    def __init__(self, roxy_self_manager: RoxySelfManager):
+        """Initialize the adapter.
+
+        Args:
+            roxy_self_manager: Roxy's RoxySelfManager instance
+        """
+        self._roxy_self_manager = roxy_self_manager
+
+    def get_trait_value(self, trait_name: str, default: float = 0.5) -> float:
+        """Get a trait value from RoxySelfManager.
+
+        Args:
+            trait_name: Name of the trait (e.g., 'curiosity_intensity')
+            default: Default value if trait not found
+
+        Returns:
+            Trait value 0.0-1.0
+        """
+        return self._roxy_self_manager.get_trait_value(trait_name, default)
+
+
+# =============================================================================
+# Curiosity Adapter (REQ-003-02)
+# =============================================================================
+
+
+@dataclass
+class RoxyCuriosityAdapter:
+    """Adapter that allows Roxy to use draagon-ai's CuriosityEngine.
+
+    This is the main entry point for REQ-003-02. It wraps draagon-ai's curiosity
+    engine and provides Roxy-compatible methods.
+
+    Example:
+        from roxy.services.llm import LLMService
+        from roxy.services.memory import MemoryService
+        from roxy.services.roxy_self import RoxySelfManager
+
+        adapter = RoxyCuriosityAdapter(
+            llm=LLMService(),
+            memory=MemoryService(),
+            roxy_self_manager=RoxySelfManager(),
+        )
+
+        questions = await adapter.analyze_for_curiosity(
+            conversation="User: I'm planning a trip to Japan...",
+            user_id="doug",
+        )
+    """
+
+    llm: RoxyLLMService
+    memory: RoxyMemoryService
+    roxy_self_manager: RoxySelfManager
+    agent_name: str = "Roxy"
+    agent_id: str = "roxy"
+    ask_cooldown_hours: int = 24
+
+    _engine: CuriosityEngine | None = None
+
+    def _get_engine(self) -> CuriosityEngine:
+        """Get or create the underlying engine."""
+        if self._engine is None:
+            # Create adapters
+            llm_adapter = RoxyLLMAdapter(self.llm)
+            memory_adapter = RoxyMemoryAdapter(self.memory, agent_id=self.agent_id)
+            trait_adapter = RoxyTraitAdapter(self.roxy_self_manager)
+
+            # Create the engine
+            self._engine = CuriosityEngine(
+                llm=llm_adapter,
+                memory=memory_adapter,
+                trait_provider=trait_adapter,
+                agent_name=self.agent_name,
+                agent_id=self.agent_id,
+                ask_cooldown_hours=self.ask_cooldown_hours,
+            )
+
+        return self._engine
+
+    # =========================================================================
+    # Roxy-Compatible Methods
+    # =========================================================================
+
+    async def analyze_for_curiosity(
+        self,
+        conversation: str,
+        user_id: str,
+        topic_hint: str | None = None,
+    ) -> list[CuriousQuestion]:
+        """Analyze a conversation for things to be curious about.
+
+        Called after interactions to identify questions.
+
+        Args:
+            conversation: The conversation text
+            user_id: The user involved
+            topic_hint: Optional topic hint
+
+        Returns:
+            List of CuriousQuestion objects generated
+        """
+        # Get worldview from RoxySelfManager if available
+        worldview_str = None
+        try:
+            worldview_str = await self.roxy_self_manager.get_worldview_string()
+        except Exception as e:
+            logger.debug(f"Could not get worldview: {e}")
+
+        return await self._get_engine().analyze_for_curiosity(
+            conversation=conversation,
+            user_id=user_id,
+            topic_hint=topic_hint,
+            worldview_str=worldview_str,
+        )
+
+    async def get_question_for_moment(
+        self,
+        user_id: str,
+        conversation_context: str,
+    ) -> CuriousQuestion | None:
+        """Get a question appropriate for the current moment.
+
+        Called when there's a natural pause or conversation end.
+
+        Args:
+            user_id: Current user
+            conversation_context: Recent context
+
+        Returns:
+            A question to ask, or None if not appropriate
+        """
+        return await self._get_engine().get_question_for_moment(
+            user_id=user_id,
+            conversation_context=conversation_context,
+        )
+
+    async def mark_question_asked(self, question_id: str) -> None:
+        """Mark a question as asked.
+
+        Args:
+            question_id: The question that was asked
+        """
+        await self._get_engine().mark_question_asked(question_id)
+
+    async def process_answer(
+        self,
+        question_id: str,
+        response: str,
+        user_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Process user's answer to a question.
+
+        Args:
+            question_id: The question that was answered
+            response: User's response
+            user_id: User ID for storage
+
+        Returns:
+            Extracted information including what agent should do next
+        """
+        return await self._get_engine().process_answer(
+            question_id=question_id,
+            response=response,
+            user_id=user_id,
+        )
+
+    async def load_questions_from_storage(self) -> None:
+        """Load queued questions from storage."""
+        await self._get_engine().load_questions_from_storage()
+
+    def get_pending_questions(self) -> list[CuriousQuestion]:
+        """Get all pending questions (for dashboard).
+
+        Returns:
+            List of unanswered, unexpired questions
+        """
+        return self._get_engine().get_pending_questions()
+
+    def get_knowledge_gaps_count(self) -> int:
+        """Get count of known knowledge gaps.
+
+        Returns:
+            Number of tracked knowledge gaps
+        """
+        return self._get_engine().get_knowledge_gaps_count()
+
+    def get_curiosity_level(self) -> float:
+        """Get the current curiosity level from traits.
+
+        Returns:
+            Curiosity intensity 0.0-1.0
+        """
+        return self.roxy_self_manager.get_trait_value("curiosity_intensity", default=0.7)
