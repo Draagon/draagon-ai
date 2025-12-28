@@ -5,6 +5,7 @@ Roxy-specific LLM, Memory, Credibility, and Trait implementations.
 
 REQ-003-01: Belief reconciliation using core service.
 REQ-003-02: Curiosity engine using core service.
+REQ-003-03: Opinion formation using core service.
 """
 
 import logging
@@ -27,6 +28,23 @@ from draagon_ai.cognition.curiosity import (
     QuestionPurpose,
     QuestionType,
     TraitProvider,
+)
+from draagon_ai.cognition.opinions import (
+    FormedOpinion,
+    IdentityManager,
+    OpinionBasis,
+    OpinionFormationService,
+    OpinionRequest,
+    OpinionStrength,
+)
+from draagon_ai.core import (
+    AgentIdentity,
+    CoreValue,
+    GuidingPrinciple,
+    Opinion,
+    PersonalityTrait,
+    Preference,
+    WorldviewBelief,
 )
 from draagon_ai.core.types import (
     AgentBelief,
@@ -963,3 +981,370 @@ class RoxyCuriosityAdapter:
             Curiosity intensity 0.0-1.0
         """
         return self.roxy_self_manager.get_trait_value("curiosity_intensity", default=0.7)
+
+
+# =============================================================================
+# Identity Adapter (REQ-003-03)
+# =============================================================================
+
+
+class RoxyIdentityAdapter(IdentityManager):
+    """Adapts Roxy's RoxySelfManager to draagon-ai's IdentityManager protocol.
+
+    The IdentityManager protocol is used by OpinionFormationService to load
+    and save agent identity. This adapter bridges RoxySelfManager to that protocol.
+
+    Key mappings:
+    - RoxySelf.values -> AgentIdentity.values
+    - RoxySelf.worldview -> AgentIdentity.worldview
+    - RoxySelf.principles -> AgentIdentity.principles
+    - RoxySelf.traits -> AgentIdentity.traits
+    - RoxySelf.preferences -> AgentIdentity.preferences
+    - RoxySelf.opinions -> AgentIdentity.opinions
+    """
+
+    def __init__(
+        self,
+        roxy_self_manager: RoxySelfManager,
+        agent_name: str = "Roxy",
+        agent_id: str = "roxy",
+    ):
+        """Initialize the adapter.
+
+        Args:
+            roxy_self_manager: Roxy's RoxySelfManager instance
+            agent_name: Name of the agent
+            agent_id: Unique agent ID
+        """
+        self._roxy_self_manager = roxy_self_manager
+        self._agent_name = agent_name
+        self._agent_id = agent_id
+        self._dirty = False
+        self._cached_identity: AgentIdentity | None = None
+
+    async def load(self) -> AgentIdentity:
+        """Load the agent's identity from RoxySelfManager.
+
+        Converts RoxySelf to AgentIdentity format.
+        """
+        # Get RoxySelf through the manager
+        # Note: We need to call the manager's load method
+        roxy_self = await self._load_roxy_self()
+
+        # Convert to AgentIdentity
+        identity = AgentIdentity(
+            agent_id=self._agent_id,
+            name=self._agent_name,
+        )
+
+        # Map values
+        for name, value in roxy_self.get("values", {}).items():
+            identity.values[name] = CoreValue(
+                strength=value.get("strength", 0.9),
+                description=value.get("description", ""),
+                formed_through=value.get("formed_through", ""),
+            )
+
+        # Map worldview beliefs
+        for name, wb in roxy_self.get("worldview", {}).items():
+            identity.worldview[name] = WorldviewBelief(
+                name=name,
+                description=wb.get("description", ""),
+                conviction=wb.get("conviction", 0.7),
+                influences=wb.get("influences", []),
+                open_to_revision=wb.get("open_to_revision", True),
+                caveats=wb.get("caveats", []),
+            )
+
+        # Map principles
+        for name, p in roxy_self.get("principles", {}).items():
+            identity.principles[name] = GuidingPrinciple(
+                name=name,
+                description=p.get("description", ""),
+                application=p.get("application", ""),
+                source=p.get("source", ""),
+                strength=p.get("strength", 0.9),
+            )
+
+        # Map traits
+        for name, trait in roxy_self.get("traits", {}).items():
+            identity.traits[name] = PersonalityTrait(
+                value=trait.get("value", 0.5),
+                description=trait.get("description", ""),
+            )
+
+        # Map preferences
+        for name, pref in roxy_self.get("preferences", {}).items():
+            identity.preferences[name] = Preference(
+                name=name,
+                value=pref.get("value", ""),
+                reason=pref.get("reason", ""),
+                confidence=pref.get("confidence", 0.7),
+                formed_at=datetime.fromisoformat(pref["formed_at"]) if pref.get("formed_at") else datetime.now(),
+            )
+
+        # Map opinions
+        for topic, op in roxy_self.get("opinions", {}).items():
+            open_to_rev = op.get("open_to_revision", op.get("open_to_change", True))
+            identity.opinions[topic] = Opinion(
+                topic=topic,
+                stance=op.get("stance", ""),
+                basis=op.get("basis", ""),
+                confidence=op.get("confidence", 0.5),
+                open_to_change=open_to_rev,
+                open_to_revision=open_to_rev,
+                reasoning=op.get("reasoning", ""),
+                caveats=op.get("caveats", []),
+            )
+
+        self._cached_identity = identity
+        return identity
+
+    async def _load_roxy_self(self) -> dict[str, Any]:
+        """Load RoxySelf data from the manager.
+
+        Returns a dict representation for easier mapping.
+        """
+        # The RoxySelfManager returns a RoxySelf object
+        # We need to convert it to a dict for mapping
+        roxy_self = await self._roxy_self_manager.load()
+
+        # If it's already a dict, use it directly
+        if isinstance(roxy_self, dict):
+            return roxy_self
+
+        # Otherwise, extract attributes
+        # This handles both actual RoxySelf objects and Mock objects
+        result: dict[str, Any] = {}
+
+        # Extract each attribute if available
+        for attr in ["values", "worldview", "principles", "traits", "preferences", "opinions"]:
+            try:
+                value = getattr(roxy_self, attr, {})
+                if hasattr(value, "items"):
+                    # Convert to dict of dicts
+                    result[attr] = {
+                        k: self._to_dict(v) for k, v in value.items()
+                    }
+                else:
+                    result[attr] = {}
+            except Exception:
+                result[attr] = {}
+
+        return result
+
+    def _to_dict(self, obj: Any) -> dict[str, Any]:
+        """Convert an object to a dict."""
+        if isinstance(obj, dict):
+            return obj
+        if hasattr(obj, "__dict__"):
+            return {k: v for k, v in obj.__dict__.items() if not k.startswith("_")}
+        if hasattr(obj, "_asdict"):
+            return obj._asdict()
+        return {"value": str(obj)}
+
+    def mark_dirty(self) -> None:
+        """Mark identity as needing save."""
+        self._dirty = True
+        # Also mark Roxy's manager as dirty
+        try:
+            self._roxy_self_manager.mark_dirty()
+        except Exception:
+            pass
+
+    async def save_if_dirty(self) -> bool:
+        """Save identity if modified.
+
+        Delegates to RoxySelfManager's save method.
+        """
+        if not self._dirty:
+            return False
+
+        try:
+            # Delegate to Roxy's manager
+            result = await self._roxy_self_manager.save_if_dirty()
+            if result:
+                self._dirty = False
+            return result
+        except Exception as e:
+            logger.warning(f"Failed to save identity: {e}")
+            return False
+
+
+# =============================================================================
+# Opinion Adapter (REQ-003-03)
+# =============================================================================
+
+
+@dataclass
+class RoxyOpinionAdapter:
+    """Adapter that allows Roxy to use draagon-ai's OpinionFormationService.
+
+    This is the main entry point for REQ-003-03. It wraps draagon-ai's opinion
+    formation service and provides Roxy-compatible methods.
+
+    Example:
+        from roxy.services.llm import LLMService
+        from roxy.services.memory import MemoryService
+        from roxy.services.roxy_self import RoxySelfManager
+
+        adapter = RoxyOpinionAdapter(
+            llm=LLMService(),
+            memory=MemoryService(),
+            roxy_self_manager=RoxySelfManager(),
+        )
+
+        opinion = await adapter.form_opinion(
+            topic="pineapple on pizza",
+            context="User asked about food preferences",
+            user_id="doug",
+        )
+    """
+
+    llm: RoxyLLMService
+    memory: RoxyMemoryService
+    roxy_self_manager: RoxySelfManager
+    agent_name: str = "Roxy"
+    agent_id: str = "roxy"
+
+    _service: OpinionFormationService | None = None
+
+    def _get_service(self) -> OpinionFormationService:
+        """Get or create the underlying service."""
+        if self._service is None:
+            # Create adapters
+            llm_adapter = RoxyLLMAdapter(self.llm)
+            memory_adapter = RoxyMemoryAdapter(self.memory, agent_id=self.agent_id)
+            identity_adapter = RoxyIdentityAdapter(
+                self.roxy_self_manager,
+                agent_name=self.agent_name,
+                agent_id=self.agent_id,
+            )
+
+            # Create the service
+            self._service = OpinionFormationService(
+                llm=llm_adapter,
+                memory=memory_adapter,
+                identity_manager=identity_adapter,
+                agent_name=self.agent_name,
+                agent_id=self.agent_id,
+            )
+
+        return self._service
+
+    # =========================================================================
+    # Roxy-Compatible Methods
+    # =========================================================================
+
+    async def form_opinion(
+        self,
+        topic: str,
+        context: str,
+        user_id: str,
+    ) -> FormedOpinion | None:
+        """Form an opinion on a topic.
+
+        Args:
+            topic: The topic to form an opinion on
+            context: Conversational context
+            user_id: User asking for the opinion
+
+        Returns:
+            FormedOpinion or None if unable to form one
+        """
+        request = OpinionRequest(
+            topic=topic,
+            user_id=user_id,
+            context=context,
+        )
+        return await self._get_service().form_opinion(request)
+
+    async def form_preference(
+        self,
+        topic: str,
+        context: str,
+        user_id: str,
+        options: list[str] | None = None,
+    ) -> Preference | None:
+        """Form a preference on a topic.
+
+        Args:
+            topic: The preference topic (e.g., "favorite color")
+            context: Conversational context
+            user_id: User asking
+            options: Optional list of choices
+
+        Returns:
+            Preference or None
+        """
+        request = OpinionRequest(
+            topic=topic,
+            user_id=user_id,
+            context=context,
+            is_preference_request=True,
+            options=options,
+        )
+        return await self._get_service().form_preference(request)
+
+    async def get_opinion(self, topic: str) -> Opinion | None:
+        """Get existing opinion on a topic.
+
+        Args:
+            topic: The topic to look up
+
+        Returns:
+            Opinion or None
+        """
+        return await self._get_service().get_opinion(topic)
+
+    async def get_preference(self, topic: str) -> Preference | None:
+        """Get existing preference on a topic.
+
+        Args:
+            topic: The topic to look up
+
+        Returns:
+            Preference or None
+        """
+        return await self._get_service().get_preference(topic)
+
+    async def get_or_form_opinion(
+        self,
+        topic: str,
+        context: str,
+        user_id: str,
+    ) -> FormedOpinion | None:
+        """Get existing opinion or form a new one.
+
+        Args:
+            topic: The topic
+            context: Context for formation if needed
+            user_id: User asking
+
+        Returns:
+            FormedOpinion (from existing or newly formed)
+        """
+        return await self._get_service().get_or_form_opinion(
+            topic=topic,
+            context=context,
+            user_id=user_id,
+        )
+
+    async def consider_updating_opinion(
+        self,
+        topic: str,
+        new_info: str,
+    ) -> bool:
+        """Consider whether to update an opinion based on new info.
+
+        Args:
+            topic: The topic with the opinion
+            new_info: New information to consider
+
+        Returns:
+            True if opinion was updated
+        """
+        return await self._get_service().consider_updating_opinion(
+            topic=topic,
+            new_info=new_info,
+        )

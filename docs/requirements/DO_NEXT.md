@@ -10,8 +10,8 @@ I'll read this file, do the current task, update status, and move to the next st
 
 ```
 PHASE: 3 - Cognitive Services
-REQ: REQ-003-03
-NAME: Opinion formation using core service
+REQ: REQ-003-04
+NAME: Learning service using core service
 STEP: IMPLEMENT
 ```
 
@@ -69,7 +69,7 @@ STEP: IMPLEMENT
 |---|-------------|-----------|------|--------|----------|
 | 01 | Belief reconciliation using core service | [x] | [x] | [x] | [x] |
 | 02 | Curiosity engine using core service | [x] | [x] | [x] | [x] |
-| 03 | Opinion formation using core service | [ ] | [ ] | [ ] | [ ] |
+| 03 | Opinion formation using core service | [x] | [x] | [x] | [x] |
 | 04 | Learning service using core service | [ ] | [ ] | [ ] | [ ] |
 | 05 | Identity manager integration | [ ] | [ ] | [ ] | [ ] |
 | 06 | Remove duplicate Roxy cognitive services | [ ] | [ ] | [ ] | [ ] |
@@ -77,7 +77,7 @@ STEP: IMPLEMENT
 | 08 | Unit tests (≥90% coverage) | [ ] | [ ] | [ ] | [ ] |
 | 09 | Integration tests | [ ] | [ ] | [ ] | [ ] |
 
-**Phase 3 Status:** IN PROGRESS (2/9)
+**Phase 3 Status:** IN PROGRESS (3/9)
 
 ---
 
@@ -139,6 +139,60 @@ STEP: IMPLEMENT
 ---
 
 ## CURRENT WORK LOG
+
+### REQ-003-03: Opinion formation using core service
+
+**Status:** ✅ COMPLETED
+
+**Work Done:**
+- Created `RoxyIdentityAdapter` in `src/draagon_ai/adapters/roxy_cognition.py`
+- Adapter implements `IdentityManager` protocol for draagon-ai's OpinionFormationService
+- Maps Roxy's `RoxySelf` to draagon-ai's `AgentIdentity`:
+  - Values (truth_seeking, epistemic_humility, etc.)
+  - Worldview beliefs
+  - Guiding principles
+  - Personality traits
+  - Preferences
+  - Opinions (with fix for `open_to_revision` attribute)
+- Created `RoxyOpinionAdapter` as main entry point:
+  - `form_opinion()` - Form a new opinion on a topic
+  - `form_preference()` - Form a new preference
+  - `get_opinion()` / `get_preference()` - Retrieve existing
+  - `get_or_form_opinion()` - Get existing or form new
+  - `consider_updating_opinion()` - Evaluate new information
+- Reused existing adapters from REQ-003-01:
+  - `RoxyLLMAdapter` - Adapts Roxy's LLMService to LLMProvider protocol
+  - `RoxyMemoryAdapter` - Adapts Roxy's MemoryService to MemoryProvider protocol
+- Full test coverage with 21 new unit tests (58 total in file)
+
+**Key Components:**
+
+| Adapter | Purpose |
+|---------|---------|
+| `RoxyIdentityAdapter` | Wraps RoxySelfManager for IdentityManager protocol |
+| `RoxyOpinionAdapter` | Main entry point - wraps OpinionFormationService |
+
+**Bug Fixed:**
+- Opinion class has both `open_to_change` and `open_to_revision` attributes
+- OpinionFormationService checks `open_to_revision` for update decisions
+- Updated mapping to set both attributes from source value
+
+**Acceptance Criteria:**
+- [x] Roxy uses `OpinionFormationService` from draagon-ai
+- [x] Adapter provides Roxy's identity via IdentityManager protocol
+- [x] Opinion formation works with context and memory search
+- [x] Preference formation works with optional options
+- [x] Opinion updates respect `open_to_revision` flag
+- [x] All existing tests pass (58/58 in file)
+
+**Files Updated:**
+- `src/draagon_ai/adapters/roxy_cognition.py` (UPDATED - added ~310 lines)
+- `tests/unit/adapters/test_roxy_cognition.py` (UPDATED - added ~600 lines, 21 new tests)
+- `src/draagon_ai/adapters/__init__.py` (UPDATED - added new exports)
+
+**Test Results:** ✅ 58/58 PASSED
+
+---
 
 ### REQ-003-02: Curiosity engine using core service
 

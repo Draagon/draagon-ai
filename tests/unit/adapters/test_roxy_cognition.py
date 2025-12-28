@@ -2,6 +2,7 @@
 
 REQ-003-01: Belief reconciliation using core service.
 REQ-003-02: Curiosity engine using core service.
+REQ-003-03: Opinion formation using core service.
 """
 
 import uuid
@@ -14,8 +15,10 @@ from draagon_ai.adapters.roxy_cognition import (
     RoxyBeliefAdapter,
     RoxyCredibilityAdapter,
     RoxyCuriosityAdapter,
+    RoxyIdentityAdapter,
     RoxyLLMAdapter,
     RoxyMemoryAdapter,
+    RoxyOpinionAdapter,
     RoxyTraitAdapter,
 )
 from draagon_ai.cognition.curiosity import (
@@ -24,6 +27,12 @@ from draagon_ai.cognition.curiosity import (
     QuestionPurpose,
     QuestionType,
 )
+from draagon_ai.cognition.opinions import (
+    FormedOpinion,
+    OpinionBasis,
+    OpinionStrength,
+)
+from draagon_ai.core import AgentIdentity, Opinion, Preference
 from draagon_ai.core.types import (
     AgentBelief,
     BeliefType,
@@ -1009,3 +1018,622 @@ class TestRoxyCuriosityAdapterIntegration:
         # With medium-low curiosity, should only get high priority questions
         if question:
             assert question.priority == QuestionPriority.HIGH
+
+
+# =============================================================================
+# RoxyIdentityAdapter Tests (REQ-003-03)
+# =============================================================================
+
+
+class TestRoxyIdentityAdapter:
+    """Tests for RoxyIdentityAdapter."""
+
+    @pytest.fixture
+    def mock_roxy_self_with_data(self):
+        """Create a mock RoxySelfManager with full identity data."""
+        manager = MagicMock()
+
+        # Create a mock RoxySelf with values, traits, opinions, etc.
+        mock_self = MagicMock()
+
+        # Values dict
+        mock_value = MagicMock()
+        mock_value.strength = 0.95
+        mock_value.description = "Always seek the truth"
+        mock_value.formed_through = "core design"
+        mock_self.values = {"truth_seeking": mock_value}
+
+        # Worldview dict
+        mock_worldview = MagicMock()
+        mock_worldview.description = "Technology should serve humanity"
+        mock_worldview.conviction = 0.85
+        mock_worldview.influences = ["humanism"]
+        mock_worldview.open_to_revision = True
+        mock_worldview.caveats = []
+        mock_self.worldview = {"tech_humanism": mock_worldview}
+
+        # Principles dict
+        mock_principle = MagicMock()
+        mock_principle.description = "Be honest even when it's hard"
+        mock_principle.application = "Always"
+        mock_principle.source = "core values"
+        mock_principle.strength = 0.9
+        mock_self.principles = {"honesty": mock_principle}
+
+        # Traits dict
+        mock_trait = MagicMock()
+        mock_trait.value = 0.7
+        mock_trait.description = "How curious I am"
+        mock_self.traits = {"curiosity_intensity": mock_trait}
+
+        # Preferences dict
+        mock_pref = MagicMock()
+        mock_pref.value = "blue"
+        mock_pref.reason = "It reminds me of calm"
+        mock_pref.confidence = 0.8
+        mock_pref.formed_at = None
+        mock_self.preferences = {"favorite_color": mock_pref}
+
+        # Opinions dict
+        mock_opinion = MagicMock()
+        mock_opinion.stance = "Pineapple on pizza is valid"
+        mock_opinion.basis = "aesthetic"
+        mock_opinion.confidence = 0.6
+        mock_opinion.open_to_revision = True
+        mock_opinion.reasoning = "Taste is subjective"
+        mock_opinion.caveats = []
+        mock_self.opinions = {"pineapple_pizza": mock_opinion}
+
+        manager.load = AsyncMock(return_value=mock_self)
+        manager.mark_dirty = MagicMock()
+        manager.save_if_dirty = AsyncMock(return_value=True)
+
+        return manager
+
+    @pytest.mark.anyio
+    async def test_load_returns_agent_identity(self, mock_roxy_self_with_data):
+        """Test that load returns an AgentIdentity object."""
+        adapter = RoxyIdentityAdapter(
+            mock_roxy_self_with_data,
+            agent_name="Roxy",
+            agent_id="roxy",
+        )
+
+        identity = await adapter.load()
+
+        assert isinstance(identity, AgentIdentity)
+        assert identity.agent_id == "roxy"
+        assert identity.name == "Roxy"
+
+    @pytest.mark.anyio
+    async def test_load_maps_values(self, mock_roxy_self_with_data):
+        """Test that load maps values correctly."""
+        adapter = RoxyIdentityAdapter(mock_roxy_self_with_data)
+
+        identity = await adapter.load()
+
+        assert "truth_seeking" in identity.values
+        assert identity.values["truth_seeking"].strength == 0.95
+        assert "truth" in identity.values["truth_seeking"].description.lower()
+
+    @pytest.mark.anyio
+    async def test_load_maps_worldview(self, mock_roxy_self_with_data):
+        """Test that load maps worldview beliefs correctly."""
+        adapter = RoxyIdentityAdapter(mock_roxy_self_with_data)
+
+        identity = await adapter.load()
+
+        assert "tech_humanism" in identity.worldview
+        assert identity.worldview["tech_humanism"].conviction == 0.85
+
+    @pytest.mark.anyio
+    async def test_load_maps_traits(self, mock_roxy_self_with_data):
+        """Test that load maps traits correctly."""
+        adapter = RoxyIdentityAdapter(mock_roxy_self_with_data)
+
+        identity = await adapter.load()
+
+        assert "curiosity_intensity" in identity.traits
+        assert identity.traits["curiosity_intensity"].value == 0.7
+
+    @pytest.mark.anyio
+    async def test_load_maps_preferences(self, mock_roxy_self_with_data):
+        """Test that load maps preferences correctly."""
+        adapter = RoxyIdentityAdapter(mock_roxy_self_with_data)
+
+        identity = await adapter.load()
+
+        assert "favorite_color" in identity.preferences
+        assert identity.preferences["favorite_color"].value == "blue"
+
+    @pytest.mark.anyio
+    async def test_load_maps_opinions(self, mock_roxy_self_with_data):
+        """Test that load maps opinions correctly."""
+        adapter = RoxyIdentityAdapter(mock_roxy_self_with_data)
+
+        identity = await adapter.load()
+
+        assert "pineapple_pizza" in identity.opinions
+        assert "valid" in identity.opinions["pineapple_pizza"].stance.lower()
+        assert identity.opinions["pineapple_pizza"].confidence == 0.6
+
+    def test_mark_dirty_delegates(self, mock_roxy_self_with_data):
+        """Test that mark_dirty delegates to RoxySelfManager."""
+        adapter = RoxyIdentityAdapter(mock_roxy_self_with_data)
+
+        adapter.mark_dirty()
+
+        mock_roxy_self_with_data.mark_dirty.assert_called_once()
+
+    @pytest.mark.anyio
+    async def test_save_if_dirty_delegates(self, mock_roxy_self_with_data):
+        """Test that save_if_dirty delegates to RoxySelfManager."""
+        adapter = RoxyIdentityAdapter(mock_roxy_self_with_data)
+        adapter._dirty = True
+
+        result = await adapter.save_if_dirty()
+
+        assert result is True
+        mock_roxy_self_with_data.save_if_dirty.assert_called_once()
+
+    @pytest.mark.anyio
+    async def test_save_if_dirty_skips_when_clean(self, mock_roxy_self_with_data):
+        """Test that save_if_dirty does nothing when not dirty."""
+        adapter = RoxyIdentityAdapter(mock_roxy_self_with_data)
+        adapter._dirty = False
+
+        result = await adapter.save_if_dirty()
+
+        assert result is False
+        mock_roxy_self_with_data.save_if_dirty.assert_not_called()
+
+
+# =============================================================================
+# RoxyOpinionAdapter Tests (REQ-003-03)
+# =============================================================================
+
+
+class TestRoxyOpinionAdapter:
+    """Tests for RoxyOpinionAdapter."""
+
+    @pytest.fixture
+    def adapter(self, mock_roxy_llm, mock_roxy_memory, mock_roxy_self_manager):
+        """Create a RoxyOpinionAdapter with mocks."""
+        # Extend mock_roxy_self_manager with load method
+        mock_self = MagicMock()
+        mock_self.values = {}
+        mock_self.worldview = {}
+        mock_self.principles = {}
+        mock_self.traits = {}
+        mock_self.preferences = {}
+        mock_self.opinions = {}
+        mock_roxy_self_manager.load = AsyncMock(return_value=mock_self)
+        mock_roxy_self_manager.mark_dirty = MagicMock()
+        mock_roxy_self_manager.save_if_dirty = AsyncMock(return_value=True)
+
+        return RoxyOpinionAdapter(
+            llm=mock_roxy_llm,
+            memory=mock_roxy_memory,
+            roxy_self_manager=mock_roxy_self_manager,
+            agent_name="Roxy",
+            agent_id="roxy",
+        )
+
+    def test_initialization(self, adapter):
+        """Test that adapter initializes correctly."""
+        assert adapter.agent_name == "Roxy"
+        assert adapter.agent_id == "roxy"
+        assert adapter._service is None  # Lazy initialization
+
+    def test_get_service_creates_service(self, adapter):
+        """Test that _get_service creates the underlying service."""
+        from draagon_ai.cognition.opinions import OpinionFormationService
+
+        service = adapter._get_service()
+
+        assert isinstance(service, OpinionFormationService)
+        assert adapter._service is service  # Cached
+
+    def test_get_service_caches_service(self, adapter):
+        """Test that _get_service returns cached service."""
+        service1 = adapter._get_service()
+        service2 = adapter._get_service()
+
+        assert service1 is service2
+
+    @pytest.mark.anyio
+    async def test_form_opinion_returns_formed_opinion(
+        self, mock_roxy_llm, mock_roxy_memory, mock_roxy_self_manager
+    ):
+        """Test that form_opinion returns a FormedOpinion."""
+        # Setup mock RoxySelf
+        mock_self = MagicMock()
+        mock_self.values = {}
+        mock_self.worldview = {}
+        mock_self.principles = {}
+        mock_self.traits = {}
+        mock_self.preferences = {}
+        mock_self.opinions = {}
+        mock_roxy_self_manager.load = AsyncMock(return_value=mock_self)
+        mock_roxy_self_manager.mark_dirty = MagicMock()
+        mock_roxy_self_manager.save_if_dirty = AsyncMock(return_value=True)
+
+        # Setup LLM response
+        mock_roxy_llm.chat = AsyncMock(
+            return_value="""{
+                "have_opinion": true,
+                "stance": "I think pineapple on pizza is a valid choice",
+                "basis": "aesthetic",
+                "strength": "moderate",
+                "confidence": 0.6,
+                "reasoning": "Taste is subjective and personal",
+                "caveats": ["This is a matter of personal preference"],
+                "could_be_wrong": true,
+                "would_change_if": "Presented with compelling culinary arguments"
+            }"""
+        )
+
+        adapter = RoxyOpinionAdapter(
+            llm=mock_roxy_llm,
+            memory=mock_roxy_memory,
+            roxy_self_manager=mock_roxy_self_manager,
+        )
+
+        result = await adapter.form_opinion(
+            topic="pineapple on pizza",
+            context="User asked about food preferences",
+            user_id="doug",
+        )
+
+        assert isinstance(result, FormedOpinion)
+        assert "pineapple" in result.stance.lower() or "pizza" in result.stance.lower()
+        assert result.basis == OpinionBasis.AESTHETIC
+        assert result.confidence == 0.6
+
+    @pytest.mark.anyio
+    async def test_form_opinion_graceful_fallback(
+        self, mock_roxy_llm, mock_roxy_memory, mock_roxy_self_manager
+    ):
+        """Test that form_opinion returns fallback when LLM fails."""
+        # Setup mock RoxySelf
+        mock_self = MagicMock()
+        mock_self.values = {}
+        mock_self.worldview = {}
+        mock_self.principles = {}
+        mock_self.traits = {}
+        mock_self.preferences = {}
+        mock_self.opinions = {}
+        mock_roxy_self_manager.load = AsyncMock(return_value=mock_self)
+        mock_roxy_self_manager.mark_dirty = MagicMock()
+        mock_roxy_self_manager.save_if_dirty = AsyncMock(return_value=True)
+
+        # LLM returns invalid JSON
+        mock_roxy_llm.chat = AsyncMock(return_value="not valid json")
+
+        adapter = RoxyOpinionAdapter(
+            llm=mock_roxy_llm,
+            memory=mock_roxy_memory,
+            roxy_self_manager=mock_roxy_self_manager,
+        )
+
+        result = await adapter.form_opinion(
+            topic="test topic",
+            context="test context",
+            user_id="doug",
+        )
+
+        # Should return a graceful fallback
+        assert isinstance(result, FormedOpinion)
+        assert result.basis == OpinionBasis.UNKNOWN
+        assert result.strength == OpinionStrength.TENTATIVE
+
+    @pytest.mark.anyio
+    async def test_form_preference_returns_preference(
+        self, mock_roxy_llm, mock_roxy_memory, mock_roxy_self_manager
+    ):
+        """Test that form_preference returns a Preference."""
+        # Setup mock RoxySelf
+        mock_self = MagicMock()
+        mock_self.values = {}
+        mock_self.worldview = {}
+        mock_self.principles = {}
+        mock_self.traits = {}
+        mock_self.preferences = {}
+        mock_self.opinions = {}
+        mock_roxy_self_manager.load = AsyncMock(return_value=mock_self)
+        mock_roxy_self_manager.mark_dirty = MagicMock()
+        mock_roxy_self_manager.save_if_dirty = AsyncMock(return_value=True)
+
+        # Setup LLM response
+        mock_roxy_llm.chat = AsyncMock(
+            return_value="""{
+                "have_preference": true,
+                "preferred_option": "blue",
+                "value": "A deep, calming blue",
+                "reasons": ["It reminds me of the sky and ocean", "It feels peaceful"],
+                "confidence": 0.75,
+                "alternative_good_too": true,
+                "context_dependent": false
+            }"""
+        )
+
+        adapter = RoxyOpinionAdapter(
+            llm=mock_roxy_llm,
+            memory=mock_roxy_memory,
+            roxy_self_manager=mock_roxy_self_manager,
+        )
+
+        result = await adapter.form_preference(
+            topic="favorite color",
+            context="User asked about color preferences",
+            user_id="doug",
+            options=["blue", "green", "red"],
+        )
+
+        assert isinstance(result, Preference)
+        assert "blue" in result.value.lower()
+        assert result.confidence == 0.75
+
+    @pytest.mark.anyio
+    async def test_get_opinion_returns_existing(
+        self, mock_roxy_llm, mock_roxy_memory, mock_roxy_self_manager
+    ):
+        """Test that get_opinion returns existing opinion."""
+        # Setup mock RoxySelf with existing opinion
+        mock_self = MagicMock()
+        mock_self.values = {}
+        mock_self.worldview = {}
+        mock_self.principles = {}
+        mock_self.traits = {}
+        mock_self.preferences = {}
+
+        mock_opinion = MagicMock()
+        mock_opinion.stance = "Existing stance"
+        mock_opinion.basis = "values"
+        mock_opinion.confidence = 0.8
+        mock_opinion.open_to_revision = True
+        mock_opinion.reasoning = "Test reasoning"
+        mock_opinion.caveats = []
+        mock_self.opinions = {"test_topic": mock_opinion}
+
+        mock_roxy_self_manager.load = AsyncMock(return_value=mock_self)
+
+        adapter = RoxyOpinionAdapter(
+            llm=mock_roxy_llm,
+            memory=mock_roxy_memory,
+            roxy_self_manager=mock_roxy_self_manager,
+        )
+
+        result = await adapter.get_opinion("test_topic")
+
+        assert result is not None
+        assert result.stance == "Existing stance"
+        assert result.confidence == 0.8
+
+    @pytest.mark.anyio
+    async def test_get_opinion_returns_none_for_missing(
+        self, mock_roxy_llm, mock_roxy_memory, mock_roxy_self_manager
+    ):
+        """Test that get_opinion returns None for missing topic."""
+        mock_self = MagicMock()
+        mock_self.values = {}
+        mock_self.worldview = {}
+        mock_self.principles = {}
+        mock_self.traits = {}
+        mock_self.preferences = {}
+        mock_self.opinions = {}
+        mock_roxy_self_manager.load = AsyncMock(return_value=mock_self)
+
+        adapter = RoxyOpinionAdapter(
+            llm=mock_roxy_llm,
+            memory=mock_roxy_memory,
+            roxy_self_manager=mock_roxy_self_manager,
+        )
+
+        result = await adapter.get_opinion("nonexistent_topic")
+
+        assert result is None
+
+
+# =============================================================================
+# RoxyOpinionAdapter Integration Tests (REQ-003-03)
+# =============================================================================
+
+
+class TestRoxyOpinionAdapterIntegration:
+    """Integration tests for RoxyOpinionAdapter with service interactions."""
+
+    @pytest.mark.anyio
+    async def test_get_or_form_opinion_uses_existing(
+        self, mock_roxy_llm, mock_roxy_memory
+    ):
+        """Test that get_or_form_opinion returns existing opinion.
+
+        REQ-003-03: Opinion retrieval before formation.
+        """
+        mock_manager = MagicMock()
+        mock_self = MagicMock()
+        mock_self.values = {}
+        mock_self.worldview = {}
+        mock_self.principles = {}
+        mock_self.traits = {}
+        mock_self.preferences = {}
+
+        # Existing opinion
+        mock_opinion = MagicMock()
+        mock_opinion.stance = "Already formed opinion"
+        mock_opinion.basis = "reasoning"
+        mock_opinion.confidence = 0.85
+        mock_opinion.open_to_revision = True
+        mock_opinion.reasoning = "Previously reasoned"
+        mock_opinion.caveats = []
+        mock_self.opinions = {"existing_topic": mock_opinion}
+
+        mock_manager.load = AsyncMock(return_value=mock_self)
+
+        adapter = RoxyOpinionAdapter(
+            llm=mock_roxy_llm,
+            memory=mock_roxy_memory,
+            roxy_self_manager=mock_manager,
+        )
+
+        result = await adapter.get_or_form_opinion(
+            topic="existing_topic",
+            context="Test context",
+            user_id="doug",
+        )
+
+        assert result is not None
+        assert "formed" in result.stance.lower()
+        # LLM should not have been called (using existing)
+        mock_roxy_llm.chat.assert_not_called()
+
+    @pytest.mark.anyio
+    async def test_get_or_form_opinion_forms_new(
+        self, mock_roxy_llm, mock_roxy_memory
+    ):
+        """Test that get_or_form_opinion forms new opinion when none exists.
+
+        REQ-003-03: Opinion formation when needed.
+        """
+        mock_manager = MagicMock()
+        mock_self = MagicMock()
+        mock_self.values = {}
+        mock_self.worldview = {}
+        mock_self.principles = {}
+        mock_self.traits = {}
+        mock_self.preferences = {}
+        mock_self.opinions = {}  # No existing opinions
+
+        mock_manager.load = AsyncMock(return_value=mock_self)
+        mock_manager.mark_dirty = MagicMock()
+        mock_manager.save_if_dirty = AsyncMock(return_value=True)
+
+        # Setup LLM response for new opinion
+        mock_roxy_llm.chat = AsyncMock(
+            return_value="""{
+                "have_opinion": true,
+                "stance": "I think X is interesting",
+                "basis": "reasoning",
+                "strength": "moderate",
+                "confidence": 0.7,
+                "reasoning": "Based on analysis",
+                "caveats": [],
+                "could_be_wrong": true
+            }"""
+        )
+
+        adapter = RoxyOpinionAdapter(
+            llm=mock_roxy_llm,
+            memory=mock_roxy_memory,
+            roxy_self_manager=mock_manager,
+        )
+
+        result = await adapter.get_or_form_opinion(
+            topic="new_topic",
+            context="User asking about something new",
+            user_id="doug",
+        )
+
+        assert result is not None
+        assert isinstance(result, FormedOpinion)
+        # LLM should have been called to form opinion
+        mock_roxy_llm.chat.assert_called()
+
+    @pytest.mark.anyio
+    async def test_consider_updating_opinion(
+        self, mock_roxy_llm, mock_roxy_memory
+    ):
+        """Test that consider_updating_opinion evaluates new info.
+
+        REQ-003-03: Opinion update consideration.
+        """
+        mock_manager = MagicMock()
+        mock_self = MagicMock()
+        mock_self.values = {}
+        mock_self.worldview = {}
+        mock_self.principles = {}
+        mock_self.traits = {}
+        mock_self.preferences = {}
+
+        # Existing opinion open to revision
+        mock_opinion = MagicMock()
+        mock_opinion.stance = "Original stance"
+        mock_opinion.basis = "reasoning"
+        mock_opinion.confidence = 0.7
+        mock_opinion.open_to_revision = True
+        mock_opinion.formed_at = datetime.now()
+        mock_opinion.caveats = []
+        mock_self.opinions = {"update_topic": mock_opinion}
+
+        mock_manager.load = AsyncMock(return_value=mock_self)
+        mock_manager.mark_dirty = MagicMock()
+        mock_manager.save_if_dirty = AsyncMock(return_value=True)
+
+        # LLM suggests update
+        mock_roxy_llm.chat = AsyncMock(
+            return_value="""{
+                "should_update": true,
+                "new_stance": "Updated stance based on new info",
+                "new_confidence": 0.8,
+                "change_reason": "New evidence presented",
+                "add_caveat": null
+            }"""
+        )
+
+        adapter = RoxyOpinionAdapter(
+            llm=mock_roxy_llm,
+            memory=mock_roxy_memory,
+            roxy_self_manager=mock_manager,
+        )
+
+        result = await adapter.consider_updating_opinion(
+            topic="update_topic",
+            new_info="New compelling evidence that changes the picture",
+        )
+
+        assert result is True
+        mock_roxy_llm.chat.assert_called()
+
+    @pytest.mark.anyio
+    async def test_opinion_respects_not_open_to_revision(
+        self, mock_roxy_llm, mock_roxy_memory
+    ):
+        """Test that opinions closed to revision are not updated.
+
+        REQ-003-03: Core opinions should be stable.
+        """
+        mock_manager = MagicMock()
+        mock_self = MagicMock()
+        mock_self.values = {}
+        mock_self.worldview = {}
+        mock_self.principles = {}
+        mock_self.traits = {}
+        mock_self.preferences = {}
+
+        # Opinion NOT open to revision
+        mock_opinion = MagicMock()
+        mock_opinion.stance = "Core belief"
+        mock_opinion.basis = "values"
+        mock_opinion.confidence = 0.95
+        mock_opinion.open_to_revision = False  # Cannot be changed
+        mock_opinion.formed_at = datetime.now()
+        mock_opinion.caveats = []
+        mock_self.opinions = {"core_topic": mock_opinion}
+
+        mock_manager.load = AsyncMock(return_value=mock_self)
+
+        adapter = RoxyOpinionAdapter(
+            llm=mock_roxy_llm,
+            memory=mock_roxy_memory,
+            roxy_self_manager=mock_manager,
+        )
+
+        result = await adapter.consider_updating_opinion(
+            topic="core_topic",
+            new_info="Trying to change a core belief",
+        )
+
+        assert result is False
+        # LLM should not be called for closed opinions
+        mock_roxy_llm.chat.assert_not_called()
