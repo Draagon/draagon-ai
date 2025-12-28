@@ -10,8 +10,8 @@ I'll read this file, do the current task, update status, and move to the next st
 
 ```
 PHASE: 6 - Roxy Thin Client
-REQ: REQ-006-04
-NAME: Home Assistant integration
+REQ: REQ-006-05
+NAME: Wyoming protocol support
 STEP: IMPLEMENT
 ```
 
@@ -126,19 +126,44 @@ STEP: IMPLEMENT
 | 01 | All adapters using draagon-ai | [x] | [x] | [x] | [x] |
 | 02 | Personality config (YAML) | [x] | [x] | [x] | [x] |
 | 03 | Voice/TTS channel handling | [x] | [x] | [x] | [x] |
-| 04 | Home Assistant integration | [>] | [ ] | [ ] | [ ] |
-| 05 | Wyoming protocol support | [ ] | [ ] | [ ] | [ ] |
+| 04 | Home Assistant integration | [x] | [x] | [x] | [x] |
+| 05 | Wyoming protocol support | [>] | [ ] | [ ] | [ ] |
 | 06 | Remove all duplicated code | [ ] | [ ] | [ ] | [ ] |
 | 07 | FastAPI shell only | [ ] | [ ] | [ ] | [ ] |
 | 08 | Full regression test suite | [ ] | [ ] | [ ] | [ ] |
 | 09 | Performance comparison | [ ] | [ ] | [ ] | [ ] |
 | 10 | Documentation update | [ ] | [ ] | [ ] | [ ] |
 
-**Phase 6 Status:** IN PROGRESS (3/10)
+**Phase 6 Status:** IN PROGRESS (4/10)
 
 ---
 
 ## CURRENT WORK LOG
+
+### REQ-006-04: Home Assistant integration
+
+**Status:** ✅ COMPLETED
+
+**Work Done:**
+- Created `src/roxy/channels/homeassistant/` module with complete HA integration:
+  - `service.py`: Wrapper re-exporting core HomeAssistantService
+  - `room_handler.py`: RoomAwareHandler for room-context entity resolution
+  - `tools.py`: HAToolRegistry for HA-specific tool definitions
+
+- RoomAwareHandler features:
+  - RoomContext/ResolvedEntity dataclasses
+  - Generic reference detection ("the lights" vs "Doug's lamp")
+  - Area-first resolution for room-aware commands
+  - Device-to-area lookup via HA template API
+
+- HAToolRegistry provides:
+  - get_entity, search_entities, call_service, get_weather, get_location tools
+  - OpenAI function format conversion
+  - Integration with agent ToolRegistry
+
+**Test Results:** ✅ 26/26 PASSED
+
+---
 
 ### REQ-006-03: Voice/TTS channel handling
 
