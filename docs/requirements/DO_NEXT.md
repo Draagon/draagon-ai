@@ -10,8 +10,8 @@ I'll read this file, do the current task, update status, and move to the next st
 
 ```
 PHASE: 4 - Autonomous Agent
-REQ: REQ-004-06
-NAME: Roxy adapter implementation
+REQ: REQ-004-07
+NAME: Remove extension version
 STEP: IMPLEMENT
 ```
 
@@ -90,13 +90,13 @@ STEP: IMPLEMENT
 | 03 | Guardrail system with tiers | [x] | [x] | [x] | [x] |
 | 04 | Self-monitoring capability | [x] | [x] | [x] | [x] |
 | 05 | Action logging and dashboard | [x] | [x] | [x] | [x] |
-| 06 | Roxy adapter implementation | [ ] | [ ] | [ ] | [ ] |
+| 06 | Roxy adapter implementation | [x] | [x] | [x] | [x] |
 | 07 | Remove extension version | [ ] | [ ] | [ ] | [ ] |
 | 08 | Unit tests (≥90% coverage) | [ ] | [ ] | [ ] | [ ] |
 | 09 | Integration tests | [ ] | [ ] | [ ] | [ ] |
 | 10 | Safety E2E tests | [ ] | [ ] | [ ] | [ ] |
 
-**Phase 4 Status:** IN PROGRESS (5/10)
+**Phase 4 Status:** IN PROGRESS (6/10)
 
 ---
 
@@ -214,6 +214,30 @@ The extension code already had complete implementations for:
 - `get_blocked_logs()` for audit trail
 - `get_stats()` for dashboard metrics
 - Logs persisted via MemoryStoreProvider
+
+---
+
+### REQ-004-06: Roxy adapter implementation
+
+**Status:** ✅ COMPLETED
+
+**Work Done:**
+- Updated Roxy adapters to import from `draagon_ai.orchestration.autonomous` (core) instead of extension
+- Removed fallback to local Roxy implementation (now uses core exclusively)
+- Simplified factory to use draagon-ai core directly
+
+**Files Modified:**
+- `src/roxy/adapters/autonomous_adapter.py` - Updated `RoxyContextAdapter.gather_context()` to import from core
+- `src/roxy/adapters/autonomous_factory.py` - Updated to use core imports, removed extension fallback
+
+**Test Results:** ✅ 168/168 adapter tests passed
+
+**Adapters Verified:**
+- `RoxyLLMAdapter` - Implements LLMProvider using Groq
+- `RoxySearchAdapter` - Implements SearchProvider using SearXNG
+- `RoxyMemoryStoreAdapter` - Implements MemoryStoreProvider using Qdrant
+- `RoxyContextAdapter` - Implements ContextProvider gathering Roxy context
+- `RoxyNotificationAdapter` - Implements NotificationProvider using notification queue
 
 ---
 
