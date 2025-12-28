@@ -10,8 +10,8 @@ I'll read this file, do the current task, update status, and move to the next st
 
 ```
 PHASE: 4 - Autonomous Agent
-REQ: REQ-004-09
-NAME: Integration tests
+REQ: REQ-004-10
+NAME: Safety E2E tests
 STEP: IMPLEMENT
 ```
 
@@ -93,10 +93,10 @@ STEP: IMPLEMENT
 | 06 | Roxy adapter implementation | [x] | [x] | [x] | [x] |
 | 07 | Remove extension version | [x] | [x] | [x] | [x] |
 | 08 | Unit tests (≥90% coverage) | [x] | [x] | [x] | [x] |
-| 09 | Integration tests | [ ] | [ ] | [ ] | [ ] |
+| 09 | Integration tests | [x] | [x] | [x] | [x] |
 | 10 | Safety E2E tests | [ ] | [ ] | [ ] | [ ] |
 
-**Phase 4 Status:** IN PROGRESS (8/10)
+**Phase 4 Status:** IN PROGRESS (9/10)
 
 ---
 
@@ -238,6 +238,43 @@ The extension code already had complete implementations for:
 - `RoxyMemoryStoreAdapter` - Implements MemoryStoreProvider using Qdrant
 - `RoxyContextAdapter` - Implements ContextProvider gathering Roxy context
 - `RoxyNotificationAdapter` - Implements NotificationProvider using notification queue
+
+---
+
+### REQ-004-09: Integration tests
+
+**Status:** ✅ COMPLETED
+
+**Work Done:**
+- Created comprehensive integration test suite in `tests/orchestration/test_autonomous_integration.py`
+- **31 total tests** across 5 test classes covering:
+  - Full cycle execution (research, verify, reflect, multiple actions, shadow mode)
+  - Guardrail blocking at each tier (Tier 0-4)
+  - Self-monitoring finding detection
+  - Action logging completeness
+  - Provider integration flows
+
+**Test Scenarios Covered:**
+
+| Scenario | Tests | Description |
+|----------|-------|-------------|
+| Full Cycle Execution | 5 | Research, verify, reflect, multi-action, shadow mode |
+| Guardrail Integration | 9 | All tier levels, harm check, semantic safety, rate limiting |
+| Self-Monitoring | 5 | Finding detection, severity levels, notifications |
+| Action Logging | 7 | Complete logs, errors, blocked actions, transparency API |
+| Provider Integration | 5 | Context, search, memory, notification, full cycle |
+
+**Test Results:** ✅ 31/31 PASSED
+
+**Files Created:**
+- `tests/orchestration/test_autonomous_integration.py` (NEW - ~700 lines)
+
+**Acceptance Criteria:**
+- [x] Full autonomous cycle execution tested
+- [x] Guardrail blocking at each tier tested
+- [x] Self-monitoring finding detection tested
+- [x] Action logging completeness tested
+- [x] All providers integrated correctly
 
 ---
 
