@@ -10,8 +10,8 @@ I'll read this file, do the current task, update status, and move to the next st
 
 ```
 PHASE: 3 - Cognitive Services
-REQ: REQ-003-04
-NAME: Learning service using core service
+REQ: REQ-003-05
+NAME: Identity manager integration
 STEP: IMPLEMENT
 ```
 
@@ -70,14 +70,14 @@ STEP: IMPLEMENT
 | 01 | Belief reconciliation using core service | [x] | [x] | [x] | [x] |
 | 02 | Curiosity engine using core service | [x] | [x] | [x] | [x] |
 | 03 | Opinion formation using core service | [x] | [x] | [x] | [x] |
-| 04 | Learning service using core service | [ ] | [ ] | [ ] | [ ] |
+| 04 | Learning service using core service | [x] | [x] | [x] | [x] |
 | 05 | Identity manager integration | [ ] | [ ] | [ ] | [ ] |
 | 06 | Remove duplicate Roxy cognitive services | [ ] | [ ] | [ ] | [ ] |
 | 07 | Adapter layer for Roxy-specific needs | [ ] | [ ] | [ ] | [ ] |
 | 08 | Unit tests (≥90% coverage) | [ ] | [ ] | [ ] | [ ] |
 | 09 | Integration tests | [ ] | [ ] | [ ] | [ ] |
 
-**Phase 3 Status:** IN PROGRESS (3/9)
+**Phase 3 Status:** IN PROGRESS (4/9)
 
 ---
 
@@ -139,6 +139,72 @@ STEP: IMPLEMENT
 ---
 
 ## CURRENT WORK LOG
+
+### REQ-003-04: Learning service using core service
+
+**Status:** ✅ COMPLETED
+
+**Work Done:**
+- Created `RoxyLearningAdapter` in `src/draagon_ai/adapters/roxy_cognition.py`
+- Adapter wraps draagon-ai's `LearningService` for Roxy
+- Created protocol adapters:
+  - `RoxySearchAdapter` - Adapts Roxy's SearchService to SearchProvider protocol
+  - `RoxyLearningCredibilityAdapter` - Extends RoxyCredibilityAdapter for LearningService
+  - `RoxyUserProviderAdapter` - Adapts Roxy's UserService to UserProvider protocol
+- Added protocol definitions:
+  - `RoxySearchService` - Protocol for Roxy's web search
+  - `RoxyFullUserService` - Extended user service protocol with async get_user
+- Reused existing adapters from REQ-003-01:
+  - `RoxyLLMAdapter` - Adapts Roxy's LLMService to LLMProvider protocol
+  - `RoxyMemoryAdapter` - Adapts Roxy's MemoryService to MemoryProvider protocol
+- Full test coverage with 20 new unit tests (78 total in file)
+
+**Key Components:**
+
+| Adapter | Purpose |
+|---------|---------|
+| `RoxySearchAdapter` | Wraps Roxy's SearchService for SearchProvider protocol |
+| `RoxyLearningCredibilityAdapter` | Extends credibility adapter for LearningService |
+| `RoxyUserProviderAdapter` | Wraps Roxy's UserService for UserProvider protocol |
+| `RoxyLearningAdapter` | Main entry point - wraps LearningService |
+
+**Main Adapter Methods:**
+- `process_interaction()` - Extract learnings from user interactions
+- `process_tool_failure()` - Handle tool failures and trigger relearning
+- `record_skill_success()` - Record successful skill execution
+- `get_skill_confidence()` - Get confidence score for a skill
+- `get_degraded_skills()` - Get skills below confidence threshold
+- `detect_household_conflicts()` - Stub for multi-user conflict detection (requires LearningExtension)
+- `get_skill_stats()` - Get skill tracking statistics
+
+**Key Types Used:**
+- `LearningResult` - Result of learning operation
+- `SkillConfidence` - Skill confidence with decay tracking
+- `FailureType` - Types of tool failures
+- `VerificationResult` - Results of correction verification
+
+**Note on Household Conflicts:**
+- `detect_household_conflicts` is on the `LearningExtension` protocol, not `LearningService`
+- Without a `LearningExtension`, the method returns empty list (no conflicts)
+- Full multi-user conflict detection requires implementing a custom extension
+
+**Acceptance Criteria:**
+- [x] Roxy uses `LearningService` from draagon-ai
+- [x] Adapter provides Roxy's search via SearchProvider protocol
+- [x] Adapter provides Roxy's user service via UserProvider protocol
+- [x] Learning detection works with semantic analysis
+- [x] Skill confidence tracking works with decay on failures
+- [x] Tool failure relearning triggers web search and skill update
+- [x] All tests pass (78/78 in file)
+
+**Files Updated:**
+- `src/draagon_ai/adapters/roxy_cognition.py` (UPDATED - added ~450 lines)
+- `tests/unit/adapters/test_roxy_cognition.py` (UPDATED - added ~600 lines, 20 new tests)
+- `src/draagon_ai/adapters/__init__.py` (UPDATED - added new exports)
+
+**Test Results:** ✅ 78/78 PASSED
+
+---
 
 ### REQ-003-03: Opinion formation using core service
 

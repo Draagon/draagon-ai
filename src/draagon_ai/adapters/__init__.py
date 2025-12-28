@@ -66,6 +66,13 @@ from draagon_ai.adapters.roxy_cognition import (
     RoxyMemoryService,
     RoxyUserService,
     RoxySelfManager,
+    # REQ-003-04: Learning service adapters
+    RoxySearchService,
+    RoxyFullUserService,
+    RoxySearchAdapter,
+    RoxyLearningCredibilityAdapter,
+    RoxyUserProviderAdapter,
+    RoxyLearningAdapter,
 )
 
 __all__ = [
@@ -95,4 +102,11 @@ __all__ = [
     "RoxyMemoryService",
     "RoxyUserService",
     "RoxySelfManager",
+    # Learning adapters (REQ-003-04)
+    "RoxySearchService",
+    "RoxyFullUserService",
+    "RoxySearchAdapter",
+    "RoxyLearningCredibilityAdapter",
+    "RoxyUserProviderAdapter",
+    "RoxyLearningAdapter",
 ]

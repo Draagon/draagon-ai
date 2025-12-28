@@ -6,6 +6,7 @@ Roxy-specific LLM, Memory, Credibility, and Trait implementations.
 REQ-003-01: Belief reconciliation using core service.
 REQ-003-02: Curiosity engine using core service.
 REQ-003-03: Opinion formation using core service.
+REQ-003-04: Learning service using core service.
 """
 
 import logging
@@ -28,6 +29,19 @@ from draagon_ai.cognition.curiosity import (
     QuestionPurpose,
     QuestionType,
     TraitProvider,
+)
+from draagon_ai.cognition.learning import (
+    CredibilityProvider as LearningCredibilityProvider,
+    FailureType,
+    LearningCandidate,
+    LearningResult,
+    LearningService,
+    LearningType,
+    MemoryAction,
+    SearchProvider,
+    SkillConfidence,
+    UserProvider,
+    VerificationResult,
 )
 from draagon_ai.cognition.opinions import (
     FormedOpinion,
@@ -170,6 +184,68 @@ class RoxySelfManager(Protocol):
         Returns:
             Human-readable worldview string
         """
+        ...
+
+
+@runtime_checkable
+class RoxySearchService(Protocol):
+    """Protocol for Roxy's web search service.
+
+    Roxy's SearchService uses SearXNG for web search.
+    """
+
+    async def search(
+        self,
+        query: str,
+        limit: int = 5,
+    ) -> list[dict[str, Any]]:
+        """Search the web using SearXNG.
+
+        Args:
+            query: Search query
+            limit: Max results to return
+
+        Returns:
+            List of search results with title, snippet, url
+        """
+        ...
+
+
+@runtime_checkable
+class RoxyFullUserService(Protocol):
+    """Protocol for Roxy's full UserService (for learning adapter).
+
+    This extends RoxyUserService with additional methods needed for LearningService.
+    """
+
+    def get_user_credibility(self, user_id: str) -> Any | None:
+        """Get user credibility object."""
+        ...
+
+    def should_verify_correction(
+        self,
+        user_id: str,
+        domain: str | None = None,
+    ) -> tuple[bool, float]:
+        """Determine if a correction should be verified."""
+        ...
+
+    def record_correction_result(
+        self,
+        user_id: str,
+        result: str,
+        domain: str | None = None,
+        user_was_confident: bool = False,
+    ) -> dict[str, Any]:
+        """Record the result of a correction verification."""
+        ...
+
+    async def get_user(self, user_id: str) -> Any | None:
+        """Get user by ID."""
+        ...
+
+    def get_user_sync(self, user_id: str) -> Any | None:
+        """Get user by ID (synchronous version)."""
         ...
 
 
@@ -1348,3 +1424,448 @@ class RoxyOpinionAdapter:
             topic=topic,
             new_info=new_info,
         )
+
+
+# =============================================================================
+# Search Adapter (REQ-003-04)
+# =============================================================================
+
+
+class RoxySearchAdapter(SearchProvider):
+    """Adapts Roxy's SearchService to draagon-ai's SearchProvider protocol.
+
+    Roxy's SearchService uses SearXNG for web search. This adapter bridges
+    it to the SearchProvider protocol used by LearningService.
+    """
+
+    def __init__(self, roxy_search: RoxySearchService):
+        """Initialize the adapter.
+
+        Args:
+            roxy_search: Roxy's SearchService instance
+        """
+        self._search = roxy_search
+
+    async def search(self, query: str, limit: int = 5) -> list[dict[str, Any]]:
+        """Search the web using Roxy's SearchService.
+
+        Args:
+            query: Search query
+            limit: Max results to return
+
+        Returns:
+            List of search results with title, snippet/content, url
+        """
+        results = await self._search.search(query, limit)
+
+        # Normalize result format (Roxy uses 'snippet', draagon-ai expects 'content' too)
+        normalized = []
+        for r in results:
+            result = {
+                "title": r.get("title", ""),
+                "url": r.get("url", ""),
+            }
+            # Include both snippet and content for compatibility
+            snippet = r.get("snippet", r.get("content", ""))
+            result["snippet"] = snippet
+            result["content"] = snippet
+            normalized.append(result)
+
+        return normalized
+
+
+# =============================================================================
+# Learning Credibility Adapter (REQ-003-04)
+# =============================================================================
+
+
+class RoxyLearningCredibilityAdapter(LearningCredibilityProvider):
+    """Adapts Roxy's UserService to draagon-ai's CredibilityProvider protocol.
+
+    This is an extended version of RoxyCredibilityAdapter that implements
+    the full CredibilityProvider protocol required by LearningService.
+    """
+
+    def __init__(self, roxy_user_service: RoxyFullUserService):
+        """Initialize the adapter.
+
+        Args:
+            roxy_user_service: Roxy's UserService instance
+        """
+        self._user_service = roxy_user_service
+
+    def should_verify_correction(
+        self,
+        user_id: str,
+        domain: str | None = None,
+    ) -> tuple[bool, float]:
+        """Determine if a correction should be verified.
+
+        Args:
+            user_id: User making the correction
+            domain: Domain of the correction (optional)
+
+        Returns:
+            Tuple of (should_verify, threshold)
+        """
+        # Handle system/unknown users
+        if user_id in ("unknown", "system", "roxy_system"):
+            return True, 0.7  # Always verify with default threshold
+
+        try:
+            return self._user_service.should_verify_correction(user_id, domain)
+        except Exception as e:
+            logger.warning(f"Failed to check verification for {user_id}: {e}")
+            return True, 0.7
+
+    def record_correction_result(
+        self,
+        user_id: str,
+        result: str,
+        domain: str | None = None,
+        user_was_confident: bool = False,
+    ) -> dict[str, Any]:
+        """Record the result of a correction verification.
+
+        Args:
+            user_id: User who made the correction
+            result: Verification result string
+            domain: Domain of the correction
+            user_was_confident: Whether user seemed confident
+
+        Returns:
+            Updated credibility info
+        """
+        if user_id in ("unknown", "system", "roxy_system"):
+            return {"user_id": user_id, "credibility": 0.7}
+
+        try:
+            return self._user_service.record_correction_result(
+                user_id=user_id,
+                result=result,
+                domain=domain,
+                user_was_confident=user_was_confident,
+            )
+        except Exception as e:
+            logger.warning(f"Failed to record correction for {user_id}: {e}")
+            return {"user_id": user_id, "error": str(e)}
+
+    def get_user_credibility(self, user_id: str) -> Any | None:
+        """Get credibility info for a user.
+
+        Args:
+            user_id: User ID to look up
+
+        Returns:
+            Credibility object or None if unknown
+        """
+        if user_id in ("unknown", "system", "roxy_system"):
+            return None
+
+        try:
+            return self._user_service.get_user_credibility(user_id)
+        except Exception as e:
+            logger.warning(f"Failed to get credibility for {user_id}: {e}")
+            return None
+
+
+# =============================================================================
+# User Provider Adapter (REQ-003-04)
+# =============================================================================
+
+
+class RoxyUserProviderAdapter(UserProvider):
+    """Adapts Roxy's UserService to draagon-ai's UserProvider protocol.
+
+    Provides user information for the LearningService.
+    """
+
+    def __init__(self, roxy_user_service: RoxyFullUserService):
+        """Initialize the adapter.
+
+        Args:
+            roxy_user_service: Roxy's UserService instance
+        """
+        self._user_service = roxy_user_service
+
+    async def get_user(self, user_id: str) -> Any | None:
+        """Get user by ID.
+
+        Args:
+            user_id: User ID to look up
+
+        Returns:
+            User object or None if not found
+        """
+        try:
+            return await self._user_service.get_user(user_id)
+        except Exception as e:
+            logger.warning(f"Failed to get user {user_id}: {e}")
+            return None
+
+    async def get_display_name(self, user_id: str) -> str:
+        """Get user's display name.
+
+        Args:
+            user_id: User ID to look up
+
+        Returns:
+            Display name or user_id if not found
+        """
+        try:
+            # Try async first
+            user = await self._user_service.get_user(user_id)
+            if user:
+                # Roxy's User has display_name attribute
+                return getattr(user, "display_name", user_id)
+        except Exception:
+            pass
+
+        # Fall back to sync version
+        try:
+            user = self._user_service.get_user_sync(user_id)
+            if user:
+                return getattr(user, "display_name", user_id)
+        except Exception:
+            pass
+
+        return user_id
+
+
+# =============================================================================
+# Learning Adapter (REQ-003-04)
+# =============================================================================
+
+
+@dataclass
+class RoxyLearningAdapter:
+    """Adapter that allows Roxy to use draagon-ai's LearningService.
+
+    This is the main entry point for REQ-003-04. It wraps draagon-ai's learning
+    service and provides Roxy-compatible methods.
+
+    The LearningService handles:
+    - Detecting learnable content from interactions (skills, facts, insights)
+    - Extracting structured learnings with entities and scope
+    - Verifying user corrections against web sources
+    - Relearning skills when they fail
+    - Tracking skill confidence with decay
+
+    Example:
+        from roxy.services.llm import LLMService
+        from roxy.services.memory import MemoryService
+        from roxy.services.search import SearchService
+        from roxy.services.users import get_user_service
+
+        adapter = RoxyLearningAdapter(
+            llm=LLMService(),
+            memory=MemoryService(),
+            search=SearchService(),
+            user_service=get_user_service(),
+        )
+
+        result = await adapter.process_interaction(
+            user_query="The WiFi password is hunter2",
+            response="Got it, I'll remember that.",
+            tool_calls=[],
+            user_id="doug",
+        )
+    """
+
+    llm: RoxyLLMService
+    memory: RoxyMemoryService
+    search: RoxySearchService
+    user_service: RoxyFullUserService
+    agent_name: str = "Roxy"
+    agent_id: str = "roxy"
+
+    _service: LearningService | None = None
+
+    def _get_service(self) -> LearningService:
+        """Get or create the underlying service."""
+        if self._service is None:
+            # Create adapters
+            llm_adapter = RoxyLLMAdapter(self.llm)
+            memory_adapter = RoxyMemoryAdapter(self.memory, agent_id=self.agent_id)
+            search_adapter = RoxySearchAdapter(self.search)
+            credibility_adapter = RoxyLearningCredibilityAdapter(self.user_service)
+            user_adapter = RoxyUserProviderAdapter(self.user_service)
+
+            # Create the service
+            self._service = LearningService(
+                llm=llm_adapter,
+                memory=memory_adapter,
+                search_provider=search_adapter,
+                credibility_provider=credibility_adapter,
+                user_provider=user_adapter,
+                agent_name=self.agent_name,
+                agent_id=self.agent_id,
+            )
+
+        return self._service
+
+    # =========================================================================
+    # Roxy-Compatible Methods
+    # =========================================================================
+
+    async def process_interaction(
+        self,
+        user_query: str,
+        response: str,
+        tool_calls: list[dict[str, Any]],
+        user_id: str,
+        conversation_id: str | None = None,
+        conversation_mode: str = "voice",
+        previous_response: str | None = None,
+    ) -> LearningResult:
+        """Process an interaction to extract learnings.
+
+        Main entry point for learning from user interactions.
+        Detects skills, facts, insights, corrections, and more.
+
+        Args:
+            user_query: What the user said
+            response: Roxy's response
+            tool_calls: Tool calls made during the interaction
+            user_id: User ID
+            conversation_id: Conversation ID for context
+            conversation_mode: "voice" or "text"
+            previous_response: Previous response for correction detection
+
+        Returns:
+            LearningResult with detected learnings
+        """
+        return await self._get_service().process_interaction(
+            user_query=user_query,
+            response=response,
+            tool_calls=tool_calls,
+            user_id=user_id,
+            conversation_id=conversation_id or "",
+            conversation_mode=conversation_mode,
+            previous_response=previous_response,
+        )
+
+    async def process_tool_failure(
+        self,
+        tool_name: str,
+        tool_args: dict[str, Any],
+        tool_result: str,
+        skill_used: dict[str, Any] | None = None,
+        user_id: str = "system",
+        conversation_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Process a tool failure for potential relearning.
+
+        When a tool fails, this method:
+        1. Detects the failure type
+        2. Searches for correct information
+        3. Extracts a corrected skill
+        4. Updates or replaces the stored skill
+
+        Args:
+            tool_name: Name of the failed tool
+            tool_args: Arguments passed to the tool
+            tool_result: Error message or result
+            skill_used: Memory dict of skill that was used (if any)
+            user_id: User ID for context
+            conversation_id: Conversation ID
+
+        Returns:
+            Dict with relearning info
+        """
+        return await self._get_service().process_tool_failure(
+            tool_name=tool_name,
+            tool_args=tool_args,
+            tool_result=tool_result,
+            skill_used=skill_used,
+            user_id=user_id,
+            conversation_id=conversation_id or "",
+        )
+
+    async def record_skill_success(
+        self,
+        skill_id: str,
+        skill_content: str = "",
+    ) -> None:
+        """Record a successful skill execution.
+
+        Boosts the skill's confidence score.
+
+        Args:
+            skill_id: ID of the skill that succeeded
+            skill_content: Content of the skill
+        """
+        await self._get_service().record_skill_success(skill_id, skill_content)
+
+    def get_skill_confidence(self, skill_id: str) -> float | None:
+        """Get the confidence score for a skill.
+
+        Args:
+            skill_id: ID of the skill
+
+        Returns:
+            Confidence score 0.0-1.0, or None if not tracked
+        """
+        return self._get_service().get_skill_confidence(skill_id)
+
+    def get_degraded_skills(self, threshold: float = 0.3) -> list[SkillConfidence]:
+        """Get skills that have degraded below a threshold.
+
+        Args:
+            threshold: Minimum confidence threshold
+
+        Returns:
+            List of SkillConfidence objects below threshold
+        """
+        all_skills = self._get_service().get_degraded_skills()
+        return [s for s in all_skills if s.confidence < threshold]
+
+    async def detect_household_conflicts(
+        self,
+        content: str,
+        user_id: str,
+        entities: list[str],
+    ) -> list[dict[str, Any]]:
+        """Detect conflicts with other household members' knowledge.
+
+        For multi-user households, check if this learning conflicts
+        with what other users have stated.
+
+        Note: This is a stub implementation. Full household conflict detection
+        requires a LearningExtension to be provided to the LearningService.
+        Without an extension, this returns an empty list (no conflicts).
+
+        Args:
+            content: The content being stored
+            user_id: User making the statement
+            entities: Extracted entities
+
+        Returns:
+            List of conflict dicts (empty if no conflicts or no extension)
+        """
+        # LearningService.detect_household_conflicts is on the LearningExtension
+        # protocol, not the LearningService itself. Since Roxy doesn't currently
+        # provide a LearningExtension, we return an empty list.
+        service = self._get_service()
+        if service.extension is not None:
+            return await service.extension.detect_household_conflicts(
+                content=content,
+                user_id=user_id,
+                entities=entities,
+            )
+        # No extension configured - return empty (no conflicts detected)
+        return []
+
+    def get_skill_stats(self) -> dict[str, Any]:
+        """Get skill tracking statistics.
+
+        Returns:
+            Dict with skill counts and degradation info
+        """
+        service = self._get_service()
+        skills = service.get_degraded_skills()
+        return {
+            "total_tracked": len(service._skill_confidence),
+            "degraded_count": len([s for s in skills if s.needs_relearning()]),
+            "average_confidence": sum(s.confidence for s in skills) / len(skills) if skills else 1.0,
+        }

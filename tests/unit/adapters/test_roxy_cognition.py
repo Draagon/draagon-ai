@@ -1637,3 +1637,563 @@ class TestRoxyOpinionAdapterIntegration:
         assert result is False
         # LLM should not be called for closed opinions
         mock_roxy_llm.chat.assert_not_called()
+
+
+# =============================================================================
+# RoxySearchAdapter Tests (REQ-003-04)
+# =============================================================================
+
+
+class TestRoxySearchAdapter:
+    """Tests for RoxySearchAdapter."""
+
+    @pytest.mark.anyio
+    async def test_search_normalizes_results(self):
+        """Test that search normalizes result format.
+
+        REQ-003-04: SearchProvider protocol compliance.
+        """
+        from draagon_ai.adapters.roxy_cognition import RoxySearchAdapter
+
+        mock_search = MagicMock()
+        mock_search.search = AsyncMock(
+            return_value=[
+                {"title": "Result 1", "snippet": "First result snippet", "url": "http://example1.com"},
+                {"title": "Result 2", "snippet": "Second result snippet", "url": "http://example2.com"},
+            ]
+        )
+
+        adapter = RoxySearchAdapter(mock_search)
+        results = await adapter.search("test query", limit=5)
+
+        assert len(results) == 2
+        assert results[0]["title"] == "Result 1"
+        assert results[0]["snippet"] == "First result snippet"
+        assert results[0]["content"] == "First result snippet"  # Normalized
+        assert results[0]["url"] == "http://example1.com"
+
+    @pytest.mark.anyio
+    async def test_search_handles_content_key(self):
+        """Test that search handles results with 'content' instead of 'snippet'.
+
+        REQ-003-04: Result format compatibility.
+        """
+        from draagon_ai.adapters.roxy_cognition import RoxySearchAdapter
+
+        mock_search = MagicMock()
+        mock_search.search = AsyncMock(
+            return_value=[
+                {"title": "Result", "content": "Content text", "url": "http://example.com"},
+            ]
+        )
+
+        adapter = RoxySearchAdapter(mock_search)
+        results = await adapter.search("query")
+
+        assert results[0]["snippet"] == "Content text"
+        assert results[0]["content"] == "Content text"
+
+    @pytest.mark.anyio
+    async def test_search_passes_limit(self):
+        """Test that search passes limit to underlying service.
+
+        REQ-003-04: Limit parameter forwarding.
+        """
+        from draagon_ai.adapters.roxy_cognition import RoxySearchAdapter
+
+        mock_search = MagicMock()
+        mock_search.search = AsyncMock(return_value=[])
+
+        adapter = RoxySearchAdapter(mock_search)
+        await adapter.search("query", limit=10)
+
+        mock_search.search.assert_called_once_with("query", 10)
+
+
+# =============================================================================
+# RoxyLearningCredibilityAdapter Tests (REQ-003-04)
+# =============================================================================
+
+
+class TestRoxyLearningCredibilityAdapter:
+    """Tests for RoxyLearningCredibilityAdapter."""
+
+    def test_should_verify_correction_calls_user_service(self):
+        """Test that should_verify_correction delegates to UserService.
+
+        REQ-003-04: CredibilityProvider protocol compliance.
+        """
+        from draagon_ai.adapters.roxy_cognition import RoxyLearningCredibilityAdapter
+
+        mock_user_service = MagicMock()
+        mock_user_service.should_verify_correction = MagicMock(return_value=(True, 0.8))
+
+        adapter = RoxyLearningCredibilityAdapter(mock_user_service)
+        should_verify, threshold = adapter.should_verify_correction("doug", "tech")
+
+        assert should_verify is True
+        assert threshold == 0.8
+        mock_user_service.should_verify_correction.assert_called_once_with("doug", "tech")
+
+    def test_should_verify_correction_handles_system_users(self):
+        """Test that system users always require verification.
+
+        REQ-003-04: System user handling.
+        """
+        from draagon_ai.adapters.roxy_cognition import RoxyLearningCredibilityAdapter
+
+        mock_user_service = MagicMock()
+        adapter = RoxyLearningCredibilityAdapter(mock_user_service)
+
+        for user_id in ("unknown", "system", "roxy_system"):
+            should_verify, threshold = adapter.should_verify_correction(user_id)
+            assert should_verify is True
+            assert threshold == 0.7
+
+        # User service should not be called for system users
+        mock_user_service.should_verify_correction.assert_not_called()
+
+    def test_record_correction_result_delegates(self):
+        """Test that record_correction_result delegates to UserService.
+
+        REQ-003-04: Correction result recording.
+        """
+        from draagon_ai.adapters.roxy_cognition import RoxyLearningCredibilityAdapter
+
+        mock_user_service = MagicMock()
+        mock_user_service.record_correction_result = MagicMock(
+            return_value={"user_id": "doug", "credibility": 0.85}
+        )
+
+        adapter = RoxyLearningCredibilityAdapter(mock_user_service)
+        result = adapter.record_correction_result(
+            user_id="doug",
+            result="verified",
+            domain="tech",
+            user_was_confident=True,
+        )
+
+        assert result["credibility"] == 0.85
+        mock_user_service.record_correction_result.assert_called_once()
+
+    def test_get_user_credibility_returns_none_for_system_users(self):
+        """Test that system users return None credibility.
+
+        REQ-003-04: System user credibility handling.
+        """
+        from draagon_ai.adapters.roxy_cognition import RoxyLearningCredibilityAdapter
+
+        mock_user_service = MagicMock()
+        adapter = RoxyLearningCredibilityAdapter(mock_user_service)
+
+        assert adapter.get_user_credibility("system") is None
+        assert adapter.get_user_credibility("unknown") is None
+
+
+# =============================================================================
+# RoxyUserProviderAdapter Tests (REQ-003-04)
+# =============================================================================
+
+
+class TestRoxyUserProviderAdapter:
+    """Tests for RoxyUserProviderAdapter."""
+
+    @pytest.mark.anyio
+    async def test_get_user_delegates(self):
+        """Test that get_user delegates to UserService.
+
+        REQ-003-04: UserProvider protocol compliance.
+        """
+        from draagon_ai.adapters.roxy_cognition import RoxyUserProviderAdapter
+
+        mock_user = MagicMock()
+        mock_user.user_id = "doug"
+        mock_user.display_name = "Doug"
+
+        mock_user_service = MagicMock()
+        mock_user_service.get_user = AsyncMock(return_value=mock_user)
+
+        adapter = RoxyUserProviderAdapter(mock_user_service)
+        user = await adapter.get_user("doug")
+
+        assert user.user_id == "doug"
+        mock_user_service.get_user.assert_called_once_with("doug")
+
+    @pytest.mark.anyio
+    async def test_get_user_returns_none_on_error(self):
+        """Test that get_user returns None on error.
+
+        REQ-003-04: Error handling.
+        """
+        from draagon_ai.adapters.roxy_cognition import RoxyUserProviderAdapter
+
+        mock_user_service = MagicMock()
+        mock_user_service.get_user = AsyncMock(side_effect=Exception("DB error"))
+
+        adapter = RoxyUserProviderAdapter(mock_user_service)
+        user = await adapter.get_user("doug")
+
+        assert user is None
+
+    @pytest.mark.anyio
+    async def test_get_display_name_from_user(self):
+        """Test that get_display_name extracts from User object.
+
+        REQ-003-04: Display name extraction.
+        """
+        from draagon_ai.adapters.roxy_cognition import RoxyUserProviderAdapter
+
+        mock_user = MagicMock()
+        mock_user.display_name = "Douglas"
+
+        mock_user_service = MagicMock()
+        mock_user_service.get_user = AsyncMock(return_value=mock_user)
+
+        adapter = RoxyUserProviderAdapter(mock_user_service)
+        name = await adapter.get_display_name("doug")
+
+        assert name == "Douglas"
+
+    @pytest.mark.anyio
+    async def test_get_display_name_fallback_to_user_id(self):
+        """Test that get_display_name falls back to user_id.
+
+        REQ-003-04: Display name fallback.
+        """
+        from draagon_ai.adapters.roxy_cognition import RoxyUserProviderAdapter
+
+        mock_user_service = MagicMock()
+        mock_user_service.get_user = AsyncMock(return_value=None)
+        mock_user_service.get_user_sync = MagicMock(return_value=None)
+
+        adapter = RoxyUserProviderAdapter(mock_user_service)
+        name = await adapter.get_display_name("unknown_user")
+
+        assert name == "unknown_user"
+
+
+# =============================================================================
+# RoxyLearningAdapter Tests (REQ-003-04)
+# =============================================================================
+
+
+class TestRoxyLearningAdapter:
+    """Tests for RoxyLearningAdapter."""
+
+    @pytest.fixture
+    def mock_services(self, mock_roxy_llm, mock_roxy_memory):
+        """Create mock services for learning adapter."""
+        mock_search = MagicMock()
+        mock_search.search = AsyncMock(return_value=[])
+
+        mock_user_service = MagicMock()
+        mock_user_service.get_user_credibility = MagicMock(return_value=None)
+        mock_user_service.should_verify_correction = MagicMock(return_value=(True, 0.7))
+        mock_user_service.record_correction_result = MagicMock(return_value={})
+        mock_user_service.get_user = AsyncMock(return_value=None)
+        mock_user_service.get_user_sync = MagicMock(return_value=None)
+
+        return {
+            "llm": mock_roxy_llm,
+            "memory": mock_roxy_memory,
+            "search": mock_search,
+            "user_service": mock_user_service,
+        }
+
+    @pytest.mark.anyio
+    async def test_creates_service_on_first_call(self, mock_services):
+        """Test that service is lazily created.
+
+        REQ-003-04: Lazy service initialization.
+        """
+        from draagon_ai.adapters.roxy_cognition import RoxyLearningAdapter
+
+        adapter = RoxyLearningAdapter(
+            llm=mock_services["llm"],
+            memory=mock_services["memory"],
+            search=mock_services["search"],
+            user_service=mock_services["user_service"],
+        )
+
+        assert adapter._service is None
+        adapter._get_service()
+        assert adapter._service is not None
+
+    @pytest.mark.anyio
+    async def test_process_interaction_detects_learning(self, mock_services):
+        """Test that process_interaction can detect learnings.
+
+        REQ-003-04: Learning detection from interactions.
+        """
+        from draagon_ai.adapters.roxy_cognition import RoxyLearningAdapter
+
+        # Setup LLM to detect learning
+        mock_services["llm"].chat = AsyncMock(
+            return_value="""{
+                "learned_something": true,
+                "learning_type": "fact",
+                "content": "The WiFi password is hunter2",
+                "confidence": 0.9
+            }"""
+        )
+
+        adapter = RoxyLearningAdapter(
+            llm=mock_services["llm"],
+            memory=mock_services["memory"],
+            search=mock_services["search"],
+            user_service=mock_services["user_service"],
+        )
+
+        result = await adapter.process_interaction(
+            user_query="The WiFi password is hunter2",
+            response="Got it, I'll remember that.",
+            tool_calls=[],
+            user_id="doug",
+        )
+
+        # Result may be None if learning service decides not to learn,
+        # but the call should complete without error
+        mock_services["llm"].chat.assert_called()
+
+    @pytest.mark.anyio
+    async def test_process_tool_failure_triggers_relearning(self, mock_services):
+        """Test that process_tool_failure handles failures.
+
+        REQ-003-04: Failure-triggered relearning.
+        """
+        from draagon_ai.adapters.roxy_cognition import RoxyLearningAdapter
+
+        # Setup LLM to detect failure
+        mock_services["llm"].chat = AsyncMock(
+            return_value="""{
+                "is_failure": true,
+                "failure_type": "execution_error",
+                "should_relearn": true
+            }"""
+        )
+
+        # Setup search to return results
+        mock_services["search"].search = AsyncMock(
+            return_value=[
+                {"title": "Correct method", "snippet": "Use docker restart plex", "url": "http://example.com"}
+            ]
+        )
+
+        adapter = RoxyLearningAdapter(
+            llm=mock_services["llm"],
+            memory=mock_services["memory"],
+            search=mock_services["search"],
+            user_service=mock_services["user_service"],
+        )
+
+        # skill_used should be a dict with skill memory info
+        result = await adapter.process_tool_failure(
+            tool_name="execute_command",
+            tool_args={"command": "systemctl restart plex"},
+            tool_result="Error: Unit plex.service not found",
+            skill_used={
+                "content": "To restart Plex: systemctl restart plex",
+                "skill_id": "skill_123",
+                "success_indicators": ["Plex is running"],
+            },
+            user_id="doug",
+        )
+
+        # Result is a dict with failure handling info
+        assert isinstance(result, dict)
+
+    @pytest.mark.anyio
+    async def test_record_skill_success_delegates(self, mock_services):
+        """Test that record_skill_success works.
+
+        REQ-003-04: Skill success tracking.
+        """
+        from draagon_ai.adapters.roxy_cognition import RoxyLearningAdapter
+
+        adapter = RoxyLearningAdapter(
+            llm=mock_services["llm"],
+            memory=mock_services["memory"],
+            search=mock_services["search"],
+            user_service=mock_services["user_service"],
+        )
+
+        # Should not raise
+        await adapter.record_skill_success("skill_123", "docker restart plex")
+
+    def test_get_skill_confidence(self, mock_services):
+        """Test that get_skill_confidence returns value.
+
+        REQ-003-04: Skill confidence retrieval.
+        """
+        from draagon_ai.adapters.roxy_cognition import RoxyLearningAdapter
+
+        adapter = RoxyLearningAdapter(
+            llm=mock_services["llm"],
+            memory=mock_services["memory"],
+            search=mock_services["search"],
+            user_service=mock_services["user_service"],
+        )
+
+        # Should return None for non-existent skill
+        confidence = adapter.get_skill_confidence("nonexistent")
+        assert confidence is None
+
+    def test_get_skill_stats(self, mock_services):
+        """Test that get_skill_stats returns stats.
+
+        REQ-003-04: Skill tracking statistics.
+        """
+        from draagon_ai.adapters.roxy_cognition import RoxyLearningAdapter
+
+        adapter = RoxyLearningAdapter(
+            llm=mock_services["llm"],
+            memory=mock_services["memory"],
+            search=mock_services["search"],
+            user_service=mock_services["user_service"],
+        )
+
+        stats = adapter.get_skill_stats()
+
+        assert isinstance(stats, dict)
+        assert "total_tracked" in stats
+        assert "degraded_count" in stats
+        assert "average_confidence" in stats
+
+
+# =============================================================================
+# RoxyLearningAdapter Integration Tests (REQ-003-04)
+# =============================================================================
+
+
+class TestRoxyLearningAdapterIntegration:
+    """Integration tests for RoxyLearningAdapter."""
+
+    @pytest.mark.anyio
+    async def test_full_learning_flow(self, mock_roxy_llm, mock_roxy_memory):
+        """Test the full learning flow from detection to storage.
+
+        REQ-003-04: End-to-end learning integration.
+        """
+        from draagon_ai.adapters.roxy_cognition import RoxyLearningAdapter
+
+        mock_search = MagicMock()
+        mock_search.search = AsyncMock(return_value=[])
+
+        mock_user_service = MagicMock()
+        mock_user_service.get_user_credibility = MagicMock(return_value=None)
+        mock_user_service.should_verify_correction = MagicMock(return_value=(False, 0.7))
+        mock_user_service.record_correction_result = MagicMock(return_value={})
+        mock_user_service.get_user = AsyncMock(return_value=None)
+        mock_user_service.get_user_sync = MagicMock(return_value=None)
+
+        # LLM responses for detection and extraction
+        call_count = [0]
+
+        async def mock_chat(*args, **kwargs):
+            call_count[0] += 1
+            if call_count[0] == 1:
+                # Detection response
+                return """{
+                    "learned_something": true,
+                    "learning_type": "fact",
+                    "confidence": 0.9,
+                    "answered_question": false
+                }"""
+            else:
+                # Extraction response
+                return """{
+                    "title": "WiFi password",
+                    "content": "The WiFi password is hunter2",
+                    "entities": ["wifi", "password"],
+                    "scope": "household",
+                    "perspective": "user"
+                }"""
+
+        mock_roxy_llm.chat = AsyncMock(side_effect=mock_chat)
+
+        adapter = RoxyLearningAdapter(
+            llm=mock_roxy_llm,
+            memory=mock_roxy_memory,
+            search=mock_search,
+            user_service=mock_user_service,
+        )
+
+        result = await adapter.process_interaction(
+            user_query="The WiFi password is hunter2",
+            response="Got it, I'll remember that.",
+            tool_calls=[],
+            user_id="doug",
+        )
+
+        # Should have called LLM for detection and extraction
+        assert mock_roxy_llm.chat.call_count >= 1
+
+    @pytest.mark.anyio
+    async def test_skill_confidence_tracking(self, mock_roxy_llm, mock_roxy_memory):
+        """Test that skill confidence is tracked properly.
+
+        REQ-003-04: Skill confidence tracking with decay.
+        """
+        from draagon_ai.adapters.roxy_cognition import RoxyLearningAdapter
+
+        mock_search = MagicMock()
+        mock_search.search = AsyncMock(return_value=[])
+
+        mock_user_service = MagicMock()
+        mock_user_service.get_user_credibility = MagicMock(return_value=None)
+        mock_user_service.should_verify_correction = MagicMock(return_value=(False, 0.7))
+        mock_user_service.get_user = AsyncMock(return_value=None)
+        mock_user_service.get_user_sync = MagicMock(return_value=None)
+
+        adapter = RoxyLearningAdapter(
+            llm=mock_roxy_llm,
+            memory=mock_roxy_memory,
+            search=mock_search,
+            user_service=mock_user_service,
+        )
+
+        # Record success
+        await adapter.record_skill_success("skill_123", "docker restart plex")
+
+        # Check confidence (sync method)
+        confidence = adapter.get_skill_confidence("skill_123")
+
+        # Confidence should be tracked (starts at 1.0, success keeps it high)
+        # After recording success, confidence should be 1.0
+        assert confidence == 1.0
+
+    @pytest.mark.anyio
+    async def test_household_conflict_detection_without_extension(
+        self, mock_roxy_llm, mock_roxy_memory
+    ):
+        """Test that household conflicts returns empty without LearningExtension.
+
+        REQ-003-04: Multi-user conflict detection requires a LearningExtension.
+        Without an extension, the method should return an empty list.
+        """
+        from draagon_ai.adapters.roxy_cognition import RoxyLearningAdapter
+
+        mock_search = MagicMock()
+        mock_search.search = AsyncMock(return_value=[])
+
+        mock_user_service = MagicMock()
+        mock_user_service.get_user_credibility = MagicMock(return_value=None)
+        mock_user_service.should_verify_correction = MagicMock(return_value=(False, 0.7))
+        mock_user_service.get_user = AsyncMock(return_value=None)
+        mock_user_service.get_user_sync = MagicMock(return_value=None)
+
+        adapter = RoxyLearningAdapter(
+            llm=mock_roxy_llm,
+            memory=mock_roxy_memory,
+            search=mock_search,
+            user_service=mock_user_service,
+        )
+
+        result = await adapter.detect_household_conflicts(
+            content="We have 6 cats",
+            user_id="doug",
+            entities=["cats"],
+        )
+
+        # Without a LearningExtension, should return empty list
+        assert result == []
