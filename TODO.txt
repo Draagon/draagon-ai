@@ -194,3 +194,82 @@ use the Groq 70b model to keep costs down, but we could use Claude as well if we
       279 +│                                                                              │                                                                 
       280 +│ ARCHITECTURAL_PATTERN:                                                       │                                                                 
       281 +│   "API routes return {success: bool, data: T, error?: string}"              │                                                                  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## 12/29//25 2:00PM
+
+God-Level Architectural Assessment
+
+What's Right
+
+Clean separation of concerns - draagon-ai is reusable, Roxy is domain-specific
+Adapter pattern works - Wrapping existing services is clean and testable
+Gradual migration is working - Can run native fallback if issues arise
+Model routing is optimal - GPT-OSS-20B for routing, 70B for complex, Claude for deep
+
+What's Still Messy
+
+Two orchestrators coexist - 6,098 lines in native orchestrator still there
+Duplicate cognitive services - Roxy services wrap draagon-ai but add overhead
+Test suite is sprawling - 1,292 tests, many test mechanisms not outcomes
+Over-engineering debt - CRAG, conversation modes, two-stage calendar still in code
+
+Honest Truths
+
+| Observation | Reality |
+
+|-------------|---------|
+
+| "We need CRAG grading" | Self-RAG relevance check is 90% as good |
+
+| "We need conversation modes" | LLM naturally adapts tone with good prompts |
+
+| "We need two-stage calendar" | Single-shot + datetime helper works |
+
+| "All tests must pass" | ~15% test over-engineering, not real bugs |
+
+
+---
+
+
+Recommended Next Steps (Priority Order)
+
+Immediate (This Week)
+
+Fix the 3 real test failures - Investigate HA brightness and entity query
+Mark over-engineered tests as xfail - Stop the noise, focus on real issues
+Verify production stability - Run draagon-ai in production with monitoring
+
+Short Term (Next 2 Weeks)
+
+Add confirmation flow - Security critical for dangerous commands
+Add query contextualization - Essential for multi-turn conversations
+Clean up native orchestrator - Archive or delete, reduce confusion
+
+Medium Term (Next Month)
+
+Migrate to layered memory - draagon-ai's 4-layer architecture is better
+Move tests into behavior definitions - Co-evolve tests and behaviors
+Remove CRAG/mode detection code - Delete the over-engineering

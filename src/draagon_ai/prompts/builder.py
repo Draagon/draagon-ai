@@ -19,8 +19,8 @@ Example:
 
     # Add capability actions (from extensions)
     builder.add_capability_actions("calendar", [
-        ("calendar_query", "Check user's calendar/schedule"),
-        ("calendar_create", "Add event to calendar"),
+        ("get_calendar_events", "Check user's calendar/schedule"),
+        ("create_calendar_event", "Add event to calendar"),
     ])
 
     # Add MCP actions
@@ -279,11 +279,11 @@ CORE_ACTIONS = [
 CALENDAR_CAPABILITY = CapabilityDef(
     name="calendar",
     actions=[
-        ActionDef("calendar_query", "Check user's calendar/schedule"),
-        ActionDef("calendar_create", "Add event to calendar"),
-        ActionDef("calendar_delete", "Remove event from calendar"),
+        ActionDef("get_calendar_events", "Check user's calendar/schedule"),
+        ActionDef("create_calendar_event", "Add event to calendar"),
+        ActionDef("delete_calendar_event", "Remove event from calendar"),
     ],
-    tool_selection_guide="- Calendar events → calendar_query/calendar_create/calendar_delete",
+    tool_selection_guide="- Calendar events → get_calendar_events/create_calendar_event/delete_calendar_event",
 )
 
 HOME_ASSISTANT_CAPABILITY = CapabilityDef(

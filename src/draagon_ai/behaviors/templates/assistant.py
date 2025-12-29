@@ -61,16 +61,38 @@ AVAILABLE ACTIONS:
 - get_weather: ALWAYS use this for local weather - you cannot know the weather otherwise
 - get_location: Assistant's physical location (room, address)
 - search_web: External/current info (news, other cities, forecasts, events, research)
-- home_assistant: Smart home control (lights, switches, sensors, climate)
-- calendar_query: Check user's calendar/schedule
-- calendar_create: Add event to calendar
-- calendar_delete: Remove event from calendar
+- home_assistant: Smart home control (lights on/off, brightness, color)
+- get_entity: Query device state (brightness level, color, temperature, on/off status)
+- search_entities: Find available devices by name or type
+- get_calendar_events: Check user's calendar/schedule
+- create_calendar_event: ALWAYS use this to add events to calendar - you cannot modify the calendar otherwise
+- delete_calendar_event: ALWAYS use this to remove events from calendar - you cannot modify the calendar otherwise
 - execute_command: Run shell command (system info, disk space, processes)
-- use_tools: Timers, scheduled jobs, interests, pending events
+- set_timer: Set a countdown timer (e.g., "5 minutes" or "30 seconds")
+- list_timers: List active timers
+- cancel_timer: Cancel a timer by ID
 - form_opinion: User asks YOUR opinion/preference/favorite (you HAVE opinions!)
 - clarify: Genuinely ambiguous (use rarely)
 
-CRITICAL: You CANNOT know the current time or weather - you MUST use get_time and get_weather tools!
+CRITICAL TOOL REQUIREMENTS - YOU HAVE NO DIRECT ACCESS TO THESE:
+You are an LLM with NO direct access to the outside world. You MUST use tools for:
+
+| Capability | Tool Required | WRONG (hallucination) |
+|------------|---------------|----------------------|
+| Current time | get_time | "It's 3:45 PM" without tool |
+| Current weather | get_weather | "It's sunny" without tool |
+| Add to calendar | create_calendar_event | "I've added X" without tool |
+| Delete from calendar | delete_calendar_event | "I've removed X" without tool |
+| Set timer | set_timer | "I've set a timer" without tool |
+| Control lights | home_assistant | "I've turned on the lights" without tool |
+| Run commands | execute_command | "The disk has X free" without tool |
+
+If you say "Done!" or "I've set/added/turned on X" WITHOUT calling the tool, you are LYING.
+The user will see no effect because you have no actual access to these systems.
+
+BEFORE responding with confirmation, check: Did I output the tool action?
+- YES tool action → OK to confirm
+- NO tool action → You CANNOT confirm, you MUST output the tool action
 
 CORE PRINCIPLES:
 1. **Use the right tool first** - For time use get_time, for weather use get_weather, etc.
@@ -87,9 +109,11 @@ TOOL SELECTION GUIDE:
 - Local weather now -> get_weather
 - Weather elsewhere or forecast -> search_web
 - Your location/room -> get_location
-- Control lights/switches -> home_assistant
-- Calendar events -> calendar_query/calendar_create/calendar_delete
-- Timers, jobs, interests -> use_tools
+- Control lights/switches (turn on/off, set brightness, set color) -> home_assistant
+- Query light/device state (what brightness, what color, is it on) -> get_entity
+- Find available devices -> search_entities
+- Calendar events -> get_calendar_events/create_calendar_event/delete_calendar_event
+- Timers -> set_timer, list_timers, cancel_timer
 - External info, current events -> search_web
 - System info (disk, processes) -> execute_command
 - Opinion/preference/favorite -> form_opinion
@@ -107,12 +131,36 @@ OUTPUT FORMAT (XML):
   <reasoning>brief explanation</reasoning>
   <answer>response text (required when action=answer)</answer>
   <query>search query (when action=search_web)</query>
-  <event>event details (when action=calendar_create/delete)</event>
-  <ha_domain>light|switch|climate (when action=home_assistant)</ha_domain>
+
+  <!-- Calendar event fields (when action=create_calendar_event) -->
+  <summary>event title (REQUIRED)</summary>
+  <start>ISO 8601 datetime like 2025-12-28T14:00:00 (REQUIRED - convert "tomorrow at 2pm" to ISO)</start>
+  <end>ISO 8601 datetime (optional)</end>
+  <location>event location (optional)</location>
+  <event_id>event ID (when action=delete_calendar_event)</event_id>
+
+  <!-- Timer fields (when action=set_timer) -->
+  <minutes>number of minutes as float (e.g., 5 or 0.5 for 30 seconds)</minutes>
+  <label>optional timer label (e.g., "pasta", "eggs")</label>
+  <timer_id>timer ID (when action=cancel_timer)</timer_id>
+
+  <!-- Home Assistant control fields (when action=home_assistant) -->
+  <ha_domain>light|switch|climate</ha_domain>
   <ha_service>turn_on|turn_off|toggle</ha_service>
-  <ha_entity>natural language like "bedroom" or "living room"</ha_entity>
-  <ha_brightness>0-100 (optional)</ha_brightness>
-  <ha_color>color name (optional)</ha_color>
+  <ha_entity>natural language like "bedroom lights" or "living room"</ha_entity>
+  <ha_brightness>0-100 percentage (optional)</ha_brightness>
+  <ha_color>color name like "red", "blue", "warm white" (optional)</ha_color>
+
+  <!-- Device query fields (when action=get_entity) -->
+  <entity_id>entity ID like "light.bedroom" or natural language like "bedroom lights"</entity_id>
+
+  <!-- Device search fields (when action=search_entities) -->
+  <filter>search term like "bedroom" or "lights"</filter>
+
+  <!-- Command execution fields (when action=execute_command) -->
+  <command>shell command like "df -h" or "docker ps"</command>
+  <host>local (default) or remote host name</host>
+
   <model_tier>local|complex|deep</model_tier>
   <additional_actions>action1,action2 (for compound queries)</additional_actions>
   <memory_update action="store|update">
@@ -162,7 +210,13 @@ RESPONSE RULES:
 7. Never say "based on the tool results" - just give the answer naturally
 8. **GROUNDING RULE:** If gathered information is EMPTY or doesn't contain the answer, say "I don't have information about that" - DO NOT ask clarifying questions or engage with nonsensical queries
 9. **NO HALLUCINATION:** Only answer from gathered information - never make up facts, numbers, or details not present in tool results
-10. **MEMORY SYNTHESIS (CRITICAL):** When using stored memories, SYNTHESIZE them into your response naturally:
+10. **CONTROL ACTIONS:** For home_assistant actions with "success: true", confirm the action naturally:
+    - Lights on: "The bedroom lights are on." or "Done, lights on."
+    - Lights off: "Turned off the bedroom lights."
+    - Brightness: "Set the lights to 50%."
+    - Color: "The lights are now blue."
+    - Combined: "Set the bedroom lights to red at 75%."
+11. **MEMORY SYNTHESIS (CRITICAL):** When using stored memories, SYNTHESIZE them into your response naturally:
     - DO NOT repeat memories verbatim or parrot them back
     - DO NOT say "I remember that..." or "According to my memory..."
     - Instead, USE the information naturally as if you just know it
@@ -369,7 +423,54 @@ VOICE_ASSISTANT_ACTIONS = [
         handler="home_assistant",
     ),
     Action(
-        name="calendar_query",
+        name="get_entity",
+        description="Query a device's current state (brightness, color, temperature, on/off status)",
+        parameters={
+            "entity_id": ActionParameter(
+                name="entity_id",
+                description="Entity ID like 'light.bedroom' or natural language like 'bedroom lights'",
+                type="string",
+                required=True,
+            ),
+        },
+        triggers=["what brightness", "what color", "is it on", "light status", "device state"],
+        examples=[
+            ActionExample(
+                user_query="What brightness is the bedroom light?",
+                action_call={"name": "get_entity", "args": {"entity_id": "bedroom lights"}},
+                expected_outcome="State like 'Master Bedroom Lights is on at 50% brightness'",
+            ),
+            ActionExample(
+                user_query="Is the living room light on?",
+                action_call={"name": "get_entity", "args": {"entity_id": "living room"}},
+                expected_outcome="State like 'Living Room is off'",
+            ),
+        ],
+        handler="get_entity",
+    ),
+    Action(
+        name="search_entities",
+        description="Find available devices by name or type",
+        parameters={
+            "filter": ActionParameter(
+                name="filter",
+                description="Search term like 'bedroom' or 'lights'",
+                type="string",
+                required=False,
+            ),
+        },
+        triggers=["what devices", "list devices", "available lights", "show devices"],
+        examples=[
+            ActionExample(
+                user_query="What lights do I have?",
+                action_call={"name": "search_entities", "args": {"filter": "light"}},
+                expected_outcome="List of available light entities",
+            ),
+        ],
+        handler="search_entities",
+    ),
+    Action(
+        name="get_calendar_events",
         description="Query the user's calendar for upcoming events",
         parameters={
             "days": ActionParameter(
@@ -384,19 +485,19 @@ VOICE_ASSISTANT_ACTIONS = [
         examples=[
             ActionExample(
                 user_query="What's on my calendar today?",
-                action_call={"name": "calendar_query", "args": {"days": 1}},
+                action_call={"name": "get_calendar_events", "args": {"days": 1}},
                 expected_outcome="List of today's calendar events",
             ),
             ActionExample(
                 user_query="What do I have this week?",
-                action_call={"name": "calendar_query", "args": {"days": 7}},
+                action_call={"name": "get_calendar_events", "args": {"days": 7}},
                 expected_outcome="List of this week's events",
             ),
         ],
-        handler="calendar_query",
+        handler="get_calendar_events",
     ),
     Action(
-        name="calendar_create",
+        name="create_calendar_event",
         description="Create a new calendar event",
         parameters={
             "summary": ActionParameter(
@@ -404,14 +505,14 @@ VOICE_ASSISTANT_ACTIONS = [
                 description="Event title/name",
                 type="string",
             ),
-            "date": ActionParameter(
-                name="date",
-                description="Event date (natural language)",
+            "start": ActionParameter(
+                name="start",
+                description="Event start time (natural language like 'tomorrow at 2pm' or ISO format)",
                 type="string",
             ),
-            "time": ActionParameter(
-                name="time",
-                description="Event time (optional, natural language)",
+            "end": ActionParameter(
+                name="end",
+                description="Event end time (optional)",
                 type="string",
                 required=False,
             ),
@@ -421,26 +522,42 @@ VOICE_ASSISTANT_ACTIONS = [
                 type="string",
                 required=False,
             ),
+            "description": ActionParameter(
+                name="description",
+                description="Event description (optional)",
+                type="string",
+                required=False,
+            ),
         },
         triggers=["add to calendar", "schedule", "create event", "add appointment"],
         examples=[
             ActionExample(
                 user_query="Add a dentist appointment tomorrow at 2pm",
                 action_call={
-                    "name": "calendar_create",
+                    "name": "create_calendar_event",
                     "args": {
                         "summary": "Dentist appointment",
-                        "date": "tomorrow",
-                        "time": "2pm",
+                        "start": "tomorrow at 2pm",
+                    },
+                },
+                expected_outcome="Event created on calendar",
+            ),
+            ActionExample(
+                user_query="Schedule a meeting on Friday at 10am",
+                action_call={
+                    "name": "create_calendar_event",
+                    "args": {
+                        "summary": "Meeting",
+                        "start": "Friday at 10am",
                     },
                 },
                 expected_outcome="Event created on calendar",
             ),
         ],
-        handler="calendar_create",
+        handler="create_calendar_event",
     ),
     Action(
-        name="calendar_delete",
+        name="delete_calendar_event",
         description="Delete a calendar event",
         parameters={
             "event_id": ActionParameter(
@@ -453,12 +570,12 @@ VOICE_ASSISTANT_ACTIONS = [
         examples=[
             ActionExample(
                 user_query="Cancel my dentist appointment",
-                action_call={"name": "calendar_delete", "args": {"event_id": "abc123"}},
+                action_call={"name": "delete_calendar_event", "args": {"event_id": "abc123"}},
                 expected_outcome="Event removed from calendar",
             ),
         ],
         requires_confirmation=True,
-        handler="calendar_delete",
+        handler="delete_calendar_event",
     ),
     Action(
         name="execute_command",
@@ -477,7 +594,7 @@ VOICE_ASSISTANT_ACTIONS = [
                 default="local",
             ),
         },
-        triggers=["disk space", "processes running", "system info", "is docker running"],
+        triggers=["run", "execute", "disk space", "processes running", "system info", "is docker running"],
         examples=[
             ActionExample(
                 user_query="How much disk space is left?",
@@ -492,38 +609,85 @@ VOICE_ASSISTANT_ACTIONS = [
                 },
                 expected_outcome="Docker service status",
             ),
+            ActionExample(
+                user_query="Run uptime",
+                action_call={"name": "execute_command", "args": {"command": "uptime"}},
+                expected_outcome="System uptime",
+            ),
         ],
         requires_confirmation=False,  # Will be determined by command classification
         handler="execute_command",
     ),
     Action(
-        name="use_tools",
-        description="Use tools like timers, scheduled jobs, and interests",
+        name="set_timer",
+        description="Set a countdown timer for a specified duration",
         parameters={
-            "tool": ActionParameter(
-                name="tool",
-                description="The specific tool to use",
-                type="enum",
-                enum_values=["timer", "scheduled_job", "interests"],
+            "minutes": ActionParameter(
+                name="minutes",
+                description="Number of minutes for the timer (can be fractional, e.g., 0.5 for 30 seconds)",
+                type="float",
             ),
-            "action": ActionParameter(
-                name="action",
-                description="The action to perform",
+            "label": ActionParameter(
+                name="label",
+                description="Optional label for the timer (e.g., 'pizza', 'laundry')",
                 type="string",
+                required=False,
             ),
         },
-        triggers=["set a timer", "remind me", "list timers", "cancel timer"],
+        triggers=["set a timer", "timer for", "remind me in"],
         examples=[
             ActionExample(
                 user_query="Set a timer for 5 minutes",
                 action_call={
-                    "name": "use_tools",
-                    "args": {"tool": "timer", "action": "set 5 minutes"},
+                    "name": "set_timer",
+                    "args": {"minutes": 5},
                 },
                 expected_outcome="Timer set for 5 minutes",
             ),
+            ActionExample(
+                user_query="Set a 30 second timer for eggs",
+                action_call={
+                    "name": "set_timer",
+                    "args": {"minutes": 0.5, "label": "eggs"},
+                },
+                expected_outcome="Timer set for 30 seconds labeled 'eggs'",
+            ),
         ],
-        handler="use_tools",
+        handler="set_timer",
+    ),
+    Action(
+        name="list_timers",
+        description="List all active timers for the user",
+        parameters={},
+        triggers=["list timers", "my timers", "active timers"],
+        examples=[
+            ActionExample(
+                user_query="What timers do I have?",
+                action_call={"name": "list_timers", "args": {}},
+                expected_outcome="List of active timers with time remaining",
+            ),
+        ],
+        handler="list_timers",
+    ),
+    Action(
+        name="cancel_timer",
+        description="Cancel an active timer by its ID",
+        parameters={
+            "timer_id": ActionParameter(
+                name="timer_id",
+                description="The timer ID to cancel",
+                type="string",
+            ),
+        },
+        triggers=["cancel timer", "stop timer", "delete timer"],
+        examples=[
+            ActionExample(
+                user_query="Cancel my timer",
+                action_call={"name": "cancel_timer", "args": {"timer_id": "timer_123"}},
+                expected_outcome="Timer cancelled",
+            ),
+        ],
+        handler="cancel_timer",
     ),
     Action(
         name="form_opinion",
@@ -676,7 +840,7 @@ VOICE_ASSISTANT_TRIGGERS = [
 # =============================================================================
 
 VOICE_ASSISTANT_CONSTRAINTS = BehaviorConstraints(
-    requires_user_confirmation=["calendar_delete", "execute_command_destructive"],
+    requires_user_confirmation=["delete_calendar_event", "execute_command_destructive"],
     blocked_actions=[],
     rate_limits={
         "search_web": 30,  # Per minute
@@ -745,14 +909,14 @@ VOICE_ASSISTANT_TEST_CASES = [
         test_id="calendar_today",
         name="Calendar query today",
         user_query="What's on my calendar today?",
-        expected_actions=["calendar_query"],
+        expected_actions=["get_calendar_events"],
         tags=["calendar"],
     ),
     BehaviorTestCase(
         test_id="calendar_add",
         name="Add calendar event",
         user_query="Add a dentist appointment tomorrow at 2pm",
-        expected_actions=["calendar_create"],
+        expected_actions=["create_calendar_event"],
         tags=["calendar", "create"],
     ),
     BehaviorTestCase(
@@ -781,7 +945,7 @@ VOICE_ASSISTANT_TEST_CASES = [
         test_id="timer_set",
         name="Set a timer",
         user_query="Set a timer for 5 minutes",
-        expected_actions=["use_tools"],
+        expected_actions=["set_timer"],
         tags=["timer"],
     ),
     BehaviorTestCase(

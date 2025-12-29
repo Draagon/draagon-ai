@@ -30,9 +30,9 @@ AVAILABLE ACTIONS:
 - get_location: Assistant's physical location (room, address)
 - search_web: External/current info (news, other cities, forecasts, events, research)
 - home_assistant: Smart home control (lights, switches, sensors, climate)
-- calendar_query: Check user's calendar/schedule
-- calendar_create: Add event to calendar
-- calendar_delete: Remove event from calendar
+- get_calendar_events: Check user's calendar/schedule
+- create_calendar_event: Add event to calendar
+- delete_calendar_event: Remove event from calendar
 - execute_command: Run shell command (system info, disk space, processes)
 - use_tools: Timers, scheduled jobs, interests, pending events
 - get_code_docs: Programming library documentation
@@ -57,7 +57,7 @@ TOOL SELECTION GUIDE:
 - Weather elsewhere or forecast → search_web
 - Your location/room → get_location
 - Control lights/switches → home_assistant
-- Calendar events → calendar_query/calendar_create/calendar_delete
+- Calendar events → get_calendar_events/create_calendar_event/delete_calendar_event
 - Timers, jobs, interests → use_tools
 - External info, current events → search_web
 - Programming questions → get_code_docs
@@ -79,7 +79,7 @@ OUTPUT FORMAT (XML):
   <reasoning>brief explanation</reasoning>
   <answer>response text (required when action=answer)</answer>
   <query>search query (when action=search_web)</query>
-  <event>event details (when action=calendar_create/delete)</event>
+  <event>event details (when action=create_calendar_event/delete_calendar_event)</event>
   <ha_domain>light|switch|climate (when action=home_assistant)</ha_domain>
   <ha_service>turn_on|turn_off|toggle</ha_service>
   <ha_entity>natural language like "bedroom" or "living room"</ha_entity>

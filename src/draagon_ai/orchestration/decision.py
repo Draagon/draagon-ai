@@ -319,95 +319,21 @@ class DecisionEngine:
             Parsed DecisionResult
         """
         content = response.content.strip()
+        logger.debug(f"Raw LLM decision content: {content[:500]}...")
 
         # Try XML parsing first (our default format)
         if "<response>" in content:
             result = self._parse_xml_decision(content, behavior)
-            # Apply query-based override if LLM defaulted to "answer"
-            if result.action == "answer" and query:
-                result = self._apply_query_override(result, query, behavior)
+            logger.debug(f"Parsed XML decision: action={result.action}, args={result.args}")
             return result
 
         # Fallback to JSON parsing
         if content.startswith("{"):
             result = self._parse_json_decision(content, behavior)
-            # Apply query-based override if LLM defaulted to "answer"
-            if result.action == "answer" and query:
-                result = self._apply_query_override(result, query, behavior)
             return result
 
         # If neither, try to extract action from plain text
         return self._parse_text_decision(content, behavior, query)
-
-    def _apply_query_override(
-        self,
-        result: DecisionResult,
-        query: str,
-        behavior: Behavior,
-    ) -> DecisionResult:
-        """Apply query-based action override when LLM incorrectly defaulted to answer.
-
-        This catches cases where the LLM "knows" an answer it shouldn't know
-        (like the current time) and forces the correct tool action.
-
-        Args:
-            result: Current decision result (action=answer)
-            query: Original user query
-            behavior: Behavior with valid actions
-
-        Returns:
-            Modified DecisionResult with corrected action if applicable
-        """
-        query_lower = query.lower()
-        valid_actions = {a.name.lower() for a in behavior.actions}
-
-        # Time/date queries MUST use get_time - LLM cannot know the time or date
-        time_patterns = [
-            r'\bwhat\s+time\b',
-            r'\bwhat\'?s\s+the\s+time\b',
-            r'\bcurrent\s+time\b',
-            r'\btime\s+(?:is\s+)?it\b',
-            r'\bwhat\s+is\s+the\s+time\b',
-            r'\btell\s+(?:me\s+)?the\s+time\b',
-            # Date patterns - get_time returns date info too
-            r'\bwhat\'?s?\s+(?:the\s+)?(?:today\'?s?\s+)?date\b',
-            r'\bwhat\s+(?:day|date)\s+is\s+it\b',
-            r'\btoday\'?s?\s+date\b',
-            r'\bcurrent\s+date\b',
-        ]
-        for pattern in time_patterns:
-            if re.search(pattern, query_lower):
-                if "get_time" in valid_actions:
-                    result.action = "get_time"
-                    result.original_action = "answer"
-                    result.validation_notes = (
-                        "Override: LLM answered time query without get_time tool"
-                    )
-                    result.confidence = 0.9
-                    logger.debug("Applied query override: answer → get_time")
-                    return result
-
-        # Weather queries MUST use get_weather - LLM cannot know current weather
-        weather_patterns = [
-            r'\bwhat\'?s?\s+(?:the\s+)?weather\b',
-            r'\bhow\'?s?\s+(?:the\s+)?weather\b',
-            r'\bcurrent\s+(?:temperature|weather)\b',
-            r'\bweather\s+(?:like|today|now)\b',
-            r'\btemperature\s+(?:outside|now|today)\b',
-        ]
-        for pattern in weather_patterns:
-            if re.search(pattern, query_lower):
-                if "get_weather" in valid_actions:
-                    result.action = "get_weather"
-                    result.original_action = "answer"
-                    result.validation_notes = (
-                        "Override: LLM answered weather query without get_weather tool"
-                    )
-                    result.confidence = 0.9
-                    logger.debug("Applied query override: answer → get_weather")
-                    return result
-
-        return result
 
     def _parse_xml_decision(self, content: str, behavior: Behavior) -> DecisionResult:
         """Parse XML-formatted decision.
@@ -499,7 +425,28 @@ class DecisionEngine:
         if query_elem is not None and query_elem.text:
             args["query"] = query_elem.text.strip()
 
-        # Event details
+        # Calendar event fields (structured)
+        summary_elem = root.find("summary")
+        if summary_elem is not None and summary_elem.text:
+            args["summary"] = summary_elem.text.strip()
+
+        start_elem = root.find("start")
+        if start_elem is not None and start_elem.text:
+            args["start"] = start_elem.text.strip()
+
+        end_elem = root.find("end")
+        if end_elem is not None and end_elem.text:
+            args["end"] = end_elem.text.strip()
+
+        location_elem = root.find("location")
+        if location_elem is not None and location_elem.text:
+            args["location"] = location_elem.text.strip()
+
+        event_id_elem = root.find("event_id")
+        if event_id_elem is not None and event_id_elem.text:
+            args["event_id"] = event_id_elem.text.strip()
+
+        # Legacy event details (backwards compatibility)
         event_elem = root.find("event")
         if event_elem is not None and event_elem.text:
             args["event"] = event_elem.text.strip()
@@ -528,6 +475,16 @@ class DecisionEngine:
         if ha_color is not None and ha_color.text:
             args["color"] = ha_color.text.strip()
 
+        # Entity query (for get_entity action)
+        entity_id_elem = root.find("entity_id")
+        if entity_id_elem is not None and entity_id_elem.text:
+            args["entity_id"] = entity_id_elem.text.strip()
+
+        # Entity search filter (for search_entities action)
+        filter_elem = root.find("filter")
+        if filter_elem is not None and filter_elem.text:
+            args["filter"] = filter_elem.text.strip()
+
         # Code-related
         code_query = root.find("code_query")
         if code_query is not None and code_query.text:
@@ -536,6 +493,56 @@ class DecisionEngine:
         code_file = root.find("code_file")
         if code_file is not None and code_file.text:
             args["code_file"] = code_file.text.strip()
+
+        # Timer fields
+        minutes_elem = root.find("minutes")
+        if minutes_elem is not None and minutes_elem.text:
+            try:
+                args["minutes"] = float(minutes_elem.text.strip())
+            except ValueError:
+                pass
+
+        # Fallback: extract minutes from query text if action is set_timer and no minutes specified
+        if action == "set_timer" and "minutes" not in args:
+            query_text = args.get("query", "")
+            answer_text = root.find("answer")
+            if answer_text is not None and answer_text.text:
+                query_text = answer_text.text + " " + query_text
+
+            # Try to extract duration like "5 minutes", "30 seconds", "1 hour"
+            import re
+            # Match patterns like "5 minutes", "30 seconds", "1 hour", "2 hours"
+            duration_match = re.search(
+                r'(\d+(?:\.\d+)?)\s*(minute|min|second|sec|hour|hr)s?',
+                query_text,
+                re.IGNORECASE
+            )
+            if duration_match:
+                value = float(duration_match.group(1))
+                unit = duration_match.group(2).lower()
+                if unit in ("second", "sec"):
+                    args["minutes"] = value / 60
+                elif unit in ("hour", "hr"):
+                    args["minutes"] = value * 60
+                else:  # minutes
+                    args["minutes"] = value
+
+        label_elem = root.find("label")
+        if label_elem is not None and label_elem.text:
+            args["label"] = label_elem.text.strip()
+
+        timer_id_elem = root.find("timer_id")
+        if timer_id_elem is not None and timer_id_elem.text:
+            args["timer_id"] = timer_id_elem.text.strip()
+
+        # Command execution fields
+        command_elem = root.find("command")
+        if command_elem is not None and command_elem.text:
+            args["command"] = command_elem.text.strip()
+
+        host_elem = root.find("host")
+        if host_elem is not None and host_elem.text:
+            args["host"] = host_elem.text.strip()
 
         return args
 
@@ -664,10 +671,11 @@ class DecisionEngine:
 
         # Tool actions to prioritize (NOT "answer" - that's too common)
         # Order matters: check more specific actions first
+        # NOTE: These names must match the actual tool names registered with the agent
         tool_actions = [
             "get_time", "get_weather", "get_location",
-            "search_web", "home_assistant", "calendar_query",
-            "calendar_create", "calendar_delete", "execute_command",
+            "search_web", "home_assistant", "get_calendar_events",
+            "create_calendar_event", "delete_calendar_event", "execute_command",
             "use_tools", "form_opinion", "more_details", "clarify",
         ]
 
@@ -750,6 +758,26 @@ class DecisionEngine:
                         confidence=0.8,  # Higher confidence when query matches
                         reasoning="Inferred get_weather from weather query",
                         validation_notes="Query requires get_weather tool",
+                    )
+
+        # Check for calendar creation queries that should use create_calendar_event
+        calendar_create_patterns = [
+            r'\badd\b.*\b(?:to\s+)?(?:my\s+)?calendar\b',
+            r'\bput\b.*\b(?:on\s+)?(?:my\s+)?calendar\b',
+            r'\bschedule\b.*\b(?:appointment|meeting|event)\b',
+            r'\bcreate\b.*\b(?:calendar\s+)?event\b',
+            r'\badd\b.*\b(?:appointment|meeting|event)\b',
+        ]
+        for pattern in calendar_create_patterns:
+            if re.search(pattern, query_lower):
+                valid_action_names = {a.name.lower() for a in behavior.actions}
+                if "create_calendar_event" in valid_action_names:
+                    return DecisionResult(
+                        action="create_calendar_event",
+                        answer=content,
+                        confidence=0.8,
+                        reasoning="Inferred create_calendar_event from calendar creation query",
+                        validation_notes="Query requires create_calendar_event tool",
                     )
 
         # Default fallback: answer action

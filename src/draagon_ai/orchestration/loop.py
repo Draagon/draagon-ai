@@ -556,9 +556,12 @@ class AgentLoop:
         if not self.memory:
             return "No context available.", 0
 
+        # Contextualize query for better RAG search
+        search_query = self._contextualize_for_search(query, context)
+
         try:
             results = await self.memory.search(
-                query=query,
+                query=search_query,
                 user_id=context.user_id,
                 limit=5,
             )
@@ -597,6 +600,81 @@ class AgentLoop:
                 lines.append(f"Assistant: {assistant}")
 
         return "\n".join(lines)
+
+    def _contextualize_for_search(
+        self,
+        query: str,
+        context: AgentContext,
+    ) -> str:
+        """Contextualize query for better RAG search.
+
+        For multi-turn conversations, replace pronouns and references with
+        explicit entities from conversation history.
+
+        Args:
+            query: User's query
+            context: Agent context with conversation history
+
+        Returns:
+            Contextualized query for search
+        """
+        # If no history, return original query
+        if not context.conversation_history:
+            return query
+
+        # Check if query has pronouns or references that need context
+        # Simple heuristic: short queries with pronouns/references
+        pronouns = ["it", "that", "this", "they", "them", "he", "she", "its"]
+        references = ["next", "previous", "again", "more", "same", "other"]
+
+        query_lower = query.lower()
+        has_pronoun = any(f" {p} " in f" {query_lower} " for p in pronouns)
+        has_reference = any(r in query_lower for r in references)
+
+        if not has_pronoun and not has_reference:
+            return query
+
+        # Build context from recent history for inline expansion
+        # Look at the last turn to understand what pronouns refer to
+        last_turn = context.conversation_history[-1]
+        last_user = last_turn.get("user", "")
+        last_assistant = last_turn.get("assistant", "")
+
+        # Simple pronoun replacement based on last context
+        expanded_query = query
+
+        # If user said "what about X" after a topic, expand to full question
+        if query_lower.startswith("what about"):
+            # Try to find the main topic from last question
+            if "event" in last_user.lower() or "calendar" in last_user.lower():
+                topic = "events"
+            elif "light" in last_user.lower() or "bedroom" in last_user.lower():
+                topic = "lights"
+            elif "weather" in last_user.lower():
+                topic = "weather"
+            else:
+                topic = None
+
+            if topic:
+                # "What about next week?" -> "What events do I have next week?"
+                rest = query[len("what about"):].strip().rstrip("?")
+                expanded_query = f"What {topic} do I have {rest}?"
+                logger.debug(f"Contextualized: '{query}' -> '{expanded_query}'")
+
+        # If query refers to "it" or "that", try to find the subject
+        elif has_pronoun:
+            # Look for key nouns in last exchange
+            for entity in ["bedroom lights", "lights", "calendar", "timer", "event"]:
+                if entity in last_user.lower() or entity in last_assistant.lower():
+                    # Replace "it" with the entity
+                    for p in pronouns:
+                        expanded_query = expanded_query.replace(f" {p} ", f" the {entity} ")
+                        expanded_query = expanded_query.replace(f" {p}.", f" the {entity}.")
+                        expanded_query = expanded_query.replace(f" {p}?", f" the {entity}?")
+                    logger.debug(f"Contextualized: '{query}' -> '{expanded_query}'")
+                    break
+
+        return expanded_query
 
     async def _synthesize_response(
         self,

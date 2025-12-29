@@ -27,6 +27,9 @@ class ActionResult:
     result: Any = None
     formatted_result: str = ""
 
+    # Arguments that were passed to the action
+    action_args: dict[str, Any] = field(default_factory=dict)
+
     # For errors
     error: str | None = None
 
@@ -113,6 +116,7 @@ class ActionExecutor:
                 action_name=action_name,
                 success=True,
                 result=args.get("answer", ""),
+                action_args=args,
                 direct_answer=args.get("answer", ""),
             )
 
@@ -122,6 +126,7 @@ class ActionExecutor:
                 action_name=action_name,
                 success=True,
                 result=context.get("pending_details", ""),
+                action_args=args,
                 direct_answer=context.get("pending_details", ""),
             )
 
@@ -131,6 +136,7 @@ class ActionExecutor:
                 action_name=action_name,
                 success=True,
                 result=args.get("question", "Could you clarify?"),
+                action_args=args,
                 direct_answer=args.get("question", "Could you clarify?"),
             )
 
@@ -189,6 +195,7 @@ class ActionExecutor:
             success=result.success,
             result=result.result,
             formatted_result=formatted,
+            action_args=args,
             direct_answer=direct_answer,
             error=result.error,
             latency_ms=result.latency_ms,
@@ -234,6 +241,7 @@ class ActionExecutor:
                 success=tool_result.success,
                 result=tool_result.result,
                 formatted_result=self._format_result(tool_name, tool_result),
+                action_args=args,
                 error=tool_result.error,
                 latency_ms=latency,
             )
@@ -244,6 +252,7 @@ class ActionExecutor:
             return ActionResult(
                 action_name=action_name,
                 success=False,
+                action_args=args,
                 error=str(e),
                 latency_ms=latency,
             )

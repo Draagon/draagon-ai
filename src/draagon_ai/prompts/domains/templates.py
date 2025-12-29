@@ -55,7 +55,7 @@ OUTPUT FORMAT (XML):
   <reasoning>brief explanation</reasoning>
   <answer>response text (required when action=answer)</answer>
   <query>search query (when action=search_web)</query>
-  <event>event details (when action=calendar_create/delete)</event>
+  <event>event details (when action=create_calendar_event/delete_calendar_event)</event>
   <ha_domain>light|switch|climate (when action=home_assistant)</ha_domain>
   <ha_service>turn_on|turn_off|toggle</ha_service>
   <ha_entity>natural language like "bedroom" or "living room"</ha_entity>

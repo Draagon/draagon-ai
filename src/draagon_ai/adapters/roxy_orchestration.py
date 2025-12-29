@@ -388,6 +388,17 @@ class RoxyOrchestrationAdapter:
         """
         tool_calls = []
 
+        # In SIMPLE mode, tool results are in tool_results, not react_steps
+        for result in agent_response.tool_results:
+            tool_calls.append(ToolCallInfo(
+                tool=result.action_name,
+                args=result.action_args if hasattr(result, 'action_args') else {},
+                result=result.formatted_result if result.success else None,
+                error=result.error if not result.success else None,
+                elapsed_ms=int(result.latency_ms) if result.latency_ms else None,
+            ))
+
+        # In REACT mode, also check react_steps
         for step in agent_response.react_steps:
             if step.type == StepType.ACTION:
                 # Parse action content to get tool name and args
@@ -692,6 +703,7 @@ def create_roxy_orchestration_adapter(
     agent_name: str = "Roxy",
     personality_intro: str = "You are Roxy, a helpful voice assistant.",
     loop_mode: LoopMode = LoopMode.AUTO,
+    default_model_tier: str = "local",
 ) -> RoxyOrchestrationAdapter:
     """Create a configured RoxyOrchestrationAdapter.
 
@@ -705,6 +717,10 @@ def create_roxy_orchestration_adapter(
         agent_name: Human-readable agent name
         personality_intro: Personality introduction for prompts
         loop_mode: AgentLoop mode (SIMPLE, REACT, AUTO)
+        default_model_tier: Default model tier for decision routing
+            - "local": Fast model (default)
+            - "standard": Balanced quality/speed (e.g., GPT-OSS-20B)
+            - "complex": Best quality (e.g., 70B)
 
     Returns:
         Configured RoxyOrchestrationAdapter
@@ -717,6 +733,7 @@ def create_roxy_orchestration_adapter(
                 RoxyToolDefinition(name="get_time", ...),
                 RoxyToolDefinition(name="get_weather", ...),
             ],
+            default_model_tier="standard",  # Use GPT-OSS-20B for routing
         )
     """
     adapter = RoxyOrchestrationAdapter(
@@ -725,6 +742,7 @@ def create_roxy_orchestration_adapter(
         agent_id=agent_id,
         agent_name=agent_name,
         personality_intro=personality_intro,
+        default_model_tier=default_model_tier,
         loop_mode=loop_mode,
     )
 

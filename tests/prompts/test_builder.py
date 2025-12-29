@@ -183,7 +183,7 @@ class TestCreateDefaultBuilder:
         action_names = [a.name for a in actions]
         assert "answer" in action_names
         assert "get_time" in action_names
-        assert "calendar_query" in action_names
+        assert "get_calendar_events" in action_names
         assert "home_assistant" in action_names
 
     def test_specific_capabilities(self):
@@ -192,7 +192,7 @@ class TestCreateDefaultBuilder:
         actions = builder.get_all_actions()
 
         action_names = [a.name for a in actions]
-        assert "calendar_query" in action_names
+        assert "get_calendar_events" in action_names
         assert "home_assistant" not in action_names
 
     def test_empty_capabilities(self):
@@ -205,7 +205,7 @@ class TestCreateDefaultBuilder:
         assert "answer" in action_names
         assert "get_time" in action_names
         # But no capability actions
-        assert "calendar_query" not in action_names
+        assert "get_calendar_events" not in action_names
 
 
 class TestPrebuiltCapabilities:
@@ -223,8 +223,8 @@ class TestPrebuiltCapabilities:
         """Test CALENDAR_CAPABILITY is properly defined."""
         assert CALENDAR_CAPABILITY.name == "calendar"
         action_names = [a.name for a in CALENDAR_CAPABILITY.actions]
-        assert "calendar_query" in action_names
-        assert "calendar_create" in action_names
+        assert "get_calendar_events" in action_names
+        assert "create_calendar_event" in action_names
 
     def test_home_assistant_capability(self):
         """Test HOME_ASSISTANT_CAPABILITY is properly defined."""
@@ -255,7 +255,7 @@ class TestBuildDecisionPrompt:
 
         # Should have available actions
         assert "AVAILABLE ACTIONS:" in prompt
-        assert "calendar_query" in prompt
+        assert "get_calendar_events" in prompt
         assert "home_assistant" in prompt
 
         # Should have examples
@@ -274,4 +274,4 @@ class TestBuildDecisionPrompt:
 
         assert "MinimalBot" in prompt
         assert "answer" in prompt  # Core actions still present
-        assert "calendar_query" not in prompt
+        assert "get_calendar_events" not in prompt
