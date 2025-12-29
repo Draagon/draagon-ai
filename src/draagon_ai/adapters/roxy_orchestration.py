@@ -114,6 +114,8 @@ class DebugInfo:
     loop_mode: str | None = None
     iterations_used: int = 0
     react_steps: list[dict[str, Any]] | None = None
+    # Timing breakdown (like native orchestrator)
+    timings: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -250,6 +252,11 @@ class RoxyOrchestrationAdapter:
         # Session contexts for conversation continuity
         self._contexts: dict[str, AgentContext] = {}
 
+        # Optional mode detection callback (set by Roxy to enable conversation mode detection)
+        # Signature: async def(query: str, conversation_id: str, history: list[dict]) -> dict
+        # Returns: {"mode": "task"|"support"|..., "mode_detection_ms": int}
+        self._mode_detector: Any = None
+
         logger.info(
             f"RoxyOrchestrationAdapter initialized: agent={agent_id}, mode={loop_mode.value}"
         )
@@ -284,6 +291,22 @@ class RoxyOrchestrationAdapter:
         """
         for tool in tools:
             self.register_tool(tool)
+
+    def set_mode_detector(self, detector: Any) -> None:
+        """Set the conversation mode detector callback.
+
+        The callback should be an async function with signature:
+            async def(query: str, conversation_id: str, history: list[dict]) -> dict
+
+        It should return a dict with:
+            - mode: str (e.g., "task", "support", "casual", "brainstorm", "learning")
+            - mode_detection_ms: int (time taken in milliseconds)
+
+        Args:
+            detector: Async callback function for mode detection
+        """
+        self._mode_detector = detector
+        logger.debug("Mode detector callback registered")
 
     def _ensure_agent(self) -> Agent:
         """Ensure the Agent is created with registered tools.
@@ -444,6 +467,7 @@ class RoxyOrchestrationAdapter:
         latency_ms: int,
         debug: bool,
         area_id: str | None,
+        extra_timings: dict[str, Any] | None = None,
     ) -> RoxyResponse:
         """Convert AgentResponse to RoxyResponse.
 
@@ -453,6 +477,7 @@ class RoxyOrchestrationAdapter:
             latency_ms: Total processing time
             debug: Whether to include debug info
             area_id: Area/room ID
+            extra_timings: Additional timing info (e.g., mode detection)
 
         Returns:
             RoxyResponse compatible with Roxy's ChatResponse
@@ -479,6 +504,11 @@ class RoxyOrchestrationAdapter:
             # Extract memory count from debug_info
             memories_found = agent_response.debug_info.get("memories_found", 0)
 
+            # Build timings dict with any extra timing info
+            timings: dict[str, Any] = {}
+            if extra_timings:
+                timings.update(extra_timings)
+
             response.debug = DebugInfo(
                 latency_ms=latency_ms,
                 llm_calls=agent_response.iterations_used,
@@ -492,6 +522,7 @@ class RoxyOrchestrationAdapter:
                 iterations_used=agent_response.iterations_used,
                 react_steps=react_steps if react_steps else None,
                 memories_found=memories_found,
+                timings=timings,
             )
 
         return response
@@ -523,7 +554,10 @@ class RoxyOrchestrationAdapter:
         Returns:
             RoxyResponse with the result (compatible with ChatResponse)
         """
+        import asyncio
+
         start_time = time.time()
+        extra_timings: dict[str, Any] = {}
 
         # Ensure agent is created
         agent = self._ensure_agent()
@@ -537,6 +571,15 @@ class RoxyOrchestrationAdapter:
         )
 
         try:
+            # Run mode detection in parallel with agent processing (if detector is set)
+            mode_task = None
+            if self._mode_detector is not None:
+                # Get conversation history from context
+                history = list(context.conversation_history) if hasattr(context, 'conversation_history') else []
+                mode_task = asyncio.create_task(
+                    self._mode_detector(query, conversation_id, history)
+                )
+
             # Process through draagon-ai Agent
             agent_response = await agent.process(
                 query=query,
@@ -545,6 +588,18 @@ class RoxyOrchestrationAdapter:
                 area_id=area_id,
                 debug=debug,
             )
+
+            # Await mode detection result if running
+            if mode_task is not None:
+                try:
+                    mode_result = await mode_task
+                    if mode_result:
+                        # Store mode in timings for test compatibility
+                        extra_timings["conversation_mode"] = mode_result.get("mode", "task")
+                        extra_timings["mode_detection_ms"] = mode_result.get("mode_detection_ms", 0)
+                except Exception as e:
+                    logger.warning(f"Mode detection failed: {e}")
+                    extra_timings["conversation_mode"] = "task"  # Default to task on error
 
             latency_ms = int((time.time() - start_time) * 1000)
 
@@ -555,6 +610,7 @@ class RoxyOrchestrationAdapter:
                 latency_ms=latency_ms,
                 debug=debug,
                 area_id=area_id,
+                extra_timings=extra_timings if extra_timings else None,
             )
 
         except Exception as e:
@@ -571,6 +627,7 @@ class RoxyOrchestrationAdapter:
                 response.debug = DebugInfo(
                     latency_ms=latency_ms,
                     errors=[{"error": str(e), "type": type(e).__name__}],
+                    timings=extra_timings if extra_timings else {},
                 )
 
             return response
