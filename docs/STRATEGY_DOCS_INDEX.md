@@ -1,6 +1,6 @@
 # Draagon-AI Strategy Documentation Index
 
-*Last updated: December 28, 2025*
+*Last updated: December 28, 2025 (added REALITY_CHECK_AND_BUILD_PLAN.md)*
 
 ---
 
@@ -50,6 +50,9 @@
 
 | Document | Status | Description |
 |----------|--------|-------------|
+| [ORCHESTRATOR_PROTOTYPE_DESIGN.md](ORCHESTRATOR_PROTOTYPE_DESIGN.md) | **Current** | Prototype design with killer features vs nice-to-haves, test suite, 12-day plan. |
+| [GOD_LEVEL_ORCHESTRATOR_DESIGN.md](GOD_LEVEL_ORCHESTRATOR_DESIGN.md) | Reference | Full architecture vision (some features deferred to Phase 2). |
+| [REALITY_CHECK_AND_BUILD_PLAN.md](REALITY_CHECK_AND_BUILD_PLAN.md) | Updated | Deep code review. Build plan superseded by GOD_LEVEL_ORCHESTRATOR_DESIGN. |
 | [TESTING.md](TESTING.md) | Current | Testing documentation |
 
 ---
@@ -89,8 +92,9 @@
 
 1. **REVISED_MASTER_STRATEGY.md** - The complete current strategy
 2. **FULL_SYSTEM_COMPARISON.md** - Why this is a framework, not a memory system
-3. **HUMAN_AI_SYMBIOSIS_MODEL.md** - The productivity vision
-4. **SYMBIOSIS_REALITY_CHECK.md** - What's realistic
+3. **REALITY_CHECK_AND_BUILD_PLAN.md** - Code review confirming features work + build priorities
+4. **HUMAN_AI_SYMBIOSIS_MODEL.md** - The productivity vision
+5. **SYMBIOSIS_REALITY_CHECK.md** - What's realistic
 
 ---
 

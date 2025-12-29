@@ -476,6 +476,9 @@ class RoxyOrchestrationAdapter:
             if agent_response.decision:
                 confidence = agent_response.decision.confidence
 
+            # Extract memory count from debug_info
+            memories_found = agent_response.debug_info.get("memories_found", 0)
+
             response.debug = DebugInfo(
                 latency_ms=latency_ms,
                 llm_calls=agent_response.iterations_used,
@@ -488,6 +491,7 @@ class RoxyOrchestrationAdapter:
                 loop_mode=agent_response.loop_mode.value if agent_response.loop_mode else None,
                 iterations_used=agent_response.iterations_used,
                 react_steps=react_steps if react_steps else None,
+                memories_found=memories_found,
             )
 
         return response

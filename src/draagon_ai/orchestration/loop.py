@@ -25,12 +25,14 @@ ReAct Pattern (REQ-002-01):
         FINAL_ANSWER: "You have a conflict on Tuesday at 3pm..."
 """
 
+from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import Any, Literal
 import asyncio
 import logging
+import sys
 
 from ..behaviors import Action, Behavior
 from .protocols import LLMMessage, LLMProvider, MemoryProvider
@@ -38,6 +40,37 @@ from .decision import DecisionContext, DecisionEngine, DecisionResult
 from .execution import ActionExecutor, ActionResult
 
 logger = logging.getLogger(__name__)
+
+
+# Python 3.10 compatibility for asyncio.timeout (added in 3.11)
+if sys.version_info >= (3, 11):
+    async_timeout = asyncio.timeout
+else:
+    @asynccontextmanager
+    async def async_timeout(delay: float | None):
+        """Compatibility shim for asyncio.timeout on Python 3.10."""
+        if delay is None:
+            yield
+            return
+
+        loop = asyncio.get_event_loop()
+        deadline = loop.time() + delay
+        task = asyncio.current_task()
+        if task is None:
+            raise RuntimeError("async_timeout must be called from a coroutine")
+
+        def timeout_callback():
+            task.cancel()
+
+        handle = loop.call_at(deadline, timeout_callback)
+        try:
+            yield
+        except asyncio.CancelledError:
+            if loop.time() >= deadline:
+                raise asyncio.TimeoutError()
+            raise
+        finally:
+            handle.cancel()
 
 
 class LoopMode(Enum):
@@ -399,9 +432,10 @@ class AgentLoop:
 
         try:
             # 1. Gather context
-            gathered_context = await self._gather_context(query, context)
+            gathered_context, memory_count = await self._gather_context(query, context)
             if context.debug:
                 response.debug_info["gathered_context"] = gathered_context
+                response.debug_info["memories_found"] = memory_count
 
             # 2. Make decision
             decision_context = DecisionContext(
@@ -509,7 +543,7 @@ class AgentLoop:
         self,
         query: str,
         context: AgentContext,
-    ) -> str:
+    ) -> tuple[str, int]:
         """Gather context (memories, knowledge) for the query.
 
         Args:
@@ -517,10 +551,10 @@ class AgentLoop:
             context: Agent context
 
         Returns:
-            Formatted context string
+            Tuple of (formatted context string, memory count)
         """
         if not self.memory:
-            return "No context available."
+            return "No context available.", 0
 
         try:
             results = await self.memory.search(
@@ -530,16 +564,16 @@ class AgentLoop:
             )
 
             if not results:
-                return "No relevant memories found."
+                return "No relevant memories found.", 0
 
             lines = []
             for r in results:
                 lines.append(f"[{r.memory_type}] {r.content}")
 
-            return "\n".join(lines)
+            return "\n".join(lines), len(results)
 
         except Exception as e:
-            return f"Error gathering context: {e}"
+            return f"Error gathering context: {e}", 0
 
     def _format_history(self, history: list[dict]) -> str:
         """Format conversation history for the prompt.
@@ -687,9 +721,10 @@ class AgentLoop:
         )
 
         # 1. Gather initial context
-        gathered_context = await self._gather_context(query, context)
+        gathered_context, memory_count = await self._gather_context(query, context)
         if context.debug:
             response.debug_info["gathered_context"] = gathered_context
+            response.debug_info["memories_found"] = memory_count
 
         # ReAct loop
         for iteration in range(self.config.max_iterations):
@@ -698,7 +733,7 @@ class AgentLoop:
 
             try:
                 # Apply per-iteration timeout
-                async with asyncio.timeout(self.config.iteration_timeout_seconds):
+                async with async_timeout(self.config.iteration_timeout_seconds):
                     # THOUGHT: Decide what to do next
                     thought_start = datetime.now()
                     decision_context = DecisionContext(

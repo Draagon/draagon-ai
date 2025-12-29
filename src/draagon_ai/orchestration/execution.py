@@ -147,6 +147,9 @@ class ActionExecutor:
                 action_name, tool_name, args, context, start_time
             )
 
+    # Tools that return simple, ready-to-use answers (skip synthesis)
+    DIRECT_ANSWER_TOOLS = {"get_time", "get_weather", "get_location"}
+
     async def _execute_via_registry(
         self,
         action_name: str,
@@ -173,11 +176,20 @@ class ActionExecutor:
             tool_name, args, context, timeout_override_ms
         )
 
+        formatted = self._format_registry_result(tool_name, result)
+
+        # For simple tools, return the result directly without synthesis
+        # This avoids the LLM adding unnecessary pleasantries
+        direct_answer = None
+        if tool_name in self.DIRECT_ANSWER_TOOLS and result.success:
+            direct_answer = formatted
+
         return ActionResult(
             action_name=action_name,
             success=result.success,
             result=result.result,
-            formatted_result=self._format_registry_result(tool_name, result),
+            formatted_result=formatted,
+            direct_answer=direct_answer,
             error=result.error,
             latency_ms=result.latency_ms,
             timed_out=result.timed_out,
@@ -325,8 +337,13 @@ class ActionExecutor:
 
         if isinstance(r, dict):
             # Check for common fields
+            if "time" in r and "date" in r:
+                # Time response includes both - format nicely
+                return f"The current time is {r['time']}. Today is {r['date']}."
             if "time" in r:
-                return f"The time is {r['time']}"
+                return f"The current time is {r['time']}."
+            if "date" in r:
+                return f"Today is {r['date']}."
             if "weather" in r:
                 return f"Weather: {r['weather']}"
             if "events" in r:

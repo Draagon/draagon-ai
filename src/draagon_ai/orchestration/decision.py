@@ -157,7 +157,7 @@ class DecisionEngine:
         )
 
         # Parse the response
-        result = self._parse_decision(response, behavior)
+        result = self._parse_decision(response, behavior, query)
         result.raw_response = response.content
 
         # Validate and normalize the action (REQ-002-02)
@@ -306,12 +306,14 @@ class DecisionEngine:
         self,
         response: LLMResponse,
         behavior: Behavior,
+        query: str = "",
     ) -> DecisionResult:
         """Parse the LLM response into a DecisionResult.
 
         Args:
             response: LLM response
             behavior: Behavior for validation
+            query: Original user query (for fallback action inference)
 
         Returns:
             Parsed DecisionResult
@@ -320,14 +322,92 @@ class DecisionEngine:
 
         # Try XML parsing first (our default format)
         if "<response>" in content:
-            return self._parse_xml_decision(content, behavior)
+            result = self._parse_xml_decision(content, behavior)
+            # Apply query-based override if LLM defaulted to "answer"
+            if result.action == "answer" and query:
+                result = self._apply_query_override(result, query, behavior)
+            return result
 
         # Fallback to JSON parsing
         if content.startswith("{"):
-            return self._parse_json_decision(content, behavior)
+            result = self._parse_json_decision(content, behavior)
+            # Apply query-based override if LLM defaulted to "answer"
+            if result.action == "answer" and query:
+                result = self._apply_query_override(result, query, behavior)
+            return result
 
         # If neither, try to extract action from plain text
-        return self._parse_text_decision(content, behavior)
+        return self._parse_text_decision(content, behavior, query)
+
+    def _apply_query_override(
+        self,
+        result: DecisionResult,
+        query: str,
+        behavior: Behavior,
+    ) -> DecisionResult:
+        """Apply query-based action override when LLM incorrectly defaulted to answer.
+
+        This catches cases where the LLM "knows" an answer it shouldn't know
+        (like the current time) and forces the correct tool action.
+
+        Args:
+            result: Current decision result (action=answer)
+            query: Original user query
+            behavior: Behavior with valid actions
+
+        Returns:
+            Modified DecisionResult with corrected action if applicable
+        """
+        query_lower = query.lower()
+        valid_actions = {a.name.lower() for a in behavior.actions}
+
+        # Time/date queries MUST use get_time - LLM cannot know the time or date
+        time_patterns = [
+            r'\bwhat\s+time\b',
+            r'\bwhat\'?s\s+the\s+time\b',
+            r'\bcurrent\s+time\b',
+            r'\btime\s+(?:is\s+)?it\b',
+            r'\bwhat\s+is\s+the\s+time\b',
+            r'\btell\s+(?:me\s+)?the\s+time\b',
+            # Date patterns - get_time returns date info too
+            r'\bwhat\'?s?\s+(?:the\s+)?(?:today\'?s?\s+)?date\b',
+            r'\bwhat\s+(?:day|date)\s+is\s+it\b',
+            r'\btoday\'?s?\s+date\b',
+            r'\bcurrent\s+date\b',
+        ]
+        for pattern in time_patterns:
+            if re.search(pattern, query_lower):
+                if "get_time" in valid_actions:
+                    result.action = "get_time"
+                    result.original_action = "answer"
+                    result.validation_notes = (
+                        "Override: LLM answered time query without get_time tool"
+                    )
+                    result.confidence = 0.9
+                    logger.debug("Applied query override: answer → get_time")
+                    return result
+
+        # Weather queries MUST use get_weather - LLM cannot know current weather
+        weather_patterns = [
+            r'\bwhat\'?s?\s+(?:the\s+)?weather\b',
+            r'\bhow\'?s?\s+(?:the\s+)?weather\b',
+            r'\bcurrent\s+(?:temperature|weather)\b',
+            r'\bweather\s+(?:like|today|now)\b',
+            r'\btemperature\s+(?:outside|now|today)\b',
+        ]
+        for pattern in weather_patterns:
+            if re.search(pattern, query_lower):
+                if "get_weather" in valid_actions:
+                    result.action = "get_weather"
+                    result.original_action = "answer"
+                    result.validation_notes = (
+                        "Override: LLM answered weather query without get_weather tool"
+                    )
+                    result.confidence = 0.9
+                    logger.debug("Applied query override: answer → get_weather")
+                    return result
+
+        return result
 
     def _parse_xml_decision(self, content: str, behavior: Behavior) -> DecisionResult:
         """Parse XML-formatted decision.
@@ -536,36 +616,150 @@ class DecisionEngine:
 
         return result
 
-    def _parse_text_decision(self, content: str, behavior: Behavior) -> DecisionResult:
+    def _parse_text_decision(
+        self,
+        content: str,
+        behavior: Behavior,
+        query: str = "",
+    ) -> DecisionResult:
         """Parse plain text decision (fallback).
 
         REQ-002-02: Returns lower confidence since this is a fallback parser.
 
+        The parsing strategy:
+        1. First, try to find tool-specific action keywords (get_time, get_weather, etc.)
+           These are more specific than "answer" and indicate the LLM wants to use a tool.
+        2. Try to extract JSON from the content (may be embedded in markdown)
+        3. Look for action patterns like "action: X" or "Action: X"
+        4. Check the original query to infer the required action
+        5. Default to "answer" only if no tool action is found
+
         Args:
             content: Plain text content
             behavior: Behavior for validation
+            query: Original user query (for action inference)
 
         Returns:
             Parsed DecisionResult with lower confidence
         """
-        # Try to detect action keywords
-        action = "answer"
-        matched_action = None
-        for act in behavior.actions:
-            if act.name.lower() in content.lower():
-                matched_action = act.name
-                action = act.name
-                break
+        content_lower = content.lower()
+        query_lower = query.lower() if query else ""
 
-        # Lower confidence when using text fallback parsing
-        confidence = 0.5 if matched_action else 0.3
+        # First, try to extract embedded JSON (LLM often outputs markdown with JSON)
+        json_match = re.search(r'\{[^{}]*"(?:action|answer)"[^{}]*\}', content, re.DOTALL)
+        if json_match:
+            try:
+                import json
+                data = json.loads(json_match.group(0))
+                return DecisionResult(
+                    action=data.get("action", "answer"),
+                    answer=data.get("answer"),
+                    args=data.get("args", {}),
+                    confidence=0.6,
+                    reasoning="Parsed from embedded JSON",
+                    validation_notes="Extracted JSON from text",
+                )
+            except json.JSONDecodeError:
+                pass
 
+        # Tool actions to prioritize (NOT "answer" - that's too common)
+        # Order matters: check more specific actions first
+        tool_actions = [
+            "get_time", "get_weather", "get_location",
+            "search_web", "home_assistant", "calendar_query",
+            "calendar_create", "calendar_delete", "execute_command",
+            "use_tools", "form_opinion", "more_details", "clarify",
+        ]
+
+        # Look for explicit action patterns first
+        action_patterns = [
+            r'<action>\s*(\w+)\s*</action>',  # XML-like
+            r'"action"\s*:\s*"(\w+)"',  # JSON-like
+            r'action\s*[:=]\s*["\']?(\w+)',  # Key-value like
+            r'I (?:will|should|need to) use (\w+)',  # Natural language
+            r'using (?:the )?(\w+) (?:action|tool)',  # Natural language
+        ]
+
+        for pattern in action_patterns:
+            match = re.search(pattern, content, re.IGNORECASE)
+            if match:
+                action_name = match.group(1).lower()
+                # Check if it's a valid action
+                valid_action_names = {a.name.lower() for a in behavior.actions}
+                if action_name in valid_action_names:
+                    return DecisionResult(
+                        action=action_name,
+                        answer=content,
+                        confidence=0.7,
+                        reasoning=f"Found explicit action pattern: {action_name}",
+                        validation_notes="Matched action pattern in text",
+                    )
+
+        # Check for tool action keywords in content
+        for tool_action in tool_actions:
+            # Use word boundaries to avoid partial matches
+            if re.search(rf'\b{tool_action}\b', content_lower):
+                # Verify this action exists in behavior
+                valid_action_names = {a.name.lower() for a in behavior.actions}
+                if tool_action in valid_action_names:
+                    return DecisionResult(
+                        action=tool_action,
+                        answer=content,
+                        confidence=0.5,
+                        reasoning=f"Detected tool action keyword: {tool_action}",
+                        validation_notes="Matched tool action keyword",
+                    )
+
+        # Check for time-related queries that should use get_time
+        # Check BOTH the original query AND the LLM content
+        time_patterns = [
+            r'\bwhat\s+time\b',
+            r'\bwhat\'?s\s+the\s+time\b',
+            r'\bcurrent\s+time\b',
+            r'\btime\s+(?:is\s+)?it\b',
+            r'\btell\s+(?:me\s+)?the\s+time\b',
+        ]
+        for pattern in time_patterns:
+            # Prioritize query-based matching (user's actual question)
+            if re.search(pattern, query_lower) or re.search(pattern, content_lower):
+                valid_action_names = {a.name.lower() for a in behavior.actions}
+                if "get_time" in valid_action_names:
+                    return DecisionResult(
+                        action="get_time",
+                        answer=content,
+                        confidence=0.8,  # Higher confidence when query matches
+                        reasoning="Inferred get_time from time query",
+                        validation_notes="Query requires get_time tool",
+                    )
+
+        # Check for weather-related queries that should use get_weather
+        weather_patterns = [
+            r'\bwhat\'?s?\s+(?:the\s+)?weather\b',
+            r'\bhow\'?s?\s+(?:the\s+)?weather\b',
+            r'\bcurrent\s+(?:temperature|weather)\b',
+            r'\bweather\s+(?:like|today|now)\b',
+        ]
+        for pattern in weather_patterns:
+            # Prioritize query-based matching (user's actual question)
+            if re.search(pattern, query_lower) or re.search(pattern, content_lower):
+                valid_action_names = {a.name.lower() for a in behavior.actions}
+                if "get_weather" in valid_action_names:
+                    return DecisionResult(
+                        action="get_weather",
+                        answer=content,
+                        confidence=0.8,  # Higher confidence when query matches
+                        reasoning="Inferred get_weather from weather query",
+                        validation_notes="Query requires get_weather tool",
+                    )
+
+        # Default fallback: answer action
+        # Lower confidence because we couldn't determine the action
         return DecisionResult(
-            action=action,
+            action="answer",
             answer=content,
-            confidence=confidence,
+            confidence=0.3,
             reasoning="Parsed from plain text (fallback)",
-            validation_notes="Used text fallback parser",
+            validation_notes="Used text fallback parser - no action pattern matched",
         )
 
     def _get_model_for_tier(self, tier: str) -> str | None:

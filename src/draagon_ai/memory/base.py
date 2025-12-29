@@ -91,6 +91,22 @@ class SearchResult:
     score: float  # Similarity score (0-1)
     relevance_grade: str | None = None  # "relevant", "irrelevant", "ambiguous"
 
+    # Convenience properties for direct access (used by AgentLoop._gather_context)
+    @property
+    def content(self) -> str:
+        """Get the memory content directly."""
+        return self.memory.content
+
+    @property
+    def memory_type(self) -> MemoryType:
+        """Get the memory type directly."""
+        return self.memory.memory_type
+
+    @property
+    def entities(self) -> list[str]:
+        """Get the memory entities directly."""
+        return self.memory.entities
+
 
 @dataclass
 class MemoryConfig:
