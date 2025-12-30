@@ -1,1 +1,1 @@
-"""Tests for extension system components."""
+"""Tests for draagon-ai extensions."""

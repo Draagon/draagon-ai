@@ -155,6 +155,11 @@ class Agent:
             debug=debug,
         )
 
+        # Inject additional context from kwargs (e.g., self-knowledge from Roxy)
+        additional_context = kwargs.get("additional_context")
+        if additional_context:
+            context.metadata["additional_context"] = additional_context
+
         # Process through the loop
         response = await self._loop.process(
             query=query,

@@ -325,6 +325,8 @@ class DecisionEngine:
         if "<response>" in content:
             result = self._parse_xml_decision(content, behavior)
             logger.debug(f"Parsed XML decision: action={result.action}, args={result.args}")
+            if result.memory_update:
+                logger.info(f"Memory update found: {result.memory_update}")
             return result
 
         # Fallback to JSON parsing
@@ -474,6 +476,11 @@ class DecisionEngine:
         ha_color = root.find("ha_color")
         if ha_color is not None and ha_color.text:
             args["color"] = ha_color.text.strip()
+
+        # Sensor query filter (for querying HA sensors)
+        ha_query = root.find("ha_query")
+        if ha_query is not None and ha_query.text:
+            args["query"] = ha_query.text.strip()
 
         # Entity query (for get_entity action)
         entity_id_elem = root.find("entity_id")

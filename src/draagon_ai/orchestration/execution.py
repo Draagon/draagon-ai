@@ -367,7 +367,33 @@ class ActionExecutor:
         if isinstance(r, list):
             if not r:
                 return "No results found."
-            return f"Found {len(r)} result(s)."
+            # Format list items with actual content (limit to avoid overwhelming synthesis)
+            items = []
+            for item in r[:5]:  # Max 5 items
+                if isinstance(item, dict):
+                    # Try common patterns for entity/item formatting
+                    entity_id = item.get("entity_id")
+                    name = item.get("name") or item.get("friendly_name") or item.get("title")
+                    state = item.get("state") or item.get("status")
+
+                    if entity_id and name and state:
+                        # Full entity info: show name, state, and ID
+                        items.append(f"{name} ({entity_id}): {state}")
+                    elif name and state:
+                        items.append(f"{name}: {state}")
+                    elif entity_id and state:
+                        items.append(f"{entity_id}: {state}")
+                    elif name or entity_id:
+                        items.append(str(name or entity_id))
+                    else:
+                        # Include key-value pairs for unknown dicts
+                        items.append(", ".join(f"{k}: {v}" for k, v in list(item.items())[:3]))
+                else:
+                    items.append(str(item))
+            result_text = "; ".join(items)
+            if len(r) > 5:
+                result_text += f" (and {len(r) - 5} more)"
+            return result_text
 
         return str(r)
 

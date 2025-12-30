@@ -257,6 +257,11 @@ class RoxyOrchestrationAdapter:
         # Returns: {"mode": "task"|"support"|..., "mode_detection_ms": int}
         self._mode_detector: Any = None
 
+        # Optional context provider callback (set by Roxy to inject additional context)
+        # Signature: async def(user_id: str) -> str
+        # Returns: Additional context string to prepend to gathered context
+        self._context_provider: Any = None
+
         logger.info(
             f"RoxyOrchestrationAdapter initialized: agent={agent_id}, mode={loop_mode.value}"
         )
@@ -307,6 +312,21 @@ class RoxyOrchestrationAdapter:
         """
         self._mode_detector = detector
         logger.debug("Mode detector callback registered")
+
+    def set_context_provider(self, provider: Any) -> None:
+        """Set the additional context provider callback.
+
+        The callback should be an async function with signature:
+            async def(user_id: str) -> str
+
+        It should return a string of additional context to prepend to the
+        gathered context (e.g., self-knowledge, personality info).
+
+        Args:
+            provider: Async callback function for context provision
+        """
+        self._context_provider = provider
+        logger.debug("Context provider callback registered")
 
     def _ensure_agent(self) -> Agent:
         """Ensure the Agent is created with registered tools.
@@ -591,6 +611,19 @@ class RoxyOrchestrationAdapter:
                     self._mode_detector(query, conversation_id, history)
                 )
 
+            # Get additional context from provider (e.g., self-knowledge)
+            additional_context = None
+            if self._context_provider is not None:
+                try:
+                    additional_context = await self._context_provider(user_id)
+                    if additional_context:
+                        context.metadata["additional_context"] = additional_context
+                        logger.debug(f"Injected additional context ({len(additional_context)} chars)")
+                except Exception as e:
+                    logger.warning(f"Context provider failed: {e}")
+            else:
+                logger.debug("No context provider set")
+
             # Process through draagon-ai Agent
             agent_response = await agent.process(
                 query=query,
@@ -598,6 +631,7 @@ class RoxyOrchestrationAdapter:
                 session_id=conversation_id,
                 area_id=area_id,
                 debug=debug,
+                additional_context=additional_context,  # Pass self-knowledge context
             )
 
             # Await mode detection result if running

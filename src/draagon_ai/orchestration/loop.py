@@ -126,7 +126,9 @@ class AgentLoopConfig:
     iteration_timeout_seconds: float = 30.0
 
     # Auto-mode detection settings
-    complexity_threshold: float = 0.7  # Query complexity for auto-mode
+    # threshold=0.33 means 1+ keyword match triggers REACT
+    # This ensures sensor queries (solar, battery, etc.) use multi-step reasoning
+    complexity_threshold: float = 0.33  # Query complexity for auto-mode
 
     # Debug settings
     log_thought_traces: bool = True
@@ -134,15 +136,29 @@ class AgentLoopConfig:
     # Complexity keywords that suggest multi-step reasoning
     complexity_keywords: list[str] = field(
         default_factory=lambda: [
+            # Explicit multi-step indicators
             "and then",
             "after that",
             "also",
             "first",
             "next",
             "finally",
+            # Analysis keywords
             "check",
             "compare",
             "analyze",
+            # Home Assistant queries - often need entity discovery
+            "how much",
+            "what's my",
+            "is the",
+            "solar",
+            "battery",
+            "energy",
+            "power",
+            "water",
+            "temperature",
+            "thermostat",
+            "charger",
         ]
     )
 
@@ -553,7 +569,16 @@ class AgentLoop:
         Returns:
             Tuple of (formatted context string, memory count)
         """
+        context_parts = []
+
+        # Check for additional context from adapter (e.g., self-knowledge)
+        additional_context = context.metadata.get("additional_context")
+        if additional_context:
+            context_parts.append(additional_context)
+
         if not self.memory:
+            if context_parts:
+                return "\n\n".join(context_parts), 0
             return "No context available.", 0
 
         # Contextualize query for better RAG search
@@ -566,16 +591,20 @@ class AgentLoop:
                 limit=5,
             )
 
-            if not results:
+            if results:
+                memory_lines = []
+                for r in results:
+                    memory_lines.append(f"[{r.memory_type}] {r.content}")
+                context_parts.append("\n".join(memory_lines))
+
+            if not context_parts:
                 return "No relevant memories found.", 0
 
-            lines = []
-            for r in results:
-                lines.append(f"[{r.memory_type}] {r.content}")
-
-            return "\n".join(lines), len(results)
+            return "\n\n".join(context_parts), len(results) if results else 0
 
         except Exception as e:
+            if context_parts:
+                return "\n\n".join(context_parts), 0
             return f"Error gathering context: {e}", 0
 
     def _format_history(self, history: list[dict]) -> str:
@@ -725,8 +754,31 @@ class AgentLoop:
 
         response = await self.llm.chat(messages)
 
-        # Parse JSON response if present
+        # Parse structured response (XML or JSON)
         content = response.content.strip()
+
+        # Try XML first (preferred format per LLM-First architecture)
+        if "<synthesis>" in content or "<answer>" in content:
+            try:
+                import re
+                import xml.etree.ElementTree as ET
+
+                # Extract XML block if wrapped in markdown
+                xml_match = re.search(r"<synthesis>.*?</synthesis>", content, re.DOTALL)
+                if xml_match:
+                    xml_str = xml_match.group(0)
+                    root = ET.fromstring(xml_str)
+                    answer = root.find("answer")
+                    if answer is not None and answer.text:
+                        return answer.text.strip()
+                # Try bare <answer> tag
+                answer_match = re.search(r"<answer>(.*?)</answer>", content, re.DOTALL)
+                if answer_match:
+                    return answer_match.group(1).strip()
+            except Exception:
+                pass
+
+        # Fall back to JSON parsing for backward compatibility
         if content.startswith("{"):
             try:
                 import json
@@ -750,13 +802,16 @@ class AgentLoop:
             context: Agent context
         """
         if not self.memory:
+            logger.warning("[MEMORY] No memory provider, cannot store update")
             return
 
         content = memory_update.get("content")
         if not content:
+            logger.warning("[MEMORY] No content in memory update")
             return
 
         try:
+            logger.info(f"[MEMORY] Storing: {content[:100]}... (type={memory_update.get('type', 'fact')})")
             await self.memory.store(
                 content=content,
                 user_id=context.user_id,
@@ -764,9 +819,10 @@ class AgentLoop:
                 entities=memory_update.get("entities", []),
                 importance=memory_update.get("confidence", 0.9),
             )
-        except Exception:
+            logger.info(f"[MEMORY] Successfully stored memory for {context.user_id}")
+        except Exception as e:
             # Log but don't fail the response
-            pass
+            logger.error(f"[MEMORY] Failed to store: {e}")
 
     async def _run_react(
         self,
