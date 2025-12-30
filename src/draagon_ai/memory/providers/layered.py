@@ -729,17 +729,21 @@ class LayeredMemoryProvider(MemoryProvider):
             source=source,
         )
 
-        # Route to appropriate layer
+        # Route to appropriate layer and get the node_id
         layer = LAYER_MAPPING.get(memory_type, "semantic")
 
         if layer == "working":
-            await self._store_working(memory, metadata)
+            node_id = await self._store_working(memory, metadata)
         elif layer == "episodic":
-            await self._store_episodic(memory, metadata)
+            node_id = await self._store_episodic(memory, metadata)
         elif layer == "metacognitive":
-            await self._store_metacognitive(memory, metadata)
+            node_id = await self._store_metacognitive(memory, metadata)
         else:  # semantic is default
-            await self._store_semantic(memory, metadata)
+            node_id = await self._store_semantic(memory, metadata)
+
+        # Update memory ID with actual graph node ID
+        if node_id:
+            memory.id = node_id
 
         return memory
 
@@ -747,21 +751,22 @@ class LayeredMemoryProvider(MemoryProvider):
         self,
         memory: Memory,
         metadata: dict[str, Any] | None,
-    ) -> None:
-        """Store in working memory."""
-        await self._working.add_item(
+    ) -> str | None:
+        """Store in working memory. Returns node_id."""
+        item = await self._working.add_item(
             content=memory.content,
             attention_weight=memory.importance,
             source=memory.source or "store",
             user_id=memory.user_id,
         )
+        return item.node_id if item else None
 
     async def _store_episodic(
         self,
         memory: Memory,
         metadata: dict[str, Any] | None,
-    ) -> None:
-        """Store in episodic memory."""
+    ) -> str | None:
+        """Store in episodic memory. Returns node_id (event or episode)."""
         # Add as event to current episode or create new one
         episode = self._episodic.get_current_episode()
 
@@ -772,51 +777,55 @@ class LayeredMemoryProvider(MemoryProvider):
                 entities=memory.entities,
             )
 
-        await self._episodic.add_event(
+        event = await self._episodic.add_event(
             episode_id=episode.node_id,
             content=memory.content,
             event_type=str(memory.memory_type.value),
             entities=memory.entities,
         )
+        return event.node_id if event else episode.node_id
 
     async def _store_semantic(
         self,
         memory: Memory,
         metadata: dict[str, Any] | None,
-    ) -> None:
-        """Store in semantic memory as a fact."""
-        await self._semantic.add_fact(
+    ) -> str | None:
+        """Store in semantic memory as a fact. Returns node_id."""
+        fact = await self._semantic.add_fact(
             content=memory.content,
             entities=memory.entities,
             confidence=memory.confidence,
         )
+        return fact.node_id if fact else None
 
     async def _store_metacognitive(
         self,
         memory: Memory,
         metadata: dict[str, Any] | None,
-    ) -> None:
-        """Store in metacognitive memory."""
+    ) -> str | None:
+        """Store in metacognitive memory. Returns node_id."""
+        result = None
         if memory.memory_type == MemoryType.SKILL:
-            await self._metacognitive.add_skill(
+            result = await self._metacognitive.add_skill(
                 name=memory.content[:50],
                 skill_type=metadata.get("skill_type", "general") if metadata else "general",
                 procedure=memory.content,
                 entities=memory.entities,
             )
         elif memory.memory_type == MemoryType.INSIGHT:
-            await self._metacognitive.add_insight(
+            result = await self._metacognitive.add_insight(
                 content=memory.content,
                 insight_type=metadata.get("insight_type", "observation") if metadata else "observation",
                 context=memory.source or "",
             )
         else:
             # Store as insight by default
-            await self._metacognitive.add_insight(
+            result = await self._metacognitive.add_insight(
                 content=memory.content,
                 insight_type="observation",
                 context=memory.source or "",
             )
+        return result.node_id if result else None
 
     async def search(
         self,
@@ -1082,10 +1091,9 @@ class LayeredMemoryProvider(MemoryProvider):
             True if deleted, False if not found.
         """
         self._ensure_initialized()
-        # Remove from graph
+        # Delete from graph
         try:
-            await self._graph.remove_node(memory_id)
-            return True
+            return await self._graph.delete_node(memory_id)
         except Exception:
             return False
 

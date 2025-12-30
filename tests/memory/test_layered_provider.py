@@ -1110,8 +1110,8 @@ class TestMemoryGetUpdateDelete:
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_delete_returns_false_for_existing_node(self, provider):
-        """Test that delete returns False for existing node (remove_node not implemented)."""
+    async def test_delete_succeeds_for_existing_node(self, provider):
+        """Test that delete returns True for existing node."""
         from draagon_ai.memory.temporal_nodes import NodeType
 
         # Add node directly to graph
@@ -1121,12 +1121,13 @@ class TestMemoryGetUpdateDelete:
             scope_id="user:test",
         )
 
-        # Delete returns False because remove_node is not implemented
-        # This is expected behavior - the method handles the exception gracefully
+        # Delete should succeed and return True
         result = await provider.delete(node.node_id)
+        assert result is True
 
-        # Currently returns False because remove_node raises AttributeError
-        assert result is False
+        # Verify node is actually deleted
+        deleted_node = await provider.graph.get_node(node.node_id)
+        assert deleted_node is None
 
     @pytest.mark.asyncio
     async def test_delete_nonexistent_memory(self, provider):

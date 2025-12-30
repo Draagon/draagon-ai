@@ -42,8 +42,25 @@ from draagon_ai.mcp.server import (
 
 
 @dataclass
+class MockMemoryInResult:
+    """Mock Memory object inside a SearchResult."""
+
+    id: str
+    content: str
+    memory_type: str
+    scope: str
+    importance: float = 0.5
+    entities: list[str] = None
+    created_at: str = None
+
+    def __post_init__(self):
+        if self.entities is None:
+            self.entities = []
+
+
+@dataclass
 class MockSearchResult:
-    """Mock search result for testing."""
+    """Mock search result for testing (mimics SearchResult with .memory attribute)."""
 
     id: str
     content: str
@@ -57,6 +74,25 @@ class MockSearchResult:
     def __post_init__(self):
         if self.entities is None:
             self.entities = []
+        # Create a memory attribute that mirrors the result's properties
+        self.memory = MockMemoryInResult(
+            id=self.id,
+            content=self.content,
+            memory_type=self.memory_type,
+            scope=self.scope,
+            importance=self.importance,
+            entities=self.entities,
+            created_at=self.created_at,
+        )
+
+
+@dataclass
+class MockMemory:
+    """Mock Memory object for testing."""
+    id: str
+    content: str = ""
+    memory_type: str = "fact"
+    scope: str = "user"
 
 
 @pytest.fixture
@@ -64,8 +100,8 @@ def mock_memory_provider():
     """Create a mock memory provider."""
     provider = AsyncMock()
 
-    # Mock store
-    provider.store = AsyncMock(return_value={"memory_id": "test-memory-123"})
+    # Mock store - returns a Memory-like object with .id attribute
+    provider.store = AsyncMock(return_value=MockMemory(id="test-memory-123"))
 
     # Mock search
     provider.search = AsyncMock(
@@ -278,25 +314,26 @@ class TestScopeMapping:
         assert "shared" in SCOPE_MAPPING
         assert "system" in SCOPE_MAPPING
 
-        assert SCOPE_MAPPING["private"] == "USER"
-        assert SCOPE_MAPPING["shared"] == "CONTEXT"
-        assert SCOPE_MAPPING["system"] == "WORLD"
+        # Scope values are lowercase to match MemoryScope enum
+        assert SCOPE_MAPPING["private"] == "user"
+        assert SCOPE_MAPPING["shared"] == "context"
+        assert SCOPE_MAPPING["system"] == "world"
 
     def test_map_scope_to_draagon(self):
         """Test scope mapping function."""
-        assert map_scope_to_draagon("private") == "USER"
-        assert map_scope_to_draagon("shared") == "CONTEXT"
-        assert map_scope_to_draagon("system") == "WORLD"
+        assert map_scope_to_draagon("private") == "user"
+        assert map_scope_to_draagon("shared") == "context"
+        assert map_scope_to_draagon("system") == "world"
 
     def test_map_scope_case_insensitive(self):
         """Test scope mapping is case insensitive."""
-        assert map_scope_to_draagon("PRIVATE") == "USER"
-        assert map_scope_to_draagon("Private") == "USER"
+        assert map_scope_to_draagon("PRIVATE") == "user"
+        assert map_scope_to_draagon("Private") == "user"
 
     def test_map_scope_unknown(self):
-        """Test unknown scope defaults to USER."""
-        assert map_scope_to_draagon("unknown") == "USER"
-        assert map_scope_to_draagon("") == "USER"
+        """Test unknown scope defaults to user."""
+        assert map_scope_to_draagon("unknown") == "user"
+        assert map_scope_to_draagon("") == "user"
 
 
 class TestTypeMapping:
@@ -313,20 +350,21 @@ class TestTypeMapping:
 
     def test_map_type_to_draagon(self):
         """Test type mapping function."""
-        assert map_type_to_draagon("fact") == "FACT"
-        assert map_type_to_draagon("skill") == "SKILL"
-        assert map_type_to_draagon("insight") == "INSIGHT"
-        assert map_type_to_draagon("preference") == "PREFERENCE"
+        # Type values are lowercase to match MemoryType enum
+        assert map_type_to_draagon("fact") == "fact"
+        assert map_type_to_draagon("skill") == "skill"
+        assert map_type_to_draagon("insight") == "insight"
+        assert map_type_to_draagon("preference") == "preference"
 
     def test_map_type_case_insensitive(self):
         """Test type mapping is case insensitive."""
-        assert map_type_to_draagon("FACT") == "FACT"
-        assert map_type_to_draagon("Skill") == "SKILL"
+        assert map_type_to_draagon("FACT") == "fact"
+        assert map_type_to_draagon("Skill") == "skill"
 
     def test_map_type_unknown(self):
-        """Test unknown type defaults to FACT."""
-        assert map_type_to_draagon("unknown") == "FACT"
-        assert map_type_to_draagon("") == "FACT"
+        """Test unknown type defaults to fact."""
+        assert map_type_to_draagon("unknown") == "fact"
+        assert map_type_to_draagon("") == "fact"
 
 
 # =============================================================================
@@ -397,8 +435,9 @@ class TestMemoryMCPServerTools:
         mock_memory_provider.store.assert_called_once()
         call_kwargs = mock_memory_provider.store.call_args.kwargs
         assert call_kwargs["content"] == "Test content"
-        assert call_kwargs["memory_type"] == "FACT"
-        assert call_kwargs["scope"] == "USER"
+        # Type and scope values are lowercase to match enum values
+        assert call_kwargs["memory_type"] == "fact"
+        assert call_kwargs["scope"] == "user"
 
     @pytest.mark.asyncio
     async def test_memory_search(self, mcp_server, mock_memory_provider):
@@ -425,10 +464,10 @@ class TestMemoryMCPServerTools:
 
         assert result["success"] is True
 
-        # Verify filters were passed
+        # Verify filters were passed (lowercase to match enum values)
         call_kwargs = mock_memory_provider.search.call_args.kwargs
-        assert call_kwargs["memory_types"] == ["FACT", "SKILL"]
-        assert call_kwargs["scopes"] == ["CONTEXT"]
+        assert call_kwargs["memory_types"] == ["fact", "skill"]
+        assert call_kwargs["scopes"] == ["context"]
 
     @pytest.mark.asyncio
     async def test_memory_list(self, mcp_server, mock_memory_provider):
@@ -862,16 +901,16 @@ class TestScopeEnforcement:
         """Test search scopes with specific allowed scope."""
         mcp_server.set_client_context(shared_client)
         scopes = mcp_server._get_search_scopes("shared")
-        assert scopes == ["CONTEXT"]  # Mapped scope
+        assert scopes == ["context"]  # Mapped scope (lowercase)
 
     def test_get_search_scopes_specific_denied(self, mcp_server, restricted_client):
         """Test search scopes falls back when specific scope denied."""
         mcp_server.set_client_context(restricted_client)
         # Request SHARED but only have PRIVATE access
         scopes = mcp_server._get_search_scopes("shared")
-        # Should fall back to all readable scopes
-        assert "USER" in scopes  # PRIVATE
-        assert "WORLD" in scopes  # SYSTEM (always readable)
+        # Should fall back to all readable scopes (lowercase)
+        assert "user" in scopes  # PRIVATE
+        assert "world" in scopes  # SYSTEM (always readable)
 
 
 class TestScopeEnforcementInTools:
@@ -928,11 +967,11 @@ class TestScopeEnforcementInTools:
         search_tool = lookup_tool(restricted_server, "memory_search")
         await search_tool.fn(query="test")
 
-        # Verify scopes passed to memory provider
+        # Verify scopes passed to memory provider (lowercase)
         call_kwargs = mock_memory_provider.search.call_args.kwargs
         scopes = call_kwargs.get("scopes", [])
-        # Should only include readable scopes (USER + WORLD)
-        assert "USER" in scopes or "WORLD" in scopes
+        # Should only include readable scopes (user + world)
+        assert "user" in scopes or "world" in scopes
 
     @pytest.mark.asyncio
     async def test_search_denies_explicit_unauthorized_scope(self, restricted_server):

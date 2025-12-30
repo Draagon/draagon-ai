@@ -826,12 +826,13 @@ class TestAgentLoopGatherContext:
             decision_engine=mock_decision_engine,
         )
 
-        result = await loop._gather_context(
+        context_str, count = await loop._gather_context(
             query="Test query",
             context=agent_context,
         )
 
-        assert result == "No context available."
+        assert context_str == "No context available."
+        assert count == 0
 
     @pytest.mark.anyio
     async def test_gather_context_with_results(
@@ -855,12 +856,13 @@ class TestAgentLoopGatherContext:
             decision_engine=mock_decision_engine,
         )
 
-        result = await loop._gather_context(
+        context_str, count = await loop._gather_context(
             query="What do I like?",
             context=agent_context,
         )
 
-        assert "[fact] User likes pizza" in result
+        assert "[fact] User likes pizza" in context_str
+        assert count == 1
 
     @pytest.mark.anyio
     async def test_gather_context_no_results(
@@ -880,12 +882,13 @@ class TestAgentLoopGatherContext:
             decision_engine=mock_decision_engine,
         )
 
-        result = await loop._gather_context(
+        context_str, count = await loop._gather_context(
             query="Unknown topic",
             context=agent_context,
         )
 
-        assert result == "No relevant memories found."
+        assert context_str == "No relevant memories found."
+        assert count == 0
 
     @pytest.mark.anyio
     async def test_gather_context_exception_handling(
@@ -904,12 +907,13 @@ class TestAgentLoopGatherContext:
             decision_engine=mock_decision_engine,
         )
 
-        result = await loop._gather_context(
+        context_str, count = await loop._gather_context(
             query="Test",
             context=agent_context,
         )
 
-        assert "Error gathering context" in result
+        assert "Error gathering context" in context_str
+        assert count == 0
 
 
 class TestAgentLoopFormatHistory:

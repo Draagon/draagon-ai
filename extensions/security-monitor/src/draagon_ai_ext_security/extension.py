@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from draagon_ai.extensions import Extension, ExtensionInfo
+
+logger = logging.getLogger(__name__)
 
 
 class SecurityMonitorExtension(Extension):
@@ -23,12 +26,19 @@ class SecurityMonitorExtension(Extension):
     - llm.model: Model to use for analysis
     - monitors.*: Enable/configure specific monitors
     - notifications.*: Notification channel settings
+
+    Voice-configurable settings (via progressive discovery):
+    - network.known_services: Add/remove known devices
+    - notifications.voice.quiet_hours: Set quiet hours
+    - notifications.voice.min_severity: Set minimum alert severity
+    - check_interval_seconds: Set check interval
     """
 
     def __init__(self) -> None:
         self._config: dict[str, Any] = {}
         self._initialized: bool = False
         self._service: Any = None  # SecurityMonitorService
+        self._config_service: Any = None  # ExtensionConfigService
 
     @property
     def info(self) -> ExtensionInfo:
@@ -167,6 +177,14 @@ class SecurityMonitorExtension(Extension):
         self._config = config
         self._initialized = True
 
+        # Set up the config service for hybrid YAML + memory config
+        try:
+            from draagon_ai.extensions import get_extension_config_service
+            self._config_service = get_extension_config_service()
+            logger.info("Extension config service initialized")
+        except ImportError:
+            logger.warning("Extension config service not available")
+
         # Initialize will be called by the framework
         # Actual service startup happens in get_services()
 
@@ -197,6 +215,9 @@ class SecurityMonitorExtension(Extension):
 
         if not self._service:
             self._service = SecurityMonitorService(self._config)
+            # Wire up the config service
+            if self._config_service:
+                self._service.set_config_service(self._config_service)
 
         return {
             "security_monitor": self._service,
@@ -208,7 +229,11 @@ class SecurityMonitorExtension(Extension):
         Returns:
             List of tools for security analysis.
         """
-        from draagon_ai_ext_security.tools import get_security_tools
+        from draagon_ai_ext_security.tools import get_security_tools, set_config_service
+
+        # Wire up config service for tools
+        if self._config_service:
+            set_config_service(self._config_service)
 
         return get_security_tools(self._config)
 
@@ -222,6 +247,9 @@ class SecurityMonitorExtension(Extension):
             CLASSIFICATION_PROMPT,
             INVESTIGATION_PROMPT,
             VOICE_ANNOUNCEMENT_PROMPT,
+            UNKNOWN_DEVICE_DISCOVERY_PROMPT,
+            LEARN_SERVICE_FROM_RESPONSE_PROMPT,
+            CONFIG_CHANGE_INTENT_PROMPT,
         )
 
         return {
@@ -229,5 +257,9 @@ class SecurityMonitorExtension(Extension):
                 "CLASSIFICATION_PROMPT": CLASSIFICATION_PROMPT,
                 "INVESTIGATION_PROMPT": INVESTIGATION_PROMPT,
                 "VOICE_ANNOUNCEMENT_PROMPT": VOICE_ANNOUNCEMENT_PROMPT,
+                # Progressive discovery prompts
+                "UNKNOWN_DEVICE_DISCOVERY_PROMPT": UNKNOWN_DEVICE_DISCOVERY_PROMPT,
+                "LEARN_SERVICE_FROM_RESPONSE_PROMPT": LEARN_SERVICE_FROM_RESPONSE_PROMPT,
+                "CONFIG_CHANGE_INTENT_PROMPT": CONFIG_CHANGE_INTENT_PROMPT,
             },
         }

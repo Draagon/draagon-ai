@@ -230,32 +230,32 @@ logger = logging.getLogger(__name__)
 # Scope Mapping
 # =============================================================================
 
-# Map MCP scopes to draagon-ai MemoryScope
+# Map MCP scopes to draagon-ai MemoryScope (lowercase values to match enum)
 SCOPE_MAPPING = {
-    "private": "USER",
-    "shared": "CONTEXT",
-    "system": "WORLD",
+    "private": "user",
+    "shared": "context",
+    "system": "world",
 }
 
-# Map MCP memory types to draagon-ai MemoryType
+# Map MCP memory types to draagon-ai MemoryType (lowercase values to match enum)
 TYPE_MAPPING = {
-    "fact": "FACT",
-    "skill": "SKILL",
-    "insight": "INSIGHT",
-    "preference": "PREFERENCE",
-    "episodic": "EPISODIC",
-    "instruction": "INSTRUCTION",
+    "fact": "fact",
+    "skill": "skill",
+    "insight": "insight",
+    "preference": "preference",
+    "episodic": "episodic",
+    "instruction": "instruction",
 }
 
 
 def map_scope_to_draagon(scope: str) -> str:
     """Map MCP scope to draagon-ai MemoryScope."""
-    return SCOPE_MAPPING.get(scope.lower(), "USER")
+    return SCOPE_MAPPING.get(scope.lower(), "user")
 
 
 def map_type_to_draagon(memory_type: str) -> str:
     """Map MCP memory type to draagon-ai MemoryType."""
-    return TYPE_MAPPING.get(memory_type.lower(), "FACT")
+    return TYPE_MAPPING.get(memory_type.lower(), "fact")
 
 
 # =============================================================================
@@ -349,8 +349,8 @@ class MemoryMCPServer:
             memory_config = LayeredMemoryConfig(
                 qdrant_url=self.config.qdrant_url,
                 qdrant_api_key=self.config.qdrant_api_key,
-                node_collection=f"{self.config.qdrant_collection}_nodes",
-                edge_collection=f"{self.config.qdrant_collection}_edges",
+                qdrant_nodes_collection=f"{self.config.qdrant_collection}_nodes",
+                qdrant_edges_collection=f"{self.config.qdrant_collection}_edges",
                 embedding_dimension=self.config.embedding_dimension,
             )
 
@@ -613,7 +613,7 @@ class MemoryMCPServer:
 
                 return {
                     "success": True,
-                    "memory_id": result.get("memory_id") if result else None,
+                    "memory_id": result.id if result else None,
                     "message": f"Memory stored successfully as {memory_type}",
                 }
 
@@ -691,22 +691,25 @@ class MemoryMCPServer:
                 )
 
                 # Format results
+                # SearchResult has .memory (Memory object) and .score
+                # Memory has .id, .content, .memory_type, .scope, .importance, etc.
                 formatted_results = []
                 for r in results:
+                    mem = r.memory
                     formatted_results.append(
                         {
-                            "id": r.id,
-                            "content": r.content,
-                            "memory_type": r.memory_type.value
-                            if hasattr(r.memory_type, "value")
-                            else str(r.memory_type),
-                            "scope": r.scope.value
-                            if hasattr(r.scope, "value")
-                            else str(r.scope),
+                            "id": mem.id,
+                            "content": mem.content,
+                            "memory_type": mem.memory_type.value
+                            if hasattr(mem.memory_type, "value")
+                            else str(mem.memory_type),
+                            "scope": mem.scope.value
+                            if hasattr(mem.scope, "value")
+                            else str(mem.scope),
                             "score": r.score,
-                            "importance": getattr(r, "importance", 0.5),
-                            "entities": getattr(r, "entities", []),
-                            "created_at": getattr(r, "created_at", None),
+                            "importance": getattr(mem, "importance", 0.5),
+                            "entities": getattr(mem, "entities", []),
+                            "created_at": getattr(mem, "created_at", None),
                         }
                     )
 
@@ -832,12 +835,8 @@ class MemoryMCPServer:
                 effective_user = self._get_user_id(user_id)
                 effective_agent = self._get_agent_id(agent_id)
 
-                # Get memory
-                result = await memory.get(
-                    memory_id=memory_id,
-                    user_id=effective_user,
-                    agent_id=effective_agent,
-                )
+                # Get memory (get() only takes memory_id)
+                result = await memory.get(memory_id=memory_id)
 
                 if result is None:
                     return {
@@ -896,12 +895,8 @@ class MemoryMCPServer:
                 effective_user = self._get_user_id(user_id)
                 effective_agent = self._get_agent_id(agent_id)
 
-                # Delete memory
-                success = await memory.delete(
-                    memory_id=memory_id,
-                    user_id=effective_user,
-                    agent_id=effective_agent,
-                )
+                # Delete memory (delete() only takes memory_id)
+                success = await memory.delete(memory_id=memory_id)
 
                 if success:
                     logger.info(f"Deleted memory: {memory_id}")
@@ -967,8 +962,8 @@ class MemoryMCPServer:
                 # Full belief reconciliation would require the BeliefReconciliationService
                 result = await memory.store(
                     content=observation,
-                    memory_type="FACT",
-                    scope="USER",
+                    memory_type="fact",  # lowercase to match MemoryType enum
+                    scope="user",  # lowercase to match MemoryScope enum
                     user_id=effective_user,
                     agent_id=effective_agent,
                     importance=confidence,
@@ -986,7 +981,7 @@ class MemoryMCPServer:
 
                 return {
                     "success": True,
-                    "memory_id": result.get("memory_id") if result else None,
+                    "memory_id": result.id if result else None,
                     "message": "Observation recorded for reconciliation",
                     "conflicts_detected": False,  # TODO: Implement conflict detection
                 }

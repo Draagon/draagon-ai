@@ -53,6 +53,13 @@ from .config import (
     DraagonExtensionConfig,
     ExtensionConfig,
 )
+from .config_service import (
+    ExtensionConfigService,
+    ConfigValue,
+    NetworkContext,
+    NetworkService,
+    get_extension_config_service,
+)
 
 if TYPE_CHECKING:
     from draagon_ai.behaviors import Behavior
@@ -391,6 +398,12 @@ __all__ = [
     "EXTENSION_GROUP",
     # Config
     "load_config",
+    # Config Service
+    "ExtensionConfigService",
+    "ConfigValue",
+    "NetworkContext",
+    "NetworkService",
+    "get_extension_config_service",
     # Manager
     "ExtensionManager",
     "get_extension_manager",

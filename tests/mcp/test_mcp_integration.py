@@ -16,16 +16,56 @@ import pytest
 from datetime import datetime
 from typing import Any
 
-# Skip all integration tests unless explicitly requested
-pytestmark = pytest.mark.integration
-
-
 # =============================================================================
 # Integration Test Configuration
 # =============================================================================
 
 QDRANT_URL = os.environ.get("QDRANT_URL", "http://192.168.168.216:6333")
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://192.168.168.200:11434")
+
+
+def check_qdrant_available() -> bool:
+    """Check if Qdrant is accessible."""
+    import socket
+    try:
+        host = QDRANT_URL.replace("http://", "").replace("https://", "").split(":")[0]
+        port = int(QDRANT_URL.split(":")[-1])
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(2)
+        result = sock.connect_ex((host, port))
+        sock.close()
+        return result == 0
+    except Exception:
+        return False
+
+
+def check_ollama_available() -> bool:
+    """Check if Ollama is accessible."""
+    import socket
+    try:
+        host = OLLAMA_URL.replace("http://", "").replace("https://", "").split(":")[0]
+        port = int(OLLAMA_URL.split(":")[-1])
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(2)
+        result = sock.connect_ex((host, port))
+        sock.close()
+        return result == 0
+    except Exception:
+        return False
+
+
+# Skip if Qdrant or Ollama not available
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.skipif(
+        not check_qdrant_available(),
+        reason=f"Qdrant not accessible at {QDRANT_URL}"
+    ),
+    pytest.mark.skipif(
+        not check_ollama_available(),
+        reason=f"Ollama not accessible at {OLLAMA_URL}"
+    ),
+]
 TEST_COLLECTION = "test_mcp_integration"
 
 
@@ -151,9 +191,9 @@ class TestMCPServerIntegration:
         )
 
         assert result["success"] is True
-        # All results should be PRIVATE or WORLD scope
+        # All results should be user or world scope (lowercase values)
         for r in result["results"]:
-            assert r["scope"] in ["USER", "WORLD"], f"Unexpected scope: {r['scope']}"
+            assert r["scope"] in ["user", "world"], f"Unexpected scope: {r['scope']}"
 
 
 # =============================================================================

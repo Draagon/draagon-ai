@@ -13,8 +13,16 @@ from draagon_ai.tools import (
     MCPServerConfig,
 )
 
+# Check if mcp-server-fetch is installed
+try:
+    import mcp_server_fetch
+    MCP_FETCH_AVAILABLE = True
+except ImportError:
+    MCP_FETCH_AVAILABLE = False
+
 
 @pytest.mark.skipif(not MCP_AVAILABLE, reason="MCP package not installed")
+@pytest.mark.skipif(not MCP_FETCH_AVAILABLE, reason="mcp-server-fetch not installed")
 class TestMCPFetchServer:
     """Test MCP integration with mcp-server-fetch."""
 

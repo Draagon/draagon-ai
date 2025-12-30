@@ -556,7 +556,6 @@ class TestRoxyLayeredAdapterSearchWithSelfRag:
         )
 
         assert "results" in result
-        assert "relevant_count" in result
-        assert result["relevant_count"] == 1
+        assert len(result["results"]) == 1
         assert "contradictions" in result
         assert result["has_contradictions"] is False
