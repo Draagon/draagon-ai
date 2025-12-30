@@ -1,0 +1,35 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "draagon-ai-ext-security"
+version = "0.1.0"
+description = "Autonomous security monitoring extension for draagon-ai"
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "Doug" }]
+requires-python = ">=3.10"
+
+dependencies = [
+    "draagon-ai>=0.1.0",
+    "httpx>=0.25.0",
+    "aiofiles>=23.0.0",
+]
+
+[project.optional-dependencies]
+groq = ["groq>=0.4.0"]
+geoip = ["geoip2>=4.0.0"]
+all = [
+    "draagon-ai-ext-security[groq,geoip]",
+]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+]
+
+[project.entry-points."draagon_ai.extensions"]
+security-monitor = "draagon_ai_ext_security:SecurityMonitorExtension"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/draagon_ai_ext_security"]
