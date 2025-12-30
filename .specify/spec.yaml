@@ -1,0 +1,136 @@
+# draagon-ai/.specify/spec.yaml
+project:
+  name: draagon-ai
+  version: 0.1.0
+  description: Agentic AI framework for building cognitive assistants
+  type: Framework / Library
+
+metadata:
+  created: 2025-12-30
+  status: Active Development
+  phase: Core Architecture
+
+stakeholders:
+  product_owner: Doug Mealing
+  developers:
+    - framework: Python AI Framework Developer
+    - cognitive: Cognitive Architecture Specialist
+  users:
+    - primary: AI Application Developers
+    - secondary: Research Teams
+    - tertiary: Enterprise AI Teams
+
+components:
+  - name: Orchestration Engine
+    type: Core
+    technology: Python asyncio
+    modules:
+      - Agent Loop (ReAct pattern)
+      - Decision Engine
+      - Action Executor
+      - Multi-Agent Orchestrator
+
+  - name: Tool System
+    type: Core
+    technology: Python decorators + MCP
+    modules:
+      - "@tool decorator"
+      - Tool Registry
+      - MCP Client Integration
+
+  - name: Memory Architecture
+    type: Core
+    technology: 4-Layer Cognitive Memory
+    modules:
+      - Working Memory (5-min TTL, Miller's Law)
+      - Episodic Memory (2-week TTL)
+      - Semantic Memory (6-month TTL)
+      - Metacognitive Memory (permanent)
+
+  - name: Cognitive Services
+    type: Core
+    technology: LLM-First Architecture
+    modules:
+      - Learning Service
+      - Belief Reconciliation
+      - Curiosity Engine
+      - Opinion Formation
+
+  - name: Multi-Agent System
+    type: Advanced
+    technology: Cognitive Swarm Architecture
+    modules:
+      - Shared Working Memory
+      - Parallel Orchestration
+      - Transactive Memory
+      - Belief Reconciliation
+
+  - name: Prompt Evolution
+    type: Advanced
+    technology: Promptbreeder-style Optimization
+    modules:
+      - Genetic optimization
+      - Safety guards
+      - Overfitting prevention
+
+phases:
+  - phase: 0
+    name: Core Framework
+    status: Completed
+    goal: Establish foundational agent architecture
+    features:
+      - ReAct loop implementation
+      - Decision engine
+      - Action executor
+      - Tool registry
+      - 4-layer memory architecture
+      - Basic multi-agent sequential orchestration
+
+  - phase: 1
+    name: Cognitive Integration
+    status: In Progress
+    goal: Wire cognitive services into orchestration
+    features:
+      - "@tool decorator with discovery"
+      - Learning service integration
+      - Belief reconciliation
+      - Curiosity engine
+      - Opinion formation
+    success_criteria:
+      - Cognitive services integrated into ReAct loop
+      - Post-response learning extraction
+      - Belief-aware decisions
+
+  - phase: 2
+    name: Cognitive Swarm Architecture
+    status: Planned
+    goal: Enable parallel cognitive multi-agent systems
+    features:
+      - Shared Cognitive Working Memory
+      - Parallel Execution with Coordination
+      - Multi-Agent Belief Reconciliation
+      - Transactive Memory System
+      - Metacognitive Reflection
+    success_criteria:
+      - Beat MultiAgentBench Werewolf (55%+ vs 36% SOTA)
+      - Beat MemoryAgentBench Conflict Resolution (75%+ vs 50% SOTA)
+      - Expertise routing accuracy >85%
+
+  - phase: 3
+    name: Production Hardening
+    status: Future
+    goal: Production-ready framework
+    features:
+      - Comprehensive test suite
+      - Performance optimization
+      - Documentation
+      - PyPI distribution
+    success_criteria:
+      - 90%+ test coverage
+      - Sub-100ms decision latency
+      - Complete API documentation
+
+reference_implementation:
+  name: Roxy Voice Assistant
+  location: "../roxy-voice-assistant/"
+  purpose: Production voice assistant for Home Assistant
