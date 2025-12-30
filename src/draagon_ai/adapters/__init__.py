@@ -1,118 +1,89 @@
-"""Adapters for integrating draagon-ai with various applications.
+"""Adapters module - patterns for integrating applications with draagon-ai.
 
-This module provides adapter implementations and base protocols that applications
-can use to bridge their existing services with draagon-ai's cognitive framework.
+This module documents adapter patterns that applications can use to integrate
+with draagon-ai's cognitive framework. Applications should implement these
+patterns in their own codebase, not in draagon-ai.
 
-Built-in Adapters:
-    - RoxyLayeredAdapter: Allows Roxy voice assistant to use LayeredMemoryProvider
+Adapter Patterns:
+-----------------
 
-Adapter Patterns (for custom implementations):
-    - LLMAdapter: Wrap your LLM service to implement draagon_ai.llm.LLMProvider
-    - MemoryAdapter: Wrap your memory service to implement MemoryProvider
-    - ToolAdapter: Wrap your tool executor to implement ToolProvider
+1. LLM Provider Adapter:
+   Implement draagon_ai.llm.LLMProvider to wrap your LLM service.
 
-Example (Roxy integration):
-    from draagon_ai.adapters import RoxyLayeredAdapter
-    from draagon_ai.memory.providers import LayeredMemoryProvider, LayeredMemoryConfig
+   Example:
+       from draagon_ai.llm import LLMProvider, ChatResponse, ModelTier
 
-    config = LayeredMemoryConfig(qdrant_url="http://localhost:6333")
-    provider = LayeredMemoryProvider(config=config, embedding_provider=embedder)
-    await provider.initialize()
+       class MyLLMProvider(LLMProvider):
+           def __init__(self, my_llm_service):
+               self._llm = my_llm_service
 
-    # Drop-in replacement for Roxy's MemoryService
-    memory_adapter = RoxyLayeredAdapter(provider)
-    result = await memory_adapter.store(content="...", user_id="doug")
+           async def chat(self, messages, *, tier=ModelTier.LOCAL, **kwargs) -> ChatResponse:
+               result = await self._llm.complete(messages)
+               return ChatResponse(content=result.text)
 
-Example (custom adapter):
-    from draagon_ai.llm import LLMProvider, ChatMessage, ChatResponse
-    from your_app.services.llm import YourLLMService
+2. Memory Provider Adapter:
+   Use draagon_ai.memory.LayeredMemoryProvider directly, or implement
+   draagon_ai.memory.MemoryProvider for custom backends.
 
-    class YourLLMAdapter(LLMProvider):
-        def __init__(self, llm_service: YourLLMService):
-            self._llm = llm_service
+   Example:
+       from draagon_ai.memory import LayeredMemoryProvider, LayeredMemoryConfig
 
-        async def chat(self, messages: list[ChatMessage], **kwargs) -> ChatResponse:
-            # Convert and call your service
-            ...
+       config = LayeredMemoryConfig(qdrant_url="http://localhost:6333")
+       memory = LayeredMemoryProvider(config=config, embedding_provider=my_embedder)
+       await memory.initialize()
+
+3. Credibility Provider Adapter:
+   Implement draagon_ai.cognition.beliefs.CredibilityProvider for user trust.
+
+   Example:
+       from draagon_ai.cognition.beliefs import CredibilityProvider
+
+       class MyCredibilityProvider(CredibilityProvider):
+           def get_user_credibility(self, user_id: str) -> float | None:
+               return self._user_service.get_trust_score(user_id)
+
+4. Tool Provider Adapter:
+   Use draagon_ai.orchestration.Tool directly to define tools.
+
+   Example:
+       from draagon_ai.orchestration import Tool, ToolParameter
+
+       tools = [
+           Tool(
+               name="get_weather",
+               description="Get current weather",
+               handler=my_weather_handler,
+               parameters=[
+                   ToolParameter(name="location", type="string", required=True),
+               ],
+           ),
+       ]
+
+5. Extension Integration:
+   Create custom extensions by subclassing draagon_ai.extensions.Extension.
+
+   Example:
+       from draagon_ai.extensions import Extension, ExtensionInfo
+
+       class MyExtension(Extension):
+           @property
+           def info(self) -> ExtensionInfo:
+               return ExtensionInfo(name="my_extension", version="1.0.0")
+
+           def get_tools(self) -> list[Tool]:
+               return [...]
+
+Reference Implementation:
+------------------------
+See the Roxy voice assistant (github.com/dmealing/roxy-voice-assistant)
+for a complete reference implementation showing how to:
+- Implement LLMProvider with multi-tier model routing
+- Add domain-specific extensions (Home Assistant, Calendar)
+- Create custom tools
+- Implement CredibilityProvider with multi-dimensional tracking
 """
 
-from draagon_ai.adapters.roxy import (
-    RoxyLayeredAdapter,
-    RoxyMemoryType,
-    RoxyMemoryScope,
-    ROXY_TYPE_MAPPING,
-    ROXY_SCOPE_MAPPING,
-)
+# No exports - this module documents patterns, doesn't provide implementations.
+# Applications implement these patterns in their own codebase.
 
-from draagon_ai.adapters.roxy_orchestration import (
-    RoxyOrchestrationAdapter,
-    RoxyToolDefinition,
-    RoxyResponse,
-    ToolCallInfo,
-    DebugInfo,
-    create_roxy_orchestration_adapter,
-)
-
-from draagon_ai.adapters.roxy_cognition import (
-    RoxyBeliefAdapter,
-    RoxyCuriosityAdapter,
-    RoxyIdentityAdapter,
-    RoxyLLMAdapter,
-    RoxyMemoryAdapter,
-    RoxyCredibilityAdapter,
-    RoxyOpinionAdapter,
-    RoxyTraitAdapter,
-    RoxyLLMService,
-    RoxyMemoryService,
-    RoxyUserService,
-    RoxySelfManager,
-    # REQ-003-04: Learning service adapters
-    RoxySearchService,
-    RoxyFullUserService,
-    RoxySearchAdapter,
-    RoxyLearningCredibilityAdapter,
-    RoxyUserProviderAdapter,
-    RoxyLearningAdapter,
-    # REQ-003-05: Identity manager adapters
-    RoxyIdentityStorageAdapter,
-    RoxyFullIdentityAdapter,
-)
-
-__all__ = [
-    # Memory adapter (REQ-001-05)
-    "RoxyLayeredAdapter",
-    "RoxyMemoryType",
-    "RoxyMemoryScope",
-    "ROXY_TYPE_MAPPING",
-    "ROXY_SCOPE_MAPPING",
-    # Orchestration adapter (REQ-002-06)
-    "RoxyOrchestrationAdapter",
-    "RoxyToolDefinition",
-    "RoxyResponse",
-    "ToolCallInfo",
-    "DebugInfo",
-    "create_roxy_orchestration_adapter",
-    # Cognition adapters (REQ-003-01, REQ-003-02, REQ-003-03)
-    "RoxyBeliefAdapter",
-    "RoxyCuriosityAdapter",
-    "RoxyIdentityAdapter",
-    "RoxyLLMAdapter",
-    "RoxyMemoryAdapter",
-    "RoxyCredibilityAdapter",
-    "RoxyOpinionAdapter",
-    "RoxyTraitAdapter",
-    "RoxyLLMService",
-    "RoxyMemoryService",
-    "RoxyUserService",
-    "RoxySelfManager",
-    # Learning adapters (REQ-003-04)
-    "RoxySearchService",
-    "RoxyFullUserService",
-    "RoxySearchAdapter",
-    "RoxyLearningCredibilityAdapter",
-    "RoxyUserProviderAdapter",
-    "RoxyLearningAdapter",
-    # Identity adapters (REQ-003-05)
-    "RoxyIdentityStorageAdapter",
-    "RoxyFullIdentityAdapter",
-]
+__all__: list[str] = []

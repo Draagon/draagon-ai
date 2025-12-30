@@ -1,4 +1,4 @@
-"""Main agent loop with Roxy patterns.
+"""Main agent loop for voice assistant orchestration.
 
 This module provides the core agent loop that orchestrates:
 - Fast-path routing for common queries
