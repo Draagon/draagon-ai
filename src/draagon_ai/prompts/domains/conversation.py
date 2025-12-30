@@ -53,14 +53,16 @@ Sometimes users combine modes. For example:
 - "My team lost and I'm bummed" = support (primary) + casual (secondary)
 - "I'm trying to figure out how databases work" = learning (primary) + brainstorm (secondary)
 
-Output JSON:
-{{
-  "mode": "task|brainstorm|support|casual|learning",
-  "secondary_modes": ["optional", "additional", "modes"],
-  "confidence": 0.0-1.0,
-  "exit_detected": true|false,
-  "reasoning": "brief explanation"
-}}
+Output XML:
+<mode_detection>
+    <mode>task | brainstorm | support | casual | learning</mode>
+    <secondary_modes>
+        <mode>optional additional mode</mode>
+    </secondary_modes>
+    <confidence>0.0-1.0</confidence>
+    <exit_detected>true or false</exit_detected>
+    <reasoning>brief explanation</reasoning>
+</mode_detection>
 
 Rules:
 - Default to "task" if unclear (confidence < 0.5)

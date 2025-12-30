@@ -33,13 +33,20 @@ TIME PARSING RULES:
 - "night" = 20:00
 - If no time given, assume all-day event
 
-Output JSON:
-{{"summary":"event title","start_date":"YYYY-MM-DD","start_time":"HH:MM or null","end_time":"HH:MM or null","location":"location or null","description":"details or null","all_day":true/false}}
+Output XML:
+<event>
+    <summary>event title</summary>
+    <start_date>YYYY-MM-DD</start_date>
+    <start_time>HH:MM or empty</start_time>
+    <end_time>HH:MM or empty</end_time>
+    <location>location or empty</location>
+    <description>details or empty</description>
+    <all_day>true or false</all_day>
+</event>
 
 Examples:
-- "Taylor Swift concert Saturday at 7pm" -> {{"summary":"Taylor Swift concert","start_date":"2025-12-06","start_time":"19:00","end_time":"22:00","location":null,"description":null,"all_day":false}}
-- "Dentist appointment tomorrow at 2:30pm" -> {{"summary":"Dentist appointment","start_date":"2025-12-06","start_time":"14:30","end_time":"15:30","location":null,"description":null,"all_day":false}}
-- "Mom's birthday December 15" -> {{"summary":"Mom's birthday","start_date":"2025-12-15","start_time":null,"end_time":null,"location":null,"description":null,"all_day":true}}"""
+- "Taylor Swift concert Saturday at 7pm" -> <event><summary>Taylor Swift concert</summary><start_date>2025-12-06</start_date><start_time>19:00</start_time><end_time>22:00</end_time><all_day>false</all_day></event>
+- "Mom's birthday December 15" -> <event><summary>Mom's birthday</summary><start_date>2025-12-15</start_date><all_day>true</all_day></event>"""
 
 
 EVENT_DETAILS_PROMPT = """Extract detailed event information from search results.
@@ -63,8 +70,18 @@ Extract as much detail as possible:
 If information is not found in the search results, use null.
 If multiple dates are mentioned, pick the one closest to today that hasn't passed.
 
-Output JSON:
-{{"full_name":"event name","date":"YYYY-MM-DD","start_time":"HH:MM or null","end_time":"HH:MM or null","venue_name":"venue","venue_address":"address or null","ticket_url":"url or null","description":"summary","price":"price or null"}}"""
+Output XML:
+<event_details>
+    <full_name>event name</full_name>
+    <date>YYYY-MM-DD</date>
+    <start_time>HH:MM or empty</start_time>
+    <end_time>HH:MM or empty</end_time>
+    <venue_name>venue</venue_name>
+    <venue_address>address or empty</venue_address>
+    <ticket_url>url or empty</ticket_url>
+    <description>summary</description>
+    <price>price or empty</price>
+</event_details>"""
 
 
 CALENDAR_PROMPTS = {

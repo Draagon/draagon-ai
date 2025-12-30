@@ -224,8 +224,11 @@ EVALUATION CRITERIA:
 2. Was the response helpful and accurate?
 3. Would the user be satisfied with this response?
 
-OUTPUT JSON only:
-{{"score": 0.0-1.0, "reasoning": "brief explanation"}}"""
+OUTPUT XML:
+<evaluation>
+  <score>0.0-1.0</score>
+  <reasoning>brief explanation</reasoning>
+</evaluation>"""
 
     def __init__(
         self,

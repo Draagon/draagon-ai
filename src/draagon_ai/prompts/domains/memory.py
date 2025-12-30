@@ -42,16 +42,21 @@ Create a brief summary that captures:
 Keep it to 2-3 sentences maximum. Focus on information that would be useful to remember later.
 Also extract a list of topics (short keywords) for categorization.
 
-Output JSON:
-{{"summary":"Brief 2-3 sentence summary of the conversation","topics":["topic1","topic2","topic3"]}}
+Output XML:
+<episode>
+    <summary>Brief 2-3 sentence summary of the conversation</summary>
+    <topics>
+        <topic>topic1</topic>
+        <topic>topic2</topic>
+        <topic>topic3</topic>
+    </topics>
+</episode>
 
 Examples:
 - User asked about weather, then scheduled a dentist appointment
-  -> {{"summary":"Checked weather conditions (72F, sunny). Dentist appointment scheduled for tomorrow at 2pm.","topics":["weather","calendar","appointment"]}}
-- User checked on smart home devices and asked about their schedule
-  -> {{"summary":"Living room lights status: on. Calendar has meeting at 3pm.","topics":["smart-home","lights","calendar"]}}
+  -> <episode><summary>Checked weather conditions (72F, sunny). Dentist appointment scheduled for tomorrow at 2pm.</summary><topics><topic>weather</topic><topic>calendar</topic><topic>appointment</topic></topics></episode>
 - User shared family information
-  -> {{"summary":"Sarah is user's sister, works at Acme Corp in Seattle. Maya is user's daughter, age 8.","topics":["family","Sarah","Maya"]}}"""
+  -> <episode><summary>Sarah is user's sister, works at Acme Corp in Seattle. Maya is user's daughter, age 8.</summary><topics><topic>family</topic><topic>Sarah</topic><topic>Maya</topic></topics></episode>"""
 
 
 GRAPH_QUERY_GENERATION_PROMPT = """You are a knowledge graph query generator for the assistant's memory system.
@@ -139,12 +144,12 @@ OPTIONS:
 2. **query_again** - You need more information, generate another graph query
 3. **insufficient_data** - The knowledge graph doesn't contain the information needed
 
-Return JSON:
-{{
-  "action": "answer|query_again|insufficient_data",
-  "reasoning": "brief explanation",
-  "answer": "natural language answer (only if action=answer)"
-}}"""
+Return XML:
+<result>
+  <action>answer|query_again|insufficient_data</action>
+  <reasoning>brief explanation</reasoning>
+  <answer>natural language answer (only if action=answer)</answer>
+</result>"""
 
 
 PROPOSE_RELATIONSHIP_TYPE_PROMPT = """You are helping to expand the assistant's relationship vocabulary.
@@ -157,21 +162,21 @@ EXISTING VOCABULARY CATEGORIES: {categories}
 
 Should this be added as a new relationship type?
 
-If YES, provide:
-{{
-  "should_add": true,
-  "name": "RELATIONSHIP_NAME",  // uppercase, snake_case
-  "inverse": "INVERSE_NAME",     // optional, null if none
-  "category": "category",        // family, professional, social, possession, location, knowledge, meta
-  "symmetric": false,            // true if relationship is bidirectional (e.g., SIBLING_OF)
-  "description": "brief description"
-}}
+If YES, provide XML:
+<relationship>
+  <should_add>true</should_add>
+  <name>RELATIONSHIP_NAME</name>
+  <inverse>INVERSE_NAME (or empty if none)</inverse>
+  <category>family|professional|social|possession|location|knowledge|meta</category>
+  <symmetric>false (true if relationship is bidirectional)</symmetric>
+  <description>brief description</description>
+</relationship>
 
 If NO (relationship is too vague, already covered, or not useful):
-{{
-  "should_add": false,
-  "reasoning": "why not"
-}}"""
+<relationship>
+  <should_add>false</should_add>
+  <reasoning>why not</reasoning>
+</relationship>"""
 
 
 META_KNOWLEDGE_EXTRACTION_PROMPT = """You are extracting meta-knowledge about a voice assistant.
@@ -199,18 +204,17 @@ META_KNOWLEDGE_EXTRACTION_PROMPT = """You are extracting meta-knowledge about a 
 4. For services, use the service name (not URLs)
 5. Confidence 0.9 for explicit statements, 0.7 for implied
 
-**Output JSON array of relationships (empty array if none found):**
-[
-  {{
-    "subject": "assistant",
-    "predicate": "USES_SERVICE",
-    "object": "qdrant",
-    "confidence": 0.9,
-    "metadata": {{}}  // optional extra info
-  }}
-]
+**Output XML relationships (empty relationships element if none found):**
+<relationships>
+    <relationship>
+        <subject>assistant</subject>
+        <predicate>USES_SERVICE</predicate>
+        <object>qdrant</object>
+        <confidence>0.9</confidence>
+    </relationship>
+</relationships>
 
-Output ONLY valid JSON array, no explanation."""
+Output ONLY valid XML, no explanation."""
 
 
 MEMORY_PROMPTS = {

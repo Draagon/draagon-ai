@@ -703,82 +703,28 @@ class DecisionEngine:
                         validation_notes="Matched action pattern in text",
                     )
 
-        # Check for tool action keywords in content
+        # Check for tool action keywords in content (exact keyword matching, not semantic)
+        # This is acceptable because we're matching exact tool names the LLM mentioned,
+        # not trying to infer intent from user language
+        valid_action_names = {a.name.lower() for a in behavior.actions}
         for tool_action in tool_actions:
             # Use word boundaries to avoid partial matches
             if re.search(rf'\b{tool_action}\b', content_lower):
                 # Verify this action exists in behavior
-                valid_action_names = {a.name.lower() for a in behavior.actions}
                 if tool_action in valid_action_names:
                     return DecisionResult(
                         action=tool_action,
                         answer=content,
                         confidence=0.5,
                         reasoning=f"Detected tool action keyword: {tool_action}",
-                        validation_notes="Matched tool action keyword",
+                        validation_notes="Matched tool action keyword in LLM response",
                     )
 
-        # Check for time-related queries that should use get_time
-        # Check BOTH the original query AND the LLM content
-        time_patterns = [
-            r'\bwhat\s+time\b',
-            r'\bwhat\'?s\s+the\s+time\b',
-            r'\bcurrent\s+time\b',
-            r'\btime\s+(?:is\s+)?it\b',
-            r'\btell\s+(?:me\s+)?the\s+time\b',
-        ]
-        for pattern in time_patterns:
-            # Prioritize query-based matching (user's actual question)
-            if re.search(pattern, query_lower) or re.search(pattern, content_lower):
-                valid_action_names = {a.name.lower() for a in behavior.actions}
-                if "get_time" in valid_action_names:
-                    return DecisionResult(
-                        action="get_time",
-                        answer=content,
-                        confidence=0.8,  # Higher confidence when query matches
-                        reasoning="Inferred get_time from time query",
-                        validation_notes="Query requires get_time tool",
-                    )
-
-        # Check for weather-related queries that should use get_weather
-        weather_patterns = [
-            r'\bwhat\'?s?\s+(?:the\s+)?weather\b',
-            r'\bhow\'?s?\s+(?:the\s+)?weather\b',
-            r'\bcurrent\s+(?:temperature|weather)\b',
-            r'\bweather\s+(?:like|today|now)\b',
-        ]
-        for pattern in weather_patterns:
-            # Prioritize query-based matching (user's actual question)
-            if re.search(pattern, query_lower) or re.search(pattern, content_lower):
-                valid_action_names = {a.name.lower() for a in behavior.actions}
-                if "get_weather" in valid_action_names:
-                    return DecisionResult(
-                        action="get_weather",
-                        answer=content,
-                        confidence=0.8,  # Higher confidence when query matches
-                        reasoning="Inferred get_weather from weather query",
-                        validation_notes="Query requires get_weather tool",
-                    )
-
-        # Check for calendar creation queries that should use create_calendar_event
-        calendar_create_patterns = [
-            r'\badd\b.*\b(?:to\s+)?(?:my\s+)?calendar\b',
-            r'\bput\b.*\b(?:on\s+)?(?:my\s+)?calendar\b',
-            r'\bschedule\b.*\b(?:appointment|meeting|event)\b',
-            r'\bcreate\b.*\b(?:calendar\s+)?event\b',
-            r'\badd\b.*\b(?:appointment|meeting|event)\b',
-        ]
-        for pattern in calendar_create_patterns:
-            if re.search(pattern, query_lower):
-                valid_action_names = {a.name.lower() for a in behavior.actions}
-                if "create_calendar_event" in valid_action_names:
-                    return DecisionResult(
-                        action="create_calendar_event",
-                        answer=content,
-                        confidence=0.8,
-                        reasoning="Inferred create_calendar_event from calendar creation query",
-                        validation_notes="Query requires create_calendar_event tool",
-                    )
+        # NOTE: Semantic intent detection (time/weather/calendar patterns) has been
+        # intentionally removed. Using regex to infer user intent violates the
+        # LLM-first architecture principle. The LLM decision prompt should determine
+        # the action; if it produces unstructured output, we fall back to "answer".
+        # See CLAUDE.md: "NEVER use regex or keyword patterns for semantic understanding"
 
         # Default fallback: answer action
         # Lower confidence because we couldn't determine the action

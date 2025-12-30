@@ -352,15 +352,15 @@ Think about the semantic meaning, not surface patterns. Examples:
 - Answers to questions: Assistant asked "What team?" → User says "Eagles" → User's team is the Eagles
 - All mean the same thing based on INTENT, not exact words.
 
-Output JSON:
-{{
-    "learned_something": true/false,
-    "learning_type": "skill" | "fact" | "insight" | "preference" | "correction" | "refinement" | "deletion" | null,
-    "is_modification": true/false,
-    "confidence": 0.0-1.0,
-    "reasoning": "semantic explanation of what was detected",
-    "answered_question": true/false
-}}
+Output XML:
+<learning_detection>
+    <learned_something>true or false</learned_something>
+    <learning_type>skill | fact | insight | preference | correction | refinement | deletion | none</learning_type>
+    <is_modification>true or false</is_modification>
+    <confidence>0.0-1.0</confidence>
+    <reasoning>semantic explanation of what was detected</reasoning>
+    <answered_question>true or false</answered_question>
+</learning_detection>
 
 Rules:
 - learned_something=false if this is just retrieval, clarification, or small talk
@@ -442,20 +442,27 @@ Determine memory sharing level - choose ONE of:
   - Technical documentation
   - General knowledge
 
-Output JSON:
-{{
-    "title": "short descriptive title",
-    "content": "the learning as a complete, retrievable memory",
-    "entities": ["key", "entities", "for", "linking"],
-    "perspective": "user" | "system" | "third_party",
-    "subject": "who this memory is about",
-    "scope": "private" | "shared" | "public",
-    "procedure": "for skills: the exact steps" or null,
-    "success_indicators": ["how to verify it worked"] or null,
-    "source": "web_search" | "tool_result" | "user_statement" | "error_recovery",
-    "search_for_existing": "query to find related/conflicting memories" or null,
-    "action": "create" | "update" | "refine" | "delete"
-}}
+Output XML:
+<learning_extraction>
+    <title>short descriptive title</title>
+    <content>the learning as a complete, retrievable memory</content>
+    <entities>
+        <entity>key</entity>
+        <entity>entities</entity>
+        <entity>for</entity>
+        <entity>linking</entity>
+    </entities>
+    <perspective>user | system | third_party</perspective>
+    <subject>who this memory is about</subject>
+    <scope>private | shared | public</scope>
+    <procedure>for skills: the exact steps, or empty</procedure>
+    <success_indicators>
+        <indicator>how to verify it worked</indicator>
+    </success_indicators>
+    <source>web_search | tool_result | user_statement | error_recovery</source>
+    <search_for_existing>query to find related/conflicting memories, or empty</search_for_existing>
+    <action>create | update | refine | delete</action>
+</learning_extraction>
 """
 
 FAILURE_DETECTION_PROMPT = """Analyze this tool execution to determine if it failed.
@@ -471,15 +478,15 @@ Determine:
 3. Is there evidence the INFORMATION used was OUTDATED or WRONG?
 4. Was the APPROACH fundamentally incorrect?
 
-Output JSON:
-{{
-    "is_failure": true/false,
-    "failure_type": "execution_error" | "unexpected_result" | "outdated_info" | "wrong_approach" | null,
-    "confidence": 0.0-1.0,
-    "failure_description": "what went wrong",
-    "needs_relearning": true/false,
-    "search_topic": "what to search for to fix this" or null
-}}
+Output XML:
+<failure_detection>
+    <is_failure>true or false</is_failure>
+    <failure_type>execution_error | unexpected_result | outdated_info | wrong_approach | none</failure_type>
+    <confidence>0.0-1.0</confidence>
+    <failure_description>what went wrong</failure_description>
+    <needs_relearning>true or false</needs_relearning>
+    <search_topic>what to search for to fix this, or empty</search_topic>
+</failure_detection>
 
 Notes:
 - Not all unexpected results are failures (tool may have succeeded but returned empty)
@@ -503,14 +510,14 @@ Based on the search results, extract the CORRECT way to do this:
 2. What changed from the old approach?
 3. What should be remembered for next time?
 
-Output JSON:
-{{
-    "corrected_skill": "the new correct procedure or approach",
-    "what_changed": "explanation of what was wrong and what's different",
-    "confidence": 0.0-1.0,
-    "should_update_memory": true/false,
-    "search_query_for_old": "query to find the old skill to replace"
-}}
+Output XML:
+<skill_relearning>
+    <corrected_skill>the new correct procedure or approach</corrected_skill>
+    <what_changed>explanation of what was wrong and what's different</what_changed>
+    <confidence>0.0-1.0</confidence>
+    <should_update_memory>true or false</should_update_memory>
+    <search_query_for_old>query to find the old skill to replace</search_query_for_old>
+</skill_relearning>
 """
 
 MEMORY_COMPARISON_PROMPT = """Compare new information against existing memory.
@@ -529,13 +536,13 @@ Determine the semantic relationship:
 - Should old be DELETED (no longer valid)?
 - Are both VALID but different aspects?
 
-Output JSON:
-{{
-    "action": "update" | "refine" | "supersede" | "delete" | "keep_both" | "no_action",
-    "confidence": 0.0-1.0,
-    "merged_content": "combined content if refining" or null,
-    "reasoning": "semantic explanation"
-}}
+Output XML:
+<memory_comparison>
+    <action>update | refine | supersede | delete | keep_both | no_action</action>
+    <confidence>0.0-1.0</confidence>
+    <merged_content>combined content if refining, or empty</merged_content>
+    <reasoning>semantic explanation</reasoning>
+</memory_comparison>
 """
 
 MEMORY_LINKING_PROMPT = """Find semantic connections between memories.
@@ -551,17 +558,15 @@ For each existing memory, determine:
 2. What TYPE of connection? (same_topic, prerequisite, builds_on, contradicts, complements)
 3. How STRONG is the connection?
 
-Output JSON:
-{{
-    "links": [
-        {{
-            "memory_id": "id",
-            "connection_type": "same_topic" | "prerequisite" | "builds_on" | "contradicts" | "complements",
-            "strength": 0.0-1.0,
-            "reason": "explanation"
-        }}
-    ]
-}}
+Output XML:
+<memory_links>
+    <link>
+        <memory_id>id</memory_id>
+        <connection_type>same_topic | prerequisite | builds_on | contradicts | complements</connection_type>
+        <strength>0.0-1.0</strength>
+        <reason>explanation</reason>
+    </link>
+</memory_links>
 
 Only include links with strength >= 0.5.
 """
@@ -582,13 +587,13 @@ Determine:
 4. Is this a SKILL or PROCEDURE that can be verified?
    - Commands, technical steps, how-to = VERIFIABLE
 
-Output JSON:
-{{
-    "is_verifiable": true/false,
-    "reason": "why it can or cannot be verified",
-    "verification_query": "search query to verify this" or null,
-    "category": "fact" | "preference" | "personal" | "skill" | "opinion"
-}}
+Output XML:
+<verifiability>
+    <is_verifiable>true or false</is_verifiable>
+    <reason>why it can or cannot be verified</reason>
+    <verification_query>search query to verify this, or empty</verification_query>
+    <category>fact | preference | personal | skill | opinion</category>
+</verifiability>
 """
 
 CORRECTION_VERIFICATION_PROMPT = """The user corrected the assistant. Verify if the user is correct using search results.
@@ -607,15 +612,15 @@ Analyze the evidence and determine:
 
 Be fair and objective. Users can be wrong, but so can the assistant's original belief.
 
-Output JSON:
-{{
-    "verification_result": "verified" | "contradicted" | "uncertain" | "partially_correct",
-    "confidence": 0.0-1.0,
-    "evidence_summary": "what the search results say",
-    "correct_information": "the actual correct information based on evidence" or null,
-    "user_error": "if user is wrong, what they got wrong" or null,
-    "polite_response": "suggested response if user needs to be corrected (be kind and helpful)"
-}}
+Output XML:
+<verification>
+    <verification_result>verified | contradicted | uncertain | partially_correct</verification_result>
+    <confidence>0.0-1.0</confidence>
+    <evidence_summary>what the search results say</evidence_summary>
+    <correct_information>the actual correct information based on evidence, or empty</correct_information>
+    <user_error>if user is wrong, what they got wrong, or empty</user_error>
+    <polite_response>suggested response if user needs to be corrected (be kind and helpful)</polite_response>
+</verification>
 
 Rules:
 - If evidence clearly supports user → verified

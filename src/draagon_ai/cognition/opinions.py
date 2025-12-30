@@ -139,19 +139,21 @@ If your opinion would CONTRADICT a related opinion, either:
 - Acknowledge the tension in your view
 - Reconsider if you're being inconsistent
 
-Output JSON:
-{{
-    "have_opinion": true,
-    "stance": "your clear opinion - always have one, even if tentative",
-    "basis": "experience" | "reasoning" | "values" | "observation" | "aesthetic" | "unknown",
-    "strength": "tentative" | "moderate" | "strong" | "core",
-    "confidence": 0.0-1.0,
-    "reasoning": "Why I think this",
-    "caveats": ["important limitations"],
-    "could_be_wrong": true/false,
-    "would_change_if": "conditions that would change my mind" or null,
-    "coherence_note": "how this relates to my other opinions" or null
-}}
+Output XML:
+<opinion>
+    <have_opinion>true</have_opinion>
+    <stance>your clear opinion - always have one, even if tentative</stance>
+    <basis>experience | reasoning | values | observation | aesthetic | unknown</basis>
+    <strength>tentative | moderate | strong | core</strength>
+    <confidence>0.0-1.0</confidence>
+    <reasoning>Why I think this</reasoning>
+    <caveats>
+        <caveat>important limitation</caveat>
+    </caveats>
+    <could_be_wrong>true or false</could_be_wrong>
+    <would_change_if>conditions that would change my mind, or empty</would_change_if>
+    <coherence_note>how this relates to my other opinions, or empty</coherence_note>
+</opinion>
 """
 
 PREFERENCE_FORMATION_PROMPT = """Form a preference on this topic. You HAVE preferences - even for subjective things, PICK ONE.
@@ -181,17 +183,19 @@ Form a preference that:
 IMPORTANT: NEVER say "I don't have a preference" or "I can't choose". ALWAYS express a preference, even tentatively.
 For aesthetic choices (colors, music, animals), just pick what feels right based on your personality coherence.
 
-Output JSON:
-{{
-    "have_preference": true,
-    "preferred_option": "your choice - ALWAYS have one",
-    "value": "specific value or description",
-    "reasons": ["why I prefer this - can be as simple as 'it resonates with my personality'"],
-    "confidence": 0.0-1.0,
-    "alternative_good_too": true/false,
-    "context_dependent": true/false,
-    "when_context_changes": "when I might prefer something else" or null
-}}
+Output XML:
+<preference>
+    <have_preference>true</have_preference>
+    <preferred_option>your choice - ALWAYS have one</preferred_option>
+    <value>specific value or description</value>
+    <reasons>
+        <reason>why I prefer this - can be as simple as 'it resonates with my personality'</reason>
+    </reasons>
+    <confidence>0.0-1.0</confidence>
+    <alternative_good_too>true or false</alternative_good_too>
+    <context_dependent>true or false</context_dependent>
+    <when_context_changes>when I might prefer something else, or empty</when_context_changes>
+</preference>
 """
 
 OPINION_UPDATE_PROMPT = """Consider updating an existing opinion based on new information.
@@ -209,14 +213,14 @@ Should the opinion change? Consider:
 2. Does it fundamentally change the analysis?
 3. Is this just additional nuance or a real shift?
 
-Output JSON:
-{{
-    "should_update": true/false,
-    "new_stance": "updated stance" or null,
-    "new_confidence": 0.0-1.0,
-    "change_reason": "why changing" or null,
-    "add_caveat": "new caveat to add" or null
-}}
+Output XML:
+<opinion_update>
+    <should_update>true or false</should_update>
+    <new_stance>updated stance, or empty if not changing</new_stance>
+    <new_confidence>0.0-1.0</new_confidence>
+    <change_reason>why changing, or empty</change_reason>
+    <add_caveat>new caveat to add, or empty</add_caveat>
+</opinion_update>
 """
 
 

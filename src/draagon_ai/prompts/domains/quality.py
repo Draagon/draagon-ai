@@ -40,15 +40,17 @@ REFLECTION_PROMPT = """You are a voice assistant quality checker. Review this re
 - 2 = Problems that need fixing
 - 1 = Unusable, must regenerate
 
-**Output JSON:**
-{{
-  "score": <1-5>,
-  "issues": ["list of specific issues, empty if none"],
-  "improved": "<improved response if score < 4, otherwise null>"
-}}
+**Output XML:**
+<quality_assessment>
+    <score>1-5</score>
+    <issues>
+        <issue>specific issue if any</issue>
+    </issues>
+    <improved>improved response if score less than 4, empty otherwise</improved>
+</quality_assessment>
 
 **Rules:**
-- If score >= 4, set improved to null (use original)
+- If score >= 4, leave improved empty (use original)
 - If score < 4, provide a concrete improved response
 - Keep improved response under 40 words
 - Be concise in issues list
@@ -57,19 +59,15 @@ REFLECTION_PROMPT = """You are a voice assistant quality checker. Review this re
 
 Query: "What's today's date?"
 Response: "It's 2:30 PM."
--> {{"score": 1, "issues": ["Does not answer the question - asked for date, gave time"], "improved": "Today is Monday, December 23rd."}}
+-> <quality_assessment><score>1</score><issues><issue>Does not answer the question - asked for date, gave time</issue></issues><improved>Today is Monday, December 23rd.</improved></quality_assessment>
 
 Query: "Turn on the lights"
 Response: "Done."
--> {{"score": 5, "issues": [], "improved": null}}
-
-Query: "What's the capital of France?"
-Response: "The capital of France, which is a country located in Western Europe, is Paris, which has been the capital since the 10th century and is known for many landmarks including the Eiffel Tower."
--> {{"score": 2, "issues": ["Too verbose for voice - 40 words when 4 would do"], "improved": "Paris."}}
+-> <quality_assessment><score>5</score></quality_assessment>
 
 Query: "How are you?"
-Response: "I don't have feelings or emotions as I am an artificial intelligence, but I am functioning within normal parameters."
--> {{"score": 2, "issues": ["Robotic tone", "Unnecessary AI disclaimers"], "improved": "I'm doing great, thanks for asking!"}}"""
+Response: "I don't have feelings or emotions as I am an artificial intelligence..."
+-> <quality_assessment><score>2</score><issues><issue>Robotic tone</issue><issue>Unnecessary AI disclaimers</issue></issues><improved>I'm doing great, thanks for asking!</improved></quality_assessment>"""
 
 
 QUALITY_PROMPTS = {

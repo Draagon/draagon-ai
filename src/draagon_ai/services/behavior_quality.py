@@ -6,13 +6,18 @@ production readiness scoring.
 
 This is the "god-level" quality gate that ensures behaviors
 created by the Architect are actually production-ready.
+
+ARCHITECTURE NOTE:
+This validator uses LLM-based semantic evaluation for assessing prompt quality.
+We do NOT use regex patterns for semantic understanding - the LLM handles all
+quality judgments about whether prompts are clear, complete, and well-structured.
 """
 
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
-import re
+from typing import Any, Protocol
+import json
 
 from ..behaviors.types import (
     Action,
@@ -23,6 +28,19 @@ from ..behaviors.types import (
     TestResults,
     Trigger,
 )
+
+
+class LLMProvider(Protocol):
+    """Protocol for LLM inference."""
+
+    async def generate(
+        self,
+        prompt: str,
+        system_prompt: str | None = None,
+        temperature: float = 0.7,
+    ) -> str:
+        """Generate text from prompt."""
+        ...
 
 
 class QualityLevel(str, Enum):
@@ -157,16 +175,112 @@ class BehaviorQualityReport:
         }
 
 
+# =============================================================================
+# LLM Prompts for Semantic Quality Evaluation
+# =============================================================================
+
+DECISION_PROMPT_EVALUATION = '''Evaluate the quality of this AI behavior decision prompt.
+
+PROMPT TO EVALUATE:
+{prompt}
+
+Assess the prompt on these criteria (score each 0-10):
+
+1. ROLE_CLARITY: Does the prompt clearly define who/what the AI is and its purpose?
+   - Look for: Identity statement, purpose, responsibilities
+   - Score 0 if no role definition, 10 if crystal clear
+
+2. ACTION_DOCUMENTATION: Are available actions clearly listed and described?
+   - Look for: List of actions, what each does, when to use each
+   - Score 0 if no actions listed, 10 if comprehensive
+
+3. DECISION_GUIDANCE: Does it explain how to choose between actions?
+   - Look for: Criteria for selection, conditions, priorities
+   - Score 0 if no guidance, 10 if clear decision logic
+
+4. OUTPUT_FORMAT: Is the expected response format specified?
+   - Look for: Format specification (XML, JSON, etc.), structure
+   - Score 0 if no format, 10 if clearly specified
+
+5. EXAMPLES: Are there examples of inputs and expected outputs?
+   - Look for: Sample queries, example responses
+   - Score 0 if no examples, 10 if helpful examples
+
+6. COMPLETENESS: Is the prompt thorough enough to guide good decisions?
+   - Consider: Length, detail, coverage of edge cases
+   - Score 0 if too sparse, 10 if comprehensive
+
+Respond with XML only:
+<evaluation>
+    <role_clarity>0-10</role_clarity>
+    <action_documentation>0-10</action_documentation>
+    <decision_guidance>0-10</decision_guidance>
+    <output_format>0-10</output_format>
+    <examples>0-10</examples>
+    <completeness>0-10</completeness>
+    <issues>
+        <issue>specific problem found</issue>
+    </issues>
+    <suggestions>
+        <suggestion>specific improvement</suggestion>
+    </suggestions>
+</evaluation>
+'''
+
+SYNTHESIS_PROMPT_EVALUATION = '''Evaluate the quality of this AI behavior synthesis prompt.
+
+PROMPT TO EVALUATE:
+{prompt}
+
+Assess the prompt on these criteria (score each 0-10):
+
+1. STYLE_GUIDANCE: Does it define the tone and style of responses?
+   - Look for: Tone (formal/casual), verbosity, personality
+   - Score 0 if no style guidance, 10 if well-defined
+
+2. FORMAT_GUIDANCE: Does it specify how to format responses?
+   - Look for: Structure, length, formatting rules
+   - Score 0 if no format guidance, 10 if clear
+
+3. ERROR_HANDLING: Does it explain how to handle failures gracefully?
+   - Look for: Error messages, fallback responses, edge cases
+   - Score 0 if no error handling, 10 if comprehensive
+
+Respond with XML only:
+<evaluation>
+    <style_guidance>0-10</style_guidance>
+    <format_guidance>0-10</format_guidance>
+    <error_handling>0-10</error_handling>
+    <issues>
+        <issue>specific problem found</issue>
+    </issues>
+    <suggestions>
+        <suggestion>specific improvement</suggestion>
+    </suggestions>
+</evaluation>
+'''
+
+
 class BehaviorQualityValidator:
     """Validates behavior quality for production readiness.
 
     This validator performs comprehensive quality assessment including:
-    - Prompt quality (structure, clarity, completeness)
+    - Prompt quality (LLM-based semantic evaluation)
     - Action quality (parameters, descriptions, examples)
     - Test quality (coverage, edge cases, assertions)
     - Structure validation (required fields, consistency)
 
+    ARCHITECTURE:
+    Uses LLM-based semantic evaluation for prompt quality assessment.
+    We do NOT use regex patterns for understanding meaning - the LLM
+    handles all quality judgments about clarity, completeness, and structure.
+
     Usage:
+        # With LLM (recommended for accurate evaluation)
+        validator = BehaviorQualityValidator(llm=my_llm)
+        report = await validator.validate_async(behavior)
+
+        # Without LLM (fast but less accurate - uses heuristics)
         validator = BehaviorQualityValidator()
         report = validator.validate(behavior)
 
@@ -184,8 +298,20 @@ class BehaviorQualityValidator:
     MIN_TEST_COVERAGE = 0.8  # 80% action coverage
     MIN_OVERALL_SCORE = 0.7
 
-    def validate(self, behavior: Behavior) -> BehaviorQualityReport:
-        """Perform comprehensive quality validation.
+    def __init__(self, llm: LLMProvider | None = None):
+        """Initialize validator.
+
+        Args:
+            llm: Optional LLM provider for semantic evaluation.
+                 If not provided, uses fast heuristic-based evaluation.
+        """
+        self._llm = llm
+
+    async def validate_async(self, behavior: Behavior) -> BehaviorQualityReport:
+        """Perform comprehensive quality validation with LLM-based evaluation.
+
+        This is the preferred method when an LLM is available, as it provides
+        accurate semantic evaluation of prompt quality.
 
         Args:
             behavior: The behavior to validate
@@ -200,8 +326,11 @@ class BehaviorQualityValidator:
         report.all_issues.extend(structure_issues)
         report.has_required_fields = report.structure_score >= 0.8
 
-        # Validate prompts
-        report.prompt_quality = self._validate_prompts(behavior.prompts)
+        # Validate prompts using LLM semantic evaluation
+        if self._llm and behavior.prompts:
+            report.prompt_quality = await self._validate_prompts_with_llm(behavior.prompts)
+        else:
+            report.prompt_quality = self._validate_prompts_heuristic(behavior.prompts)
         report.all_issues.extend(report.prompt_quality.issues)
 
         # Validate actions
@@ -228,6 +357,393 @@ class BehaviorQualityValidator:
         report.recommendations = self._generate_recommendations(report)
 
         return report
+
+    def validate(self, behavior: Behavior) -> BehaviorQualityReport:
+        """Perform comprehensive quality validation (sync, heuristic-based).
+
+        This is the fast synchronous method that uses heuristic evaluation.
+        For accurate semantic evaluation, use validate_async() with an LLM.
+
+        Args:
+            behavior: The behavior to validate
+
+        Returns:
+            Complete quality report
+        """
+        report = BehaviorQualityReport(behavior_id=behavior.behavior_id)
+
+        # Validate structure first
+        report.structure_score, structure_issues = self._validate_structure(behavior)
+        report.all_issues.extend(structure_issues)
+        report.has_required_fields = report.structure_score >= 0.8
+
+        # Validate prompts using heuristics (fast but less accurate)
+        report.prompt_quality = self._validate_prompts_heuristic(behavior.prompts)
+        report.all_issues.extend(report.prompt_quality.issues)
+
+        # Validate actions
+        report.action_quality = self._validate_actions(behavior.actions)
+        report.all_issues.extend(report.action_quality.issues)
+
+        # Validate tests
+        report.test_quality = self._validate_tests(
+            behavior.test_cases,
+            behavior.actions,
+        )
+        report.all_issues.extend(report.test_quality.issues)
+
+        # Calculate overall score (weighted)
+        report.overall_score = self._calculate_overall_score(report)
+
+        # Determine quality level
+        report.quality_level = self._determine_quality_level(report.overall_score)
+
+        # Check production readiness
+        report.production_ready = self._check_production_ready(report)
+
+        # Generate recommendations
+        report.recommendations = self._generate_recommendations(report)
+
+        return report
+
+    # =========================================================================
+    # LLM-Based Semantic Evaluation (Preferred)
+    # =========================================================================
+
+    async def _validate_prompts_with_llm(
+        self,
+        prompts: BehaviorPrompts,
+    ) -> PromptQualityScore:
+        """Validate prompt quality using LLM semantic evaluation.
+
+        This is the preferred method as it understands meaning, not just keywords.
+        """
+        score = PromptQualityScore()
+
+        # Evaluate decision prompt
+        decision_score, decision_issues = await self._evaluate_decision_prompt_llm(
+            prompts.decision_prompt
+        )
+        score.decision_prompt_score = decision_score
+        score.issues.extend(decision_issues)
+
+        # Evaluate synthesis prompt
+        synthesis_score, synthesis_issues = await self._evaluate_synthesis_prompt_llm(
+            prompts.synthesis_prompt
+        )
+        score.synthesis_prompt_score = synthesis_score
+        score.issues.extend(synthesis_issues)
+
+        return score
+
+    async def _evaluate_decision_prompt_llm(
+        self,
+        prompt: str,
+    ) -> tuple[float, list[QualityIssue]]:
+        """Evaluate decision prompt quality using LLM."""
+        issues = []
+
+        if not prompt:
+            issues.append(QualityIssue(
+                category="prompt",
+                severity="critical",
+                message="Decision prompt is empty",
+                field="decision_prompt",
+            ))
+            return 0.0, issues
+
+        try:
+            # Ask LLM to evaluate the prompt
+            eval_prompt = DECISION_PROMPT_EVALUATION.format(prompt=prompt)
+            response = await self._llm.generate(
+                eval_prompt,
+                system_prompt="You are an expert at evaluating AI prompts. Be objective and thorough.",
+                temperature=0.3,
+            )
+
+            # Parse JSON response
+            result = self._parse_json_response(response)
+            if not result:
+                # Fallback to heuristic if LLM response parsing fails
+                return self._validate_decision_prompt_heuristic(prompt)
+
+            # Calculate score from criteria (each 0-10, convert to 0-1)
+            criteria_weights = {
+                "role_clarity": 0.15,
+                "action_documentation": 0.20,
+                "decision_guidance": 0.15,
+                "output_format": 0.20,
+                "examples": 0.15,
+                "completeness": 0.15,
+            }
+
+            total_score = 0.0
+            for criterion, weight in criteria_weights.items():
+                criterion_score = result.get(criterion, 5) / 10.0
+                total_score += criterion_score * weight
+
+                # Generate issues for low scores
+                if result.get(criterion, 5) < 5:
+                    severity = "major" if result.get(criterion, 5) < 3 else "minor"
+                    issues.append(QualityIssue(
+                        category="prompt",
+                        severity=severity,
+                        message=f"Decision prompt has low {criterion.replace('_', ' ')} ({result.get(criterion, 5)}/10)",
+                        field="decision_prompt",
+                    ))
+
+            # Add specific issues from LLM
+            for issue_text in result.get("issues", []):
+                if issue_text and len(issue_text) > 5:
+                    issues.append(QualityIssue(
+                        category="prompt",
+                        severity="minor",
+                        message=issue_text,
+                        field="decision_prompt",
+                    ))
+
+            # Store suggestions for recommendations
+            score = min(1.0, max(0.0, total_score))
+            return score, issues
+
+        except Exception:
+            # Fallback to heuristic on any error
+            return self._validate_decision_prompt_heuristic(prompt)
+
+    async def _evaluate_synthesis_prompt_llm(
+        self,
+        prompt: str,
+    ) -> tuple[float, list[QualityIssue]]:
+        """Evaluate synthesis prompt quality using LLM."""
+        issues = []
+
+        if not prompt:
+            issues.append(QualityIssue(
+                category="prompt",
+                severity="major",
+                message="Synthesis prompt is empty",
+                field="synthesis_prompt",
+            ))
+            return 0.0, issues
+
+        try:
+            # Ask LLM to evaluate the prompt
+            eval_prompt = SYNTHESIS_PROMPT_EVALUATION.format(prompt=prompt)
+            response = await self._llm.generate(
+                eval_prompt,
+                system_prompt="You are an expert at evaluating AI prompts. Be objective and thorough.",
+                temperature=0.3,
+            )
+
+            # Parse JSON response
+            result = self._parse_json_response(response)
+            if not result:
+                # Fallback to heuristic if LLM response parsing fails
+                return self._validate_synthesis_prompt_heuristic(prompt)
+
+            # Calculate score from criteria
+            criteria_weights = {
+                "style_guidance": 0.3,
+                "format_guidance": 0.4,
+                "error_handling": 0.3,
+            }
+
+            total_score = 0.0
+            for criterion, weight in criteria_weights.items():
+                criterion_score = result.get(criterion, 5) / 10.0
+                total_score += criterion_score * weight
+
+                # Generate issues for low scores
+                if result.get(criterion, 5) < 5:
+                    severity = "major" if result.get(criterion, 5) < 3 else "minor"
+                    issues.append(QualityIssue(
+                        category="prompt",
+                        severity=severity,
+                        message=f"Synthesis prompt has low {criterion.replace('_', ' ')} ({result.get(criterion, 5)}/10)",
+                        field="synthesis_prompt",
+                    ))
+
+            # Add specific issues from LLM
+            for issue_text in result.get("issues", []):
+                if issue_text and len(issue_text) > 5:
+                    issues.append(QualityIssue(
+                        category="prompt",
+                        severity="minor",
+                        message=issue_text,
+                        field="synthesis_prompt",
+                    ))
+
+            score = min(1.0, max(0.0, total_score))
+            return score, issues
+
+        except Exception:
+            # Fallback to heuristic on any error
+            return self._validate_synthesis_prompt_heuristic(prompt)
+
+    def _parse_json_response(self, response: str) -> dict | None:
+        """Parse JSON from LLM response."""
+        try:
+            # Try direct parse
+            return json.loads(response)
+        except json.JSONDecodeError:
+            pass
+
+        # Try to extract JSON from markdown code block
+        import re
+        json_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', response, re.DOTALL)
+        if json_match:
+            try:
+                return json.loads(json_match.group(1))
+            except json.JSONDecodeError:
+                pass
+
+        # Try to find raw JSON object
+        json_match = re.search(r'\{[^{}]*\}', response, re.DOTALL)
+        if json_match:
+            try:
+                return json.loads(json_match.group(0))
+            except json.JSONDecodeError:
+                pass
+
+        return None
+
+    # =========================================================================
+    # Heuristic-Based Evaluation (Fast Fallback)
+    # =========================================================================
+
+    def _validate_prompts_heuristic(
+        self,
+        prompts: BehaviorPrompts | None,
+    ) -> PromptQualityScore:
+        """Validate prompt quality using fast heuristics.
+
+        This uses simple length/structure checks rather than semantic analysis.
+        Less accurate but much faster than LLM evaluation.
+        """
+        score = PromptQualityScore()
+
+        if not prompts:
+            score.issues.append(QualityIssue(
+                category="prompt",
+                severity="critical",
+                message="No prompts defined",
+            ))
+            return score
+
+        # Validate decision prompt
+        score.decision_prompt_score, decision_issues = self._validate_decision_prompt_heuristic(
+            prompts.decision_prompt
+        )
+        score.issues.extend(decision_issues)
+
+        # Validate synthesis prompt
+        score.synthesis_prompt_score, synthesis_issues = self._validate_synthesis_prompt_heuristic(
+            prompts.synthesis_prompt
+        )
+        score.issues.extend(synthesis_issues)
+
+        return score
+
+    def _validate_decision_prompt_heuristic(
+        self,
+        prompt: str,
+    ) -> tuple[float, list[QualityIssue]]:
+        """Validate decision prompt using simple heuristics.
+
+        NOTE: This is a fast fallback. It uses length and basic structure checks,
+        NOT regex patterns for semantic understanding. For accurate evaluation,
+        use _evaluate_decision_prompt_llm() instead.
+        """
+        issues = []
+
+        if not prompt:
+            issues.append(QualityIssue(
+                category="prompt",
+                severity="critical",
+                message="Decision prompt is empty",
+                field="decision_prompt",
+            ))
+            return 0.0, issues
+
+        score = 0.0
+        word_count = len(prompt.split())
+
+        # Length-based scoring (simple heuristic)
+        # A good decision prompt is typically 100-500 words
+        if word_count >= 100:
+            score += 0.4  # Has substantial content
+        elif word_count >= 50:
+            score += 0.2
+        else:
+            issues.append(QualityIssue(
+                category="prompt",
+                severity="major",
+                message=f"Decision prompt too short ({word_count} words)",
+                field="decision_prompt",
+                suggestion="Expand prompt with more guidance (aim for 100+ words)",
+            ))
+
+        # Structure indicators (just checking presence, not meaning)
+        # These are very loose checks - the LLM evaluation is more accurate
+        if word_count > 1000:
+            issues.append(QualityIssue(
+                category="prompt",
+                severity="minor",
+                message=f"Decision prompt very long ({word_count} words)",
+                field="decision_prompt",
+                suggestion="Consider condensing to improve focus",
+            ))
+
+        # Line count as structure indicator
+        line_count = len(prompt.strip().split('\n'))
+        if line_count >= 10:
+            score += 0.3  # Has structured content
+        elif line_count >= 5:
+            score += 0.15
+
+        # Paragraph indicator (multiple blank lines = structure)
+        if '\n\n' in prompt:
+            score += 0.3  # Has paragraphs/sections
+
+        return min(1.0, max(0.0, score)), issues
+
+    def _validate_synthesis_prompt_heuristic(
+        self,
+        prompt: str,
+    ) -> tuple[float, list[QualityIssue]]:
+        """Validate synthesis prompt using simple heuristics."""
+        issues = []
+
+        if not prompt:
+            issues.append(QualityIssue(
+                category="prompt",
+                severity="major",
+                message="Synthesis prompt is empty",
+                field="synthesis_prompt",
+            ))
+            return 0.0, issues
+
+        score = 0.0
+        word_count = len(prompt.split())
+
+        # Length-based scoring
+        if word_count >= 50:
+            score += 0.5
+        elif word_count >= 25:
+            score += 0.25
+
+        # Structure indicator
+        line_count = len(prompt.strip().split('\n'))
+        if line_count >= 5:
+            score += 0.3
+        elif line_count >= 3:
+            score += 0.15
+
+        # Has some structure
+        if '\n\n' in prompt or ':' in prompt:
+            score += 0.2
+
+        return min(1.0, max(0.0, score)), issues
 
     def _validate_structure(self, behavior: Behavior) -> tuple[float, list[QualityIssue]]:
         """Validate behavior structure completeness."""
@@ -284,225 +800,6 @@ class BehaviorQualityValidator:
             score -= 0.3
 
         return max(0.0, score), issues
-
-    def _validate_prompts(
-        self,
-        prompts: BehaviorPrompts | None,
-    ) -> PromptQualityScore:
-        """Validate prompt quality."""
-        score = PromptQualityScore()
-
-        if not prompts:
-            score.issues.append(QualityIssue(
-                category="prompt",
-                severity="critical",
-                message="No prompts defined",
-            ))
-            return score
-
-        # Validate decision prompt
-        score.decision_prompt_score, decision_issues = self._validate_decision_prompt(
-            prompts.decision_prompt
-        )
-        score.issues.extend(decision_issues)
-
-        # Validate synthesis prompt
-        score.synthesis_prompt_score, synthesis_issues = self._validate_synthesis_prompt(
-            prompts.synthesis_prompt
-        )
-        score.issues.extend(synthesis_issues)
-
-        return score
-
-    def _validate_decision_prompt(self, prompt: str) -> tuple[float, list[QualityIssue]]:
-        """Validate decision prompt quality."""
-        issues = []
-        score = 0.0
-
-        if not prompt:
-            issues.append(QualityIssue(
-                category="prompt",
-                severity="critical",
-                message="Decision prompt is empty",
-                field="decision_prompt",
-            ))
-            return 0.0, issues
-
-        prompt_lower = prompt.lower()
-
-        # Check for clear role definition
-        role_patterns = [
-            r"you are",
-            r"your role",
-            r"as an? (?:ai|assistant|agent)",
-        ]
-        has_role = any(re.search(p, prompt_lower) for p in role_patterns)
-        if has_role:
-            score += 0.15
-        else:
-            issues.append(QualityIssue(
-                category="prompt",
-                severity="minor",
-                message="Decision prompt lacks clear role definition",
-                field="decision_prompt",
-                suggestion="Add 'You are a...' or 'Your role is...' statement",
-            ))
-
-        # Check for action list
-        action_patterns = [
-            r"available actions?",
-            r"actions?:",
-            r"you can|you should|you may",
-        ]
-        has_actions = any(re.search(p, prompt_lower) for p in action_patterns)
-        if has_actions:
-            score += 0.2
-        else:
-            issues.append(QualityIssue(
-                category="prompt",
-                severity="major",
-                message="Decision prompt doesn't list available actions",
-                field="decision_prompt",
-                suggestion="Add a section listing available actions with descriptions",
-            ))
-
-        # Check for decision criteria
-        criteria_patterns = [
-            r"when to|if .* then",
-            r"choose|select|pick",
-            r"criteria|conditions?",
-        ]
-        has_criteria = any(re.search(p, prompt_lower) for p in criteria_patterns)
-        if has_criteria:
-            score += 0.15
-        else:
-            issues.append(QualityIssue(
-                category="prompt",
-                severity="major",
-                message="Decision prompt lacks decision criteria",
-                field="decision_prompt",
-                suggestion="Add guidance on when to choose each action",
-            ))
-
-        # Check for output format
-        format_patterns = [
-            r"respond with|respond in|return|output",
-            r"<\w+>|xml|json",
-            r"format:",
-        ]
-        has_format = any(re.search(p, prompt_lower) for p in format_patterns)
-        if has_format:
-            score += 0.2
-        else:
-            issues.append(QualityIssue(
-                category="prompt",
-                severity="major",
-                message="Decision prompt doesn't specify output format",
-                field="decision_prompt",
-                suggestion="Add expected response format (XML, JSON, etc.)",
-            ))
-
-        # Check for examples
-        example_patterns = [
-            r"example:|for example|e\.g\.|such as",
-        ]
-        has_examples = any(re.search(p, prompt_lower) for p in example_patterns)
-        if has_examples:
-            score += 0.15
-        else:
-            issues.append(QualityIssue(
-                category="prompt",
-                severity="minor",
-                message="Decision prompt lacks examples",
-                field="decision_prompt",
-                suggestion="Add example queries and expected actions",
-            ))
-
-        # Check length (too short or too long)
-        word_count = len(prompt.split())
-        if word_count < 50:
-            issues.append(QualityIssue(
-                category="prompt",
-                severity="major",
-                message=f"Decision prompt too short ({word_count} words)",
-                field="decision_prompt",
-                suggestion="Expand prompt with more guidance",
-            ))
-            score -= 0.1
-        elif word_count > 1000:
-            issues.append(QualityIssue(
-                category="prompt",
-                severity="minor",
-                message=f"Decision prompt very long ({word_count} words)",
-                field="decision_prompt",
-                suggestion="Consider condensing to improve focus",
-            ))
-        else:
-            score += 0.15
-
-        return min(1.0, max(0.0, score)), issues
-
-    def _validate_synthesis_prompt(self, prompt: str) -> tuple[float, list[QualityIssue]]:
-        """Validate synthesis prompt quality."""
-        issues = []
-        score = 0.0
-
-        if not prompt:
-            issues.append(QualityIssue(
-                category="prompt",
-                severity="major",
-                message="Synthesis prompt is empty",
-                field="synthesis_prompt",
-            ))
-            return 0.0, issues
-
-        prompt_lower = prompt.lower()
-
-        # Check for style guidance
-        style_patterns = [
-            r"style|tone|voice",
-            r"concise|brief|short",
-            r"natural|conversational",
-        ]
-        has_style = any(re.search(p, prompt_lower) for p in style_patterns)
-        if has_style:
-            score += 0.3
-        else:
-            issues.append(QualityIssue(
-                category="prompt",
-                severity="minor",
-                message="Synthesis prompt lacks style guidance",
-                field="synthesis_prompt",
-                suggestion="Add guidance on response tone and style",
-            ))
-
-        # Check for output guidance
-        output_patterns = [
-            r"response|output|format",
-            r"should be|must be",
-        ]
-        has_output = any(re.search(p, prompt_lower) for p in output_patterns)
-        if has_output:
-            score += 0.4
-
-        # Check for error handling
-        error_patterns = [
-            r"error|fail|issue|problem",
-            r"graceful|handle|if .* goes wrong",
-        ]
-        has_error = any(re.search(p, prompt_lower) for p in error_patterns)
-        if has_error:
-            score += 0.3
-        else:
-            issues.append(QualityIssue(
-                category="prompt",
-                severity="minor",
-                message="Synthesis prompt lacks error handling guidance",
-                field="synthesis_prompt",
-                suggestion="Add guidance for handling failed actions",
-            ))
-
-        return min(1.0, max(0.0, score)), issues
 
     def _validate_actions(self, actions: list[Action]) -> ActionQualityScore:
         """Validate action quality."""

@@ -35,12 +35,12 @@ INTENT_CLASSIFICATION_PROMPT = """You are a query classifier for a voice assista
 - If query is pure information request → **factual**
 
 **Output Format:**
-Return ONLY a JSON object:
-{{
-  "intent": "factual|meta|contextual|control",
-  "confidence": 0.0-1.0,
-  "reasoning": "one sentence why"
-}}
+Return ONLY XML:
+<classification>
+    <intent>factual | meta | contextual | control</intent>
+    <confidence>0.0-1.0</confidence>
+    <reasoning>one sentence why</reasoning>
+</classification>
 
 User Query: {query}
 
@@ -111,58 +111,70 @@ Use needs_context for:
 
 Query: {query}
 
-Output ONLY valid JSON: {{"action":"<action>","args":<args_or_null>}}
+Output ONLY valid XML:
+<response>
+    <action>action_name</action>
+    <args>optional arguments as nested elements</args>
+</response>
 
 HOME ASSISTANT CONTROL args format:
-{{"domain":"light|switch","service":"turn_on|turn_off","data":{{"entity_id":"<natural language>","color_name":"<color>","brightness_pct":<number>}}}}
+<args>
+    <domain>light|switch</domain>
+    <service>turn_on|turn_off</service>
+    <data>
+        <entity_id>natural language</entity_id>
+        <color_name>color</color_name>
+        <brightness_pct>number</brightness_pct>
+    </data>
+</args>
 
 MEMORY STORE args format (only for explicit remember commands):
-{{"content":"<what to remember>","scope":"private"}}
+<args>
+    <content>what to remember</content>
+    <scope>private</scope>
+</args>
 
 PERSONAL STATEMENT args format:
-{{"content":"<what the user said>","subject":"<who/what the statement is about>"}}
+<args>
+    <content>what the user said</content>
+    <subject>who/what the statement is about</subject>
+</args>
 
 Examples:
-"hi how are you doing" -> {{"action":"greeting","args":null}}
-"hey {assistant_name}" -> {{"action":"greeting","args":null}}
-"hello" -> {{"action":"greeting","args":null}}
-"hey" -> {{"action":"greeting","args":null}}
-"good morning" -> {{"action":"greeting","args":null}}
-"what time is it" -> {{"action":"get_time","args":null}}
-"weather" -> {{"action":"get_weather","args":null}}
-"remember my password is hunter2" -> {{"action":"memory_store","args":{{"content":"my password is hunter2","scope":"private"}}}}
-"Sarah is my sister" -> {{"action":"personal_statement","args":{{"content":"Sarah is my sister","subject":"Sarah"}}}}
-"I work at Acme Corp" -> {{"action":"personal_statement","args":{{"content":"I work at Acme Corp","subject":"user"}}}}
-"Tom drives a Honda" -> {{"action":"personal_statement","args":{{"content":"Tom drives a Honda","subject":"Tom"}}}}
-"my password is hunter2" -> {{"action":"personal_statement","args":{{"content":"my password is hunter2","subject":"user"}}}}
-"turn the bedroom lights red" -> {{"action":"home_assistant","args":{{"domain":"light","service":"turn_on","data":{{"entity_id":"bedroom","color_name":"red"}}}}}}
-"what events do I have today" -> {{"action":"needs_context","args":null}}
-"what is my name" -> {{"action":"needs_context","args":null}}
-"who are you" -> {{"action":"needs_context","args":null}}
-"tell me about yourself" -> {{"action":"needs_context","args":null}}
-"what can you do" -> {{"action":"needs_context","args":null}}
-"what is 2+2" -> {{"action":"needs_context","args":null}}
-"who was the first president" -> {{"action":"needs_context","args":null}}
-"what is the capital of France" -> {{"action":"needs_context","args":null}}
-"search for FastRouteEngine in the code" -> {{"action":"needs_context","args":null}}
-"find the get_weather function" -> {{"action":"needs_context","args":null}}
-"what time is it in Tokyo" -> {{"action":"needs_context","args":null}}
-"weather in Paris" -> {{"action":"needs_context","args":null}}
-"what LXC containers are running" -> {{"action":"needs_context","args":null}}
-"what port does Qdrant use" -> {{"action":"needs_context","args":null}}
-"list files in src/app/services" -> {{"action":"needs_context","args":null}}
-"add that to my calendar" -> {{"action":"needs_context","args":null}}
-"schedule a meeting for tomorrow" -> {{"action":"needs_context","args":null}}
-"search for concerts in Philadelphia" -> {{"action":"needs_context","args":null}}
-"find restaurants near me" -> {{"action":"needs_context","args":null}}
-"what events are happening in Phoenixville" -> {{"action":"needs_context","args":null}}
-"weather tomorrow" -> {{"action":"needs_context","args":null}}
-"what about tomorrow" -> {{"action":"needs_context","args":null}}
-"set a timer for 5 minutes" -> {{"action":"needs_context","args":null}}
-"set a timer for 2 minutes for eggs" -> {{"action":"needs_context","args":null}}
-"list my timers" -> {{"action":"needs_context","args":null}}
-"what timers do I have" -> {{"action":"needs_context","args":null}}
-"cancel the timer" -> {{"action":"needs_context","args":null}}"""
+"hi how are you doing" -> <response><action>greeting</action></response>
+"hey {assistant_name}" -> <response><action>greeting</action></response>
+"what time is it" -> <response><action>get_time</action></response>
+"weather" -> <response><action>get_weather</action></response>
+"remember my password is hunter2" -> <response><action>memory_store</action><args><content>my password is hunter2</content><scope>private</scope></args></response>
+"Sarah is my sister" -> <response><action>personal_statement</action><args><content>Sarah is my sister</content><subject>Sarah</subject></args></response>
+"turn the bedroom lights red" -> <response><action>home_assistant</action><args><domain>light</domain><service>turn_on</service><data><entity_id>bedroom</entity_id><color_name>red</color_name></data></args></response>
+"what events do I have today" -> <response><action>needs_context</action></response>
+"what is my name" -> <response><action>needs_context</action></response>
+"who are you" -> <response><action>needs_context</action></response>
+"tell me about yourself" -> <response><action>needs_context</action></response>
+"what can you do" -> <response><action>needs_context</action></response>
+"what is 2+2" -> <response><action>needs_context</action></response>
+"who was the first president" -> <response><action>needs_context</action></response>
+"what is the capital of France" -> <response><action>needs_context</action></response>
+"search for FastRouteEngine in the code" -> <response><action>needs_context</action></response>
+"find the get_weather function" -> <response><action>needs_context</action></response>
+"what time is it in Tokyo" -> <response><action>needs_context</action></response>
+"weather in Paris" -> <response><action>needs_context</action></response>
+"what LXC containers are running" -> <response><action>needs_context</action></response>
+"what port does Qdrant use" -> <response><action>needs_context</action></response>
+"list files in src/app/services" -> <response><action>needs_context</action></response>
+"add that to my calendar" -> <response><action>needs_context</action></response>
+"schedule a meeting for tomorrow" -> <response><action>needs_context</action></response>
+"search for concerts in Philadelphia" -> <response><action>needs_context</action></response>
+"find restaurants near me" -> <response><action>needs_context</action></response>
+"what events are happening in Phoenixville" -> <response><action>needs_context</action></response>
+"weather tomorrow" -> <response><action>needs_context</action></response>
+"what about tomorrow" -> <response><action>needs_context</action></response>
+"set a timer for 5 minutes" -> <response><action>needs_context</action></response>
+"set a timer for 2 minutes for eggs" -> <response><action>needs_context</action></response>
+"list my timers" -> <response><action>needs_context</action></response>
+"what timers do I have" -> <response><action>needs_context</action></response>
+"cancel the timer" -> <response><action>needs_context</action></response>"""
 
 
 ROUTING_PROMPTS = {

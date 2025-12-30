@@ -54,17 +54,17 @@ Form a belief that:
 - Notes any conflicts or uncertainties
 - Has appropriate confidence based on evidence
 
-Output JSON:
-{{
-    "content": "The belief statement (as {agent_name} would hold it)",
-    "belief_type": "household_fact" | "verified_fact" | "unverified_claim" | "inferred" | "user_preference" | "agent_preference",
-    "confidence": 0.0-1.0,
-    "has_conflict": true/false,
-    "conflict_description": "describe any conflicts" or null,
-    "needs_clarification": true/false,
-    "clarification_priority": 0.0-1.0,
-    "reasoning": "Brief explanation of how you formed this belief"
-}}
+Output XML:
+<belief>
+    <content>The belief statement (as {agent_name} would hold it)</content>
+    <belief_type>household_fact | verified_fact | unverified_claim | inferred | user_preference | agent_preference</belief_type>
+    <confidence>0.0-1.0</confidence>
+    <has_conflict>true or false</has_conflict>
+    <conflict_description>describe any conflicts, or empty</conflict_description>
+    <needs_clarification>true or false</needs_clarification>
+    <clarification_priority>0.0-1.0</clarification_priority>
+    <reasoning>Brief explanation of how you formed this belief</reasoning>
+</belief>
 
 Examples:
 - 3 users say "We have 6 cats" → confidence 0.95, household_fact
@@ -86,14 +86,14 @@ Your task:
 2. Suggest how {agent_name} should handle it
 3. Formulate a question {agent_name} could ask to resolve the conflict
 
-Output JSON:
-{{
-    "conflict_type": "factual_disagreement" | "outdated_info" | "perspective_difference" | "unclear",
-    "resolution_strategy": "ask_user" | "prefer_recent" | "prefer_majority" | "keep_uncertain" | "verify_externally",
-    "suggested_question": "A natural question {agent_name} could ask to resolve this",
-    "temporary_belief": "What {agent_name} should believe until resolved",
-    "temporary_confidence": 0.0-1.0
-}}
+Output XML:
+<conflict_resolution>
+    <conflict_type>factual_disagreement | outdated_info | perspective_difference | unclear</conflict_type>
+    <resolution_strategy>ask_user | prefer_recent | prefer_majority | keep_uncertain | verify_externally</resolution_strategy>
+    <suggested_question>A natural question {agent_name} could ask to resolve this</suggested_question>
+    <temporary_belief>What {agent_name} should believe until resolved</temporary_belief>
+    <temporary_confidence>0.0-1.0</temporary_confidence>
+</conflict_resolution>
 """
 
 OBSERVATION_EXTRACTION_PROMPT = """Extract a formal observation from this user statement.
@@ -110,15 +110,18 @@ Determine:
    - "household": Shared family info (number of pets, family members' birthdays)
 3. How confident does the user seem?
 
-Output JSON:
-{{
-    "content": "The observation/claim in clear terms",
-    "scope": "private" | "personal" | "household",
-    "confidence_expressed": 0.0-1.0,
-    "entities": ["key", "entities"],
-    "is_correction": true/false,
-    "corrects_topic": "topic being corrected" or null
-}}
+Output XML:
+<observation>
+    <content>The observation/claim in clear terms</content>
+    <scope>private | personal | household</scope>
+    <confidence_expressed>0.0-1.0</confidence_expressed>
+    <entities>
+        <entity>key</entity>
+        <entity>entities</entity>
+    </entities>
+    <is_correction>true or false</is_correction>
+    <corrects_topic>topic being corrected, or empty</corrects_topic>
+</observation>
 """
 
 

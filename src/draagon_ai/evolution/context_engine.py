@@ -127,15 +127,21 @@ EVALUATION CRITERIA:
 2. Completeness: Does it cover necessary cases?
 3. Effectiveness: Would it produce good responses?
 
-OUTPUT JSON:
-{{
-  "effectiveness": 0.0-1.0,
-  "clarity": 0.0-1.0,
-  "completeness": 0.0-1.0,
-  "strengths": ["list", "of", "strengths"],
-  "weaknesses": ["list", "of", "weaknesses"],
-  "reasoning": "brief explanation"
-}}"""
+OUTPUT XML:
+<evaluation>
+  <effectiveness>0.0-1.0</effectiveness>
+  <clarity>0.0-1.0</clarity>
+  <completeness>0.0-1.0</completeness>
+  <strengths>
+    <strength>strength 1</strength>
+    <strength>strength 2</strength>
+  </strengths>
+  <weaknesses>
+    <weakness>weakness 1</weakness>
+    <weakness>weakness 2</weakness>
+  </weaknesses>
+  <reasoning>brief explanation</reasoning>
+</evaluation>"""
 
 
 CURATE_MERGE_TEMPLATE = """Merge these two context instructions into an improved version.

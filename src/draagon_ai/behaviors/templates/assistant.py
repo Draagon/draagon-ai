@@ -233,7 +233,11 @@ CONDENSATION RULES:
 - For lists: mention 2-3 items, then "and X more"
 - If significantly condensed, hint that more details are available
 
-Output JSON: {{"answer":"condensed voice response","full_answer":"complete response or null"}}"""
+OUTPUT XML:
+<synthesis>
+  <answer>condensed voice response</answer>
+  <full_answer>complete response or null</full_answer>
+</synthesis>"""
 
 
 # =============================================================================

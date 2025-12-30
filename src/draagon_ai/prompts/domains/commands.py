@@ -25,21 +25,22 @@ COMMAND GUIDELINES:
 
 SAFETY: Only generate read-only commands. Never generate destructive commands.
 
-Output JSON: {{"command":"the shell command","explanation":"what this will show"}}
+Output XML:
+<command_generation>
+    <command>the shell command</command>
+    <explanation>what this will show</explanation>
+</command_generation>
 
 Examples:
 Question: "What VNC software is installed?"
 System: Pop!_OS (Ubuntu-based)
--> {{"command":"dpkg -l | grep -i vnc","explanation":"Lists all installed packages containing 'vnc'"}}
+-> <command_generation><command>dpkg -l | grep -i vnc</command><explanation>Lists all installed packages containing 'vnc'</explanation></command_generation>
 
 Question: "Is docker running?"
--> {{"command":"systemctl is-active docker","explanation":"Checks if docker service is active"}}
+-> <command_generation><command>systemctl is-active docker</command><explanation>Checks if docker service is active</explanation></command_generation>
 
 Question: "What docker containers are running?"
--> {{"command":"docker ps","explanation":"Lists running docker containers"}}
-
-Question: "How much disk space is left?"
--> {{"command":"df -h","explanation":"Shows disk usage for all partitions"}}"""
+-> <command_generation><command>docker ps</command><explanation>Lists running docker containers</explanation></command_generation>"""
 
 
 ERROR_RECOVERY_PROMPT = """A command failed. Analyze the error and suggest a fix or alternative.
@@ -59,15 +60,20 @@ ANALYSIS GUIDELINES:
 4. Empty output - might mean "not installed" or "not found" which IS an answer
 5. Timeout - suggest simpler command
 
-Output JSON:
-{{"can_retry":true|false,"new_command":"alternative command if can_retry","answer":"answer if we can determine it from error","explanation":"what went wrong"}}
+Output XML:
+<error_recovery>
+    <can_retry>true or false</can_retry>
+    <new_command>alternative command if can_retry, or empty</new_command>
+    <answer>answer if we can determine it from error, or empty</answer>
+    <explanation>what went wrong</explanation>
+</error_recovery>
 
 Examples:
 Error: "grep: command not found"
--> {{"can_retry":true,"new_command":"dpkg -l | head -50","explanation":"grep not available, showing all packages instead"}}
+-> <error_recovery><can_retry>true</can_retry><new_command>dpkg -l | head -50</new_command><explanation>grep not available, showing all packages instead</explanation></error_recovery>
 
 Error: "" (empty output for "dpkg -l | grep vnc")
--> {{"can_retry":false,"answer":"No VNC packages are currently installed on this system.","explanation":"Empty output means no matching packages"}}"""
+-> <error_recovery><can_retry>false</can_retry><answer>No VNC packages are currently installed on this system.</answer><explanation>Empty output means no matching packages</explanation></error_recovery>"""
 
 
 COMMANDS_PROMPTS = {

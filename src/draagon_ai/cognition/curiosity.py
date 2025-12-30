@@ -179,32 +179,32 @@ QUESTION PURPOSES (choose wisely - only ask questions with clear purpose):
 - Each question must have clear PURPOSE and FOLLOW_UP_PLAN
 - If nothing genuinely interesting emerged, output empty list
 
-Output JSON:
-{{
-    "analysis": "Brief analysis of what's worth exploring in this conversation (1-2 sentences)",
-    "knowledge_gaps": [
-        {{
-            "topic": "specific gap in {agent_name}'s knowledge",
-            "importance": 0.0-1.0,
-            "why_important": "how filling this gap helps {agent_name} serve better"
-        }}
-    ],
-    "potential_questions": [
-        {{
-            "question": "The specific question to ask",
-            "purpose": "learn_about_user" | "share_knowledge" | "deepen_understanding" | "genuine_curiosity",
-            "type": "clarification" | "follow_up" | "knowledge_gap" | "preference" | "context" | "verification",
-            "priority": "low" | "medium" | "high",
-            "target_user": "user_id" or null,
-            "why_this_question": "Why {agent_name} genuinely wants to know this (from their perspective)",
-            "what_agent_will_do_with_answer": "Specific follow-up: teach something, remember for later, adjust behavior, etc.",
-            "context_to_remember": "Full context so {agent_name} remembers why they asked when user answers",
-            "interesting_to_user": true/false
-        }}
-    ],
-    "should_explore": true/false,
-    "exploration_topic": "topic for {agent_name} to research on their own" or null
-}}
+Output XML:
+<curiosity_analysis>
+    <analysis>Brief analysis of what's worth exploring in this conversation (1-2 sentences)</analysis>
+    <knowledge_gaps>
+        <gap>
+            <topic>specific gap in {agent_name}'s knowledge</topic>
+            <importance>0.0-1.0</importance>
+            <why_important>how filling this gap helps {agent_name} serve better</why_important>
+        </gap>
+    </knowledge_gaps>
+    <potential_questions>
+        <question>
+            <text>The specific question to ask</text>
+            <purpose>learn_about_user | share_knowledge | deepen_understanding | genuine_curiosity</purpose>
+            <type>clarification | follow_up | knowledge_gap | preference | context | verification</type>
+            <priority>low | medium | high</priority>
+            <target_user>user_id or empty</target_user>
+            <why_this_question>Why {agent_name} genuinely wants to know this</why_this_question>
+            <what_agent_will_do_with_answer>Specific follow-up: teach, remember, adjust behavior</what_agent_will_do_with_answer>
+            <context_to_remember>Full context so {agent_name} remembers why they asked</context_to_remember>
+            <interesting_to_user>true or false</interesting_to_user>
+        </question>
+    </potential_questions>
+    <should_explore>true or false</should_explore>
+    <exploration_topic>topic for {agent_name} to research, or empty if none</exploration_topic>
+</curiosity_analysis>
 """
 
 QUESTION_FORMULATION_PROMPT = """Formulate a natural, conversational question for {agent_name} to ask.
@@ -220,13 +220,13 @@ Create a question that:
 3. Is appropriate for the relationship/context
 4. Is voice-friendly (can be spoken naturally)
 
-Output JSON:
-{{
-    "question": "The natural question",
-    "alternative": "An alternative phrasing",
-    "too_intrusive": true/false,
-    "suggested_timing": "when to ask (now, later, never)"
-}}
+Output XML:
+<formulation>
+    <question>The natural question</question>
+    <alternative>An alternative phrasing</alternative>
+    <too_intrusive>true or false</too_intrusive>
+    <suggested_timing>now | later | never</suggested_timing>
+</formulation>
 """
 
 ANSWER_PROCESSING_PROMPT = """Process the user's answer to the agent's curious question and determine next steps.
@@ -242,19 +242,24 @@ Based on the user's answer, determine:
 3. Did the user seem interested in the topic?
 4. Is there a natural follow-up question?
 
-Output JSON:
-{{
-    "answer_extracted": "The key information from their response",
-    "entities": ["key", "entities", "to", "remember"],
-    "can_execute_follow_up": true/false,
-    "follow_up_action": "What the agent should now do based on the answer (be specific)",
-    "something_to_share": "If agent can teach/share something interesting based on this answer, what?" or null,
-    "implies_follow_up": true/false,
-    "follow_up_topic": "Natural follow-up topic" or null,
-    "user_receptivity": "positive" | "neutral" | "negative",
-    "should_remember": true/false,
-    "what_to_remember": "Specific fact to store for future" or null
-}}
+Output XML:
+<answer_analysis>
+    <answer_extracted>The key information from their response</answer_extracted>
+    <entities>
+        <entity>key</entity>
+        <entity>entities</entity>
+        <entity>to</entity>
+        <entity>remember</entity>
+    </entities>
+    <can_execute_follow_up>true or false</can_execute_follow_up>
+    <follow_up_action>What the agent should now do based on the answer</follow_up_action>
+    <something_to_share>If agent can teach/share something interesting, or empty if none</something_to_share>
+    <implies_follow_up>true or false</implies_follow_up>
+    <follow_up_topic>Natural follow-up topic, or empty if none</follow_up_topic>
+    <user_receptivity>positive | neutral | negative</user_receptivity>
+    <should_remember>true or false</should_remember>
+    <what_to_remember>Specific fact to store for future, or empty if none</what_to_remember>
+</answer_analysis>
 """
 
 

@@ -28,20 +28,25 @@ MATCHING RULES:
 - "kitchen" matches "Kitchen Main Lights" or entities in kitchen area
 - Look at friendly names, not just entity_ids!
 
-OUTPUT FORMAT (JSON only):
-{{"entity_id": "<exact entity_id from list>", "domain": "<domain from entity_id>", "service": "<turn_on|turn_off|toggle>", "data": {{}}}}
-
-For brightness/color (lights only):
-{{"entity_id": "light.bedroom", "domain": "light", "service": "turn_on", "data": {{"brightness_pct": 50}}}}
+OUTPUT FORMAT (XML only):
+<device_resolution>
+    <entity_id>exact entity_id from list</entity_id>
+    <domain>domain from entity_id</domain>
+    <service>turn_on | turn_off | toggle</service>
+    <data>
+        <brightness_pct>optional brightness 0-100</brightness_pct>
+        <color_name>optional color name</color_name>
+    </data>
+</device_resolution>
 
 If NO matching device found:
-{{"error": "Could not find a device matching '<what user asked for>'"}}
+<device_resolution>
+    <error>Could not find a device matching 'what user asked for'</error>
+</device_resolution>
 
 Examples:
-- "turn on the lights" from master_bedroom → {{"entity_id": "light.bedroom", "domain": "light", "service": "turn_on", "data": {{}}}}
-- "kitchen lights on" → {{"entity_id": "switch.kitchen_main_lights", "domain": "switch", "service": "turn_on", "data": {{}}}}
-- "turn off bedroom lights" → {{"entity_id": "light.bedroom", "domain": "light", "service": "turn_off", "data": {{}}}}
-- "dim bedroom to 50%" → {{"entity_id": "light.bedroom", "domain": "light", "service": "turn_on", "data": {{"brightness_pct": 50}}}}"""
+- "turn on the lights" from master_bedroom → <device_resolution><entity_id>light.bedroom</entity_id><domain>light</domain><service>turn_on</service></device_resolution>
+- "dim bedroom to 50%" → <device_resolution><entity_id>light.bedroom</entity_id><domain>light</domain><service>turn_on</service><data><brightness_pct>50</brightness_pct></data></device_resolution>"""
 
 
 HOME_ASSISTANT_PROMPTS = {

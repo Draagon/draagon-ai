@@ -93,15 +93,18 @@ CONDENSATION RULES:
 - For lists: mention 2-3 items, then "and X more"
 - If significantly condensed, hint that more details are available
 
-Output JSON: {{"answer":"condensed voice response","full_answer":"complete response or null"}}
+Output XML:
+<synthesis>
+    <answer>condensed voice response</answer>
+    <full_answer>complete response, or empty if answer is complete</full_answer>
+</synthesis>
 
 Examples:
-- Question "is docker running", output "active" -> {{"answer":"Yes, Docker is running.","full_answer":null}}
-- Question "what VNC is installed", output shows "x11vnc" -> {{"answer":"x11vnc is installed.","full_answer":null}}
-- Question "what's on my calendar today", 3 events -> {{"answer":"You have Hockey at 9am, Kuntao Party at noon, and Brayden visit at 1pm.","full_answer":null}}
-- Question "what's on my calendar today", 6 events -> {{"answer":"You have Hockey at 9am, Kuntao Party at noon, Brayden visit at 1pm, and 3 more. Want the full list?","full_answer":"Today you have: Hockey at 9am, Kuntao Party at noon, Brayden visit at 1pm, Team meeting at 3pm, Doctor appointment at 4:30pm, and Dinner with Sarah at 7pm."}}
-- Question "compare Redis vs Memcached", detailed comparison -> {{"answer":"Redis has more features like persistence and data structures. Memcached is simpler and faster for basic caching. Want the details?","full_answer":"Redis and Memcached are both in-memory data stores but differ in several ways. Redis supports more data structures including strings, hashes, lists, sets, and sorted sets, while Memcached only supports strings. Redis offers persistence options and replication, making it suitable for scenarios where data durability matters. Memcached is simpler and can be faster for basic caching. Redis is single-threaded but highly optimized, while Memcached is multi-threaded."}}
-- Question "what port does Qdrant use", knowledge shows "port 6333" -> {{"answer":"Qdrant uses port 6333.","full_answer":null}}"""
+- Question "is docker running", output "active" -> <synthesis><answer>Yes, Docker is running.</answer></synthesis>
+- Question "what VNC is installed", output shows "x11vnc" -> <synthesis><answer>x11vnc is installed.</answer></synthesis>
+- Question "what's on my calendar today", 3 events -> <synthesis><answer>You have Hockey at 9am, Kuntao Party at noon, and Brayden visit at 1pm.</answer></synthesis>
+- Question "what's on my calendar today", 6 events -> <synthesis><answer>You have Hockey at 9am, Kuntao Party at noon, Brayden visit at 1pm, and 3 more. Want the full list?</answer><full_answer>Today you have: Hockey at 9am, Kuntao Party at noon, Brayden visit at 1pm, Team meeting at 3pm, Doctor appointment at 4:30pm, and Dinner with Sarah at 7pm.</full_answer></synthesis>
+- Question "what port does Qdrant use", knowledge shows "port 6333" -> <synthesis><answer>Qdrant uses port 6333.</answer></synthesis>"""
 
 
 CONDENSE_RESPONSE_PROMPT = """Condense this response for voice output while preserving the key information.
@@ -117,21 +120,21 @@ CONDENSATION RULES:
 5. Keep numbers, names, times - those are usually the key info
 6. End with a hint that more details are available if the response was significantly shortened
 
-Output JSON:
-{{"condensed":"the short version","has_more":true|false}}
+Output XML:
+<condensation>
+    <condensed>the short version</condensed>
+    <has_more>true or false</has_more>
+</condensation>
 
 Examples:
 - Full: "Docker is running. The service started successfully at boot time and has been active for 3 days, 2 hours. It's using the default configuration with no custom networks defined."
-  -> {{"condensed":"Docker is running.","has_more":false}}
+  -> <condensation><condensed>Docker is running.</condensed><has_more>false</has_more></condensation>
 
 - Full: "You have 5 events today: Team standup at 9am, Dentist at 11am, Lunch with Sarah at 12:30pm, Project review at 3pm, and Gym at 6pm."
-  -> {{"condensed":"You have Team standup at 9am, Dentist at 11am, Lunch with Sarah at 12:30, and 2 more. Want the full list?","has_more":true}}
-
-- Full: "Redis and Memcached are both in-memory data stores but differ in several ways. Redis supports more data structures including strings, hashes, lists, sets, and sorted sets, while Memcached only supports strings. Redis offers persistence options and replication, making it suitable for scenarios where data durability matters. Memcached is simpler and can be faster for basic caching. Redis is single-threaded but highly optimized, while Memcached is multi-threaded."
-  -> {{"condensed":"Redis has more features like persistence and data structures. Memcached is simpler and faster for basic caching. Want the details?","has_more":true}}
+  -> <condensation><condensed>You have Team standup at 9am, Dentist at 11am, Lunch with Sarah at 12:30, and 2 more. Want the full list?</condensed><has_more>true</has_more></condensation>
 
 - Full: "The current time is 3:47 PM."
-  -> {{"condensed":"It's 3:47 PM.","has_more":false}}"""
+  -> <condensation><condensed>It's 3:47 PM.</condensed><has_more>false</has_more></condensation>"""
 
 
 SYNTHESIS_PROMPTS = {

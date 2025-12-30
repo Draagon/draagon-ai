@@ -351,9 +351,11 @@ class TestTestPhase:
         assert action == "do_something"
 
     @pytest.mark.asyncio
-    async def test_extract_action_from_text(self, architect):
-        """Should extract action name from text response."""
-        response = "I will use set_timer action with parameter 5 minutes"
+    async def test_extract_action_from_key_value(self, architect):
+        """Should extract action name from key-value structured response."""
+        # Natural language extraction has been removed per LLM-first architecture.
+        # Only structured formats are supported: XML or key-value.
+        response = "action: set_timer\nminutes: 5"
         action = architect._extract_action_from_response(response)
         assert action == "set_timer"
 

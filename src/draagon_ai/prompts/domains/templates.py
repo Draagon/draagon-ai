@@ -105,7 +105,7 @@ Use needs_context for:
 
 Query: {query}
 
-Output ONLY valid JSON: {{"action":"<action>","args":<args_or_null>}}
+Output ONLY valid XML: <response><action>action_name</action><args>optional args</args></response>
 
 {fast_route_examples}"""
 
@@ -134,12 +134,12 @@ INTENT_CLASSIFICATION_TEMPLATE = """You are a query classifier for a voice assis
    - Characteristics: Imperative verbs, clear action requests
 
 **Output Format:**
-Return ONLY a JSON object:
-{{
-  "intent": "factual|meta|contextual|control",
-  "confidence": 0.0-1.0,
-  "reasoning": "one sentence why"
-}}
+Return ONLY XML:
+<classification>
+    <intent>factual | meta | contextual | control</intent>
+    <confidence>0.0-1.0</confidence>
+    <reasoning>one sentence why</reasoning>
+</classification>
 
 User Query: {query}
 
@@ -173,9 +173,13 @@ RESPONSE RULES:
 
 VOICE OUTPUT FORMAT:
 - "answer": The condensed response for voice (max 2 sentences, ~30-50 words)
-- "full_answer": The complete answer (only if significantly condensed, otherwise null)
+- "full_answer": The complete answer (only if significantly condensed, otherwise empty)
 
-Output JSON: {{"answer":"condensed voice response","full_answer":"complete response or null"}}"""
+Output XML:
+<synthesis>
+    <answer>condensed voice response</answer>
+    <full_answer>complete response, or empty if answer is complete</full_answer>
+</synthesis>"""
 
 
 # Default examples for decision prompt (can be overridden)
@@ -196,10 +200,10 @@ DEFAULT_DECISION_EXAMPLES = """EXAMPLES:
 
 # Default fast route examples (can be overridden)
 DEFAULT_FAST_ROUTE_EXAMPLES = """Examples:
-"hi how are you doing" -> {{"action":"greeting","args":null}}
-"hello" -> {{"action":"greeting","args":null}}
-"what time is it" -> {{"action":"get_time","args":null}}
-"weather" -> {{"action":"get_weather","args":null}}"""
+"hi how are you doing" -> <route><action>greeting</action></route>
+"hello" -> <route><action>greeting</action></route>
+"what time is it" -> <route><action>get_time</action></route>
+"weather" -> <route><action>get_weather</action></route>"""
 
 
 TEMPLATE_PROMPTS = {

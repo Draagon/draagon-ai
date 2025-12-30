@@ -127,15 +127,15 @@ Consider:
 4. Is the question relevant to recent discussion? (better)
 5. Is this a greeting/casual moment? (can be good)
 
-Output JSON:
-{{
-    "ask_now": true/false,
-    "timing_score": 0.0-1.0,
-    "moment_type": "task_complete" | "natural_pause" | "greeting" | "farewell" | "followup" | "topic_change" | "user_curious" | "busy" | "frustrated",
-    "transition_phrase": "SHORT 3-6 word lead-in only (e.g. 'By the way,' or 'I was curious,' - DO NOT include the question itself)",
-    "reason": "why this is/isn't a good moment",
-    "defer_reason": "if not asking now, why" or null
-}}
+Output XML:
+<timing_analysis>
+    <ask_now>true or false</ask_now>
+    <timing_score>0.0-1.0</timing_score>
+    <moment_type>task_complete | natural_pause | greeting | farewell | followup | topic_change | user_curious | busy | frustrated</moment_type>
+    <transition_phrase>SHORT 3-6 word lead-in only (e.g. 'By the way,' - DO NOT include the question)</transition_phrase>
+    <reason>why this is/isn't a good moment</reason>
+    <defer_reason>if not asking now, why, or empty</defer_reason>
+</timing_analysis>
 """
 
 QUESTION_SELECTION_PROMPT = """Select the best question to ask at this moment.
@@ -153,13 +153,13 @@ Select the question that:
 2. Would feel natural to ask now
 3. Respects the user's time and mood
 
-Output JSON:
-{{
-    "selected_question_id": "question_id",
-    "reason": "why this one",
-    "skip_all": true/false,
-    "skip_reason": "if skipping all, why"
-}}
+Output XML:
+<question_selection>
+    <selected_question_id>question_id</selected_question_id>
+    <reason>why this one</reason>
+    <skip_all>true or false</skip_all>
+    <skip_reason>if skipping all, why, or empty</skip_reason>
+</question_selection>
 """
 
 

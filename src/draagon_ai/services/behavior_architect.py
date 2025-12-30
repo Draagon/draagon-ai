@@ -237,35 +237,47 @@ BEHAVIOR DESIGN:
 DOMAIN KNOWLEDGE:
 {domain_knowledge}
 
-Write two prompts:
+Write two detailed prompts. IMPORTANT: Each prompt should be AT LEAST 100 words.
 
 1. DECISION PROMPT - Determines which action to take
-   Requirements:
-   - Define the role clearly
-   - List all available actions with descriptions
-   - Explain when to use each action
-   - Include decision criteria
-   - Specify response format (XML)
-   - Include domain-specific guidance
-   - Be thorough - this is the "brain" of the behavior
+   REQUIRED SECTIONS (you MUST include ALL of these):
+   - Start with "You are a [role description]" to define the role
+   - Include "Available Actions:" followed by a list of each action
+   - Add "When to use each action:" with decision criteria
+   - Add "Output Format:" specifying XML response format
+   - Include "Example:" with at least one example query and response
 
 2. SYNTHESIS PROMPT - Formats the response to the user
-   Requirements:
-   - Define output style
-   - Include domain-appropriate tone
+   REQUIRED SECTIONS:
+   - Define the output style and tone
    - Specify formatting requirements
-   - Handle error cases gracefully
+   - Include error handling guidance
 
-The decision prompt should help the LLM pick the RIGHT action.
-The synthesis prompt should help format a GOOD response.
+The decision prompt MUST be comprehensive and well-structured.
+A good decision prompt is typically 150-300 words.
 
 Respond with:
 <prompts>
   <decision_prompt>
-Your decision prompt here. Include placeholders like:
-- {{actions}} - Will be replaced with action list
-- {{context}} - Will be replaced with context
-- {{query}} - Will be replaced with user query
+You are a [role]. Your purpose is to [purpose].
+
+Available Actions:
+- action_name: description of what it does
+
+When to use each action:
+- Use action_name when [criteria]
+
+Output Format:
+Respond with XML in the following format:
+<decision>
+  <action name="action_name">
+    <parameter name="param">value</parameter>
+  </action>
+</decision>
+
+Example:
+If the user says "...", respond with:
+<decision>...</decision>
   </decision_prompt>
   <synthesis_prompt>
 Your synthesis prompt here. Include placeholders like:
@@ -1254,21 +1266,30 @@ class BehaviorArchitectService:
             )
 
     def _extract_action_from_response(self, response: str) -> str | None:
-        """Extract action name from LLM response."""
-        # Try XML format first
+        """Extract action name from LLM response.
+
+        Only extracts from structured output formats (XML, key-value).
+        Does NOT use regex for semantic understanding of natural language.
+        See CLAUDE.md: "NEVER use regex or keyword patterns for semantic understanding"
+        """
+        # Try XML format first: <action name="get_time"> or <action>get_time</action>
         action_match = re.search(r"<action[^>]*name=[\"']([^\"']+)[\"']", response)
         if action_match:
             return action_match.group(1)
 
-        # Try simple action: format
+        # Try XML element content: <action>get_time</action>
+        action_match = re.search(r"<action[^>]*>([^<]+)</action>", response)
+        if action_match:
+            return action_match.group(1).strip()
+
+        # Try simple action: format (structured key-value output)
         action_match = re.search(r"action:\s*(\w+)", response, re.IGNORECASE)
         if action_match:
             return action_match.group(1)
 
-        # Try to find action name pattern
-        action_match = re.search(r"(?:use|call|execute|invoke)\s+(\w+)", response, re.IGNORECASE)
-        if action_match:
-            return action_match.group(1)
+        # NOTE: Natural language pattern matching (e.g., "I will use X") has been
+        # intentionally removed. Using regex to infer intent from natural language
+        # violates the LLM-first architecture principle.
 
         return None
 

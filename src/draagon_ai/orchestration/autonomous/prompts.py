@@ -109,22 +109,22 @@ Consider:
 5. Would reflecting on your own behavior be valuable right now?
 6. Should you just rest and do nothing? (That's valid too!)
 
-Output your proposed actions as JSON:
+Output your proposed actions as XML:
 
-{{
-  "reasoning": "Brief explanation of your thought process",
-  "proposed_actions": [
-    {{
-      "type": "research|verify|reflect|note_question|prepare_suggestion|update_belief|rest",
-      "description": "What you want to do",
-      "reasoning": "Why this is interesting, useful, or helpful",
-      "risk_tier": 0,
-      "reversible": true,
-      "estimated_time_seconds": 30,
-      "target_entity": "optional entity this relates to"
-    }}
-  ]
-}}
+<action_proposal>
+    <reasoning>Brief explanation of your thought process</reasoning>
+    <proposed_actions>
+        <action>
+            <type>research | verify | reflect | note_question | prepare_suggestion | update_belief | rest</type>
+            <description>What you want to do</description>
+            <reasoning>Why this is interesting, useful, or helpful</reasoning>
+            <risk_tier>0</risk_tier>
+            <reversible>true</reversible>
+            <estimated_time_seconds>30</estimated_time_seconds>
+            <target_entity>optional entity this relates to</target_entity>
+        </action>
+    </proposed_actions>
+</action_proposal>
 
 Remember: Quality over quantity. It's perfectly fine to do nothing if nothing
 seems genuinely useful. Don't create busywork.
@@ -145,12 +145,12 @@ Consider:
 5. Could this cause embarrassment?
 6. Could this have unintended consequences?
 
-Respond with JSON:
-{{
-  "potentially_harmful": true/false,
-  "reason": "explanation if harmful",
-  "confidence": 0.0-1.0
-}}
+Respond with XML:
+<harm_check>
+    <potentially_harmful>true or false</potentially_harmful>
+    <reason>explanation if harmful, or empty</reason>
+    <confidence>0.0-1.0</confidence>
+</harm_check>
 
 Be conservative. When in doubt, flag as potentially harmful.
 """
@@ -190,14 +190,14 @@ Reflect on:
 
 Be honest and thoughtful. Small adjustments only (max 0.05 per trait).
 
-Output JSON:
-{{
-  "summary": "Brief reflection summary",
-  "trait_adjustments": {{
-    "trait_name": adjustment_amount
-  }},
-  "reasoning": "Why these adjustments"
-}}
+Output XML:
+<reflection>
+    <summary>Brief reflection summary</summary>
+    <trait_adjustments>
+        <adjustment trait="trait_name">adjustment_amount</adjustment>
+    </trait_adjustments>
+    <reasoning>Why these adjustments</reasoning>
+</reflection>
 """
 
 
@@ -219,21 +219,23 @@ SELF_MONITORING_PROMPT = """Review my recent autonomous actions for issues.
 
 Be honest and self-critical. It's better to flag a potential issue than miss one.
 
-Output JSON:
-{{
-  "overall_assessment": "good|needs_attention|problematic",
-  "findings": [
-    {{
-      "type": "unexpected_result|contradiction|pattern|low_value|important_finding|needs_human",
-      "description": "What I noticed",
-      "severity": "low|medium|high",
-      "action_recommended": "What should be done (if anything)"
-    }}
-  ],
-  "notify_user": true/false,
-  "notification_message": "Optional message to queue for user",
-  "lessons_learned": ["What I learned from this cycle"]
-}}
+Output XML:
+<self_monitoring>
+    <overall_assessment>good | needs_attention | problematic</overall_assessment>
+    <findings>
+        <finding>
+            <type>unexpected_result | contradiction | pattern | low_value | important_finding | needs_human</type>
+            <description>What I noticed</description>
+            <severity>low | medium | high</severity>
+            <action_recommended>What should be done (if anything)</action_recommended>
+        </finding>
+    </findings>
+    <notify_user>true or false</notify_user>
+    <notification_message>Optional message to queue for user</notification_message>
+    <lessons_learned>
+        <lesson>What I learned from this cycle</lesson>
+    </lessons_learned>
+</self_monitoring>
 """
 
 
