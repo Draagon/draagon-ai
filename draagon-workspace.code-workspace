@@ -1,0 +1,72 @@
+{
+  "folders": [
+    {
+      "name": "🧠 draagon-ai (FRAMEWORK)",
+      "path": "."
+    },
+    {
+      "name": "🎙️ roxy (REFERENCE IMPL)",
+      "path": "../roxy-voice-assistant"
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/__pycache__": true,
+      "**/.pytest_cache": true,
+      "**/*.egg-info": true,
+      "**/.mypy_cache": true
+    },
+    "python.analysis.extraPaths": [
+      "${workspaceFolder:🧠 draagon-ai (FRAMEWORK)}/src",
+      "${workspaceFolder:🎙️ roxy (REFERENCE IMPL)}/src"
+    ],
+    "editor.rulers": [100],
+    "files.trimTrailingWhitespace": true
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Roxy Dev Server",
+        "type": "debugpy",
+        "request": "launch",
+        "module": "roxy.main",
+        "cwd": "${workspaceFolder:🎙️ roxy (REFERENCE IMPL)}",
+        "env": {
+          "PYTHONPATH": "${workspaceFolder:🧠 draagon-ai (FRAMEWORK)}/src:${workspaceFolder:🎙️ roxy (REFERENCE IMPL)}/src"
+        }
+      },
+      {
+        "name": "draagon-ai Tests",
+        "type": "debugpy",
+        "request": "launch",
+        "module": "pytest",
+        "args": ["tests/", "-v"],
+        "cwd": "${workspaceFolder:🧠 draagon-ai (FRAMEWORK)}"
+      }
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Run Roxy Dev",
+        "type": "shell",
+        "command": "./scripts/run-dev.sh",
+        "options": {
+          "cwd": "${workspaceFolder:🎙️ roxy (REFERENCE IMPL)}"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Test draagon-ai",
+        "type": "shell",
+        "command": "pytest tests/ -v",
+        "options": {
+          "cwd": "${workspaceFolder:🧠 draagon-ai (FRAMEWORK)}"
+        },
+        "problemMatcher": []
+      }
+    ]
+  }
+}
