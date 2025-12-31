@@ -1,6 +1,6 @@
 # draagon-ai - Claude Context
 
-**Last Updated:** 2025-12-30
+**Last Updated:** 2025-12-31
 **Version:** 0.1.0
 **Project:** Agentic AI framework for building cognitive assistants
 
@@ -333,6 +333,74 @@ context.working_memory["__shared__"] = SharedWorkingMemory(context.task_id)
 # Agents access via context.working_memory["__shared__"]
 ```
 
+### Memory Reinforcement Learning
+
+Memories learn from usage outcomes. When a memory helps produce a correct response, it gets boosted. When it leads to errors, it gets demoted. This enables memories to naturally move between layers based on their proven usefulness.
+
+```python
+from draagon_ai.memory.providers.layered import LayeredMemoryProvider
+
+provider = LayeredMemoryProvider(...)
+
+# After using a memory and verifying the response was helpful
+await provider.record_usage(memory_id, "success")
+
+# After using a memory that led to a wrong answer
+await provider.record_usage(memory_id, "failure")
+
+# Direct boost/demote for specific scenarios
+await provider.boost_memory(memory_id, boost_amount=0.1)  # Custom boost
+await provider.demote_memory(memory_id)  # Default demotion
+```
+
+**Reinforcement Constants:**
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| BOOST_AMOUNT | 0.05 | Default importance boost per success |
+| DEMOTE_AMOUNT | 0.08 | Default importance penalty per failure |
+| MAX_IMPORTANCE | 1.0 | Importance ceiling |
+| MIN_IMPORTANCE | 0.1 | Importance floor |
+
+**Layer Promotion Thresholds:**
+| Transition | Importance Threshold |
+|------------|---------------------|
+| Working → Episodic | ≥ 0.7 |
+| Episodic → Semantic | ≥ 0.8 |
+| Semantic → Metacognitive | ≥ 0.9 |
+
+**Layer Demotion Thresholds:**
+| Transition | Importance Threshold |
+|------------|---------------------|
+| Metacognitive → Semantic | < 0.6 |
+| Semantic → Episodic | < 0.4 |
+| Episodic → Working | < 0.3 |
+
+**Integration Example (Prototype):**
+
+The semantic expansion prototype (`prototypes/semantic_expansion/`) demonstrates how memory reinforcement can be integrated with semantic processing. When graduated to core, the orchestrator would track all memories used during processing:
+
+```python
+# Example from semantic_expansion prototype (not yet in core)
+# from prototypes.semantic_expansion.src.integration import TwoPassSemanticOrchestrator
+
+orchestrator = TwoPassSemanticOrchestrator(memory=provider, llm=llm)
+result = await orchestrator.process("Doug has 3 cats")
+
+# Used memories are tracked in result.used_memories
+# {'mem_1': 'supporting', 'mem_2': 'contradicting', 'mem_3': 'context'}
+
+# After verifying response was correct
+await result.record_outcome(provider, "success")
+
+# After discovering response was wrong
+await result.record_outcome(provider, "failure")
+```
+
+**Intelligent Reinforcement (planned):**
+- Supporting memories get boosted on success, demoted on failure
+- Contradicting memories get the OPPOSITE treatment (if response succeeded despite contradiction, the contradiction was wrong)
+- Context memories follow standard reinforcement
+
 ---
 
 ## 🧠 Cognitive Architecture
@@ -510,6 +578,135 @@ tests/
 ├── evolution/          # Prompt evolution tests
 └── integration/        # End-to-end tests
 ```
+
+---
+
+## 🧪 Prototypes
+
+The `prototypes/` folder contains experimental code that explores new capabilities before they're integrated into the core framework. Prototypes are designed to be isolated, self-contained, and safe to experiment with.
+
+### Philosophy
+
+1. **Experimentation First** - Try ideas quickly without breaking production code
+2. **Minimal Dependencies** - Prototypes use only stable core types (Memory, MemoryType, etc.)
+3. **Explicit Integration** - Code only moves to core after validation and explicit wiring
+4. **Documentation** - Each prototype documents its hypothesis, status, and findings
+
+### Folder Structure
+
+```
+prototypes/
+├── README.md                     # Overview of all prototypes
+├── semantic_expansion/           # Example prototype
+│   ├── CLAUDE.md                 # Prototype-specific Claude context (READ THIS!)
+│   ├── README.md                 # Quick overview
+│   ├── docs/
+│   │   ├── research/             # Background, prior art, concepts
+│   │   ├── requirements/         # FR-xxx requirement docs
+│   │   ├── specs/                # Technical architecture specs
+│   │   └── findings/             # Experiment results, learnings
+│   ├── src/                      # Prototype code
+│   │   ├── __init__.py
+│   │   └── *.py                  # Implementation files
+│   └── tests/                    # Prototype tests
+│       ├── conftest.py           # Path setup
+│       └── test_*.py             # Test files
+└── [future_prototype]/           # Next experiment
+```
+
+### Prototype-Specific Claude Context
+
+**IMPORTANT:** When working on a prototype, ALWAYS read its `CLAUDE.md` first!
+
+Each prototype has its own `CLAUDE.md` with:
+- Prototype-specific architecture and patterns
+- Key files and their purposes
+- Important coding conventions
+- Integration status and blocking issues
+
+```bash
+# Before working on a prototype, read its context:
+prototypes/semantic_expansion/CLAUDE.md
+prototypes/[other_prototype]/CLAUDE.md
+```
+
+### Prototype Documentation Structure
+
+Each prototype maintains its own documentation in `docs/`:
+
+| Folder | Purpose | Examples |
+|--------|---------|----------|
+| `research/` | Background concepts, prior art | Papers, concept docs |
+| `requirements/` | FR-xxx requirements | FR-006, FR-007 |
+| `specs/` | Technical architecture | Architecture diagrams |
+| `findings/` | Experiment results | Success/failure notes |
+
+This keeps prototype documentation self-contained. When a prototype is deleted or archived, its docs go with it.
+
+### Creating a New Prototype
+
+1. Create folder structure:
+```bash
+mkdir -p prototypes/my_prototype/{src,tests,docs/{research,requirements,specs,findings}}
+```
+
+2. Add `CLAUDE.md` with:
+   - Status (Experimental/Validated/Deprecated)
+   - Hypothesis being tested
+   - Key concepts and architecture
+   - File structure
+   - Important patterns
+   - Integration readiness
+
+3. Add `README.md` with quick overview
+
+4. Add `tests/conftest.py` for path setup:
+
+```python
+import sys
+from pathlib import Path
+
+# Add prototype src to path
+prototype_root = Path(__file__).parent.parent
+src_path = prototype_root / "src"
+if str(src_path) not in sys.path:
+    sys.path.insert(0, str(src_path))
+
+# Add core draagon-ai for base types
+project_root = prototype_root.parent.parent
+draagon_src = project_root / "src"
+if str(draagon_src) not in sys.path:
+    sys.path.insert(0, str(draagon_src))
+```
+
+5. Use direct imports (not relative) in prototype code
+6. Only import stable core types from draagon-ai
+
+### Running Prototype Tests
+
+```bash
+# Run specific prototype tests
+cd prototypes/semantic_expansion
+python3 -m pytest tests/ -v
+
+# Run with real LLM provider
+GROQ_API_KEY=your_key python3 -m pytest tests/ -v
+```
+
+### When Is a Prototype Ready for Integration?
+
+A prototype is ready to graduate when:
+1. **Validated** - Tests demonstrate the concept works
+2. **Protocol Compatible** - Uses standard draagon-ai protocols (LLMProvider, MemoryProvider)
+3. **Wired In** - There's a clear integration point (e.g., AgentLoop, DecisionEngine)
+4. **Documented** - Integration plan is documented
+5. **Safe** - Doesn't break existing functionality (regression tests pass)
+
+### Current Prototypes
+
+| Prototype | Status | Description |
+|-----------|--------|-------------|
+| `semantic_expansion` | Experimental | Two-pass semantic understanding with WSD and memory integration |
 
 ---
 
