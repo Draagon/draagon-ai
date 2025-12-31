@@ -581,6 +581,44 @@ tests/
 
 ---
 
+## 🔒 Testing Integrity Principles (CRITICAL)
+
+**See `CONSTITUTION.md` for full principles.** These are inviolable:
+
+### 1. NEVER Weaken Tests to Pass (ABSOLUTE RULE)
+
+**Tests exist to validate the system. The system must rise to meet the tests.**
+
+| ❌ FORBIDDEN | ✅ REQUIRED |
+|--------------|-------------|
+| Lower threshold from 80% to 60% | Fix the underlying bug causing 60% |
+| Remove failing test case | Debug why the test case fails |
+| Add "skip" without root cause analysis | Document gap and create fix plan |
+| Change expected value to match wrong output | Fix algorithm to produce correct output |
+
+### 2. Always Fix Root Issues When Found
+
+**If you discover a bug while working on something else, FIX IT IMMEDIATELY.**
+
+Even if "out of scope" - fix wrong constants, missing edge cases, logical errors.
+
+### 3. Tests Must Be Designed to Fail Initially
+
+Good tests challenge the system. Include:
+- **Tier 1**: Industry standard tests (must pass for production)
+- **Tier 2**: Advanced tests (push boundaries, may initially fail)
+- **Tier 3**: Frontier tests (represent unsolved problems)
+
+### 4. Prevent Test Overfitting
+
+Include novel test cases, randomized testing, out-of-domain examples, adversarial inputs.
+
+### 5. Benchmark Against Industry Standards
+
+Compare to published benchmarks (BioScope, CoNLL, TempEval, ATOMIC, etc.).
+
+---
+
 ## 🧪 Prototypes
 
 The `prototypes/` folder contains experimental code that explores new capabilities before they're integrated into the core framework. Prototypes are designed to be isolated, self-contained, and safe to experiment with.
