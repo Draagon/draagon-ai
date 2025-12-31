@@ -836,8 +836,7 @@ class ParallelCognitiveOrchestrator(MultiAgentOrchestrator):
             f"{num_phases} barrier phases"
         )
 
-        # Create barrier for synchronization
-        # +1 for the orchestrator thread that manages sync operations
+        # Create barrier for synchronization (Python 3.11+ native asyncio.Barrier)
         barrier = asyncio.Barrier(len(agents))
 
         # Track results and phase outputs
@@ -919,7 +918,7 @@ class ParallelCognitiveOrchestrator(MultiAgentOrchestrator):
                     )
                     # Reset barrier to prevent deadlock
                     try:
-                        barrier.reset()
+                        await barrier.reset()
                     except asyncio.BrokenBarrierError:
                         pass
                     break
