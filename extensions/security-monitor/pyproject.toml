@@ -9,7 +9,7 @@ description = "Autonomous security monitoring extension for draagon-ai"
 readme = "README.md"
 license = "MIT"
 authors = [{ name = "Doug" }]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 
 dependencies = [
     "draagon-ai>=0.1.0",

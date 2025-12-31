@@ -112,7 +112,7 @@ BAD TEST:  "Agent MUST use tool 'get_weather' exactly"
 ## Technical Constraints
 
 ### Must Have
-- Python 3.10+ compatibility
+- Python 3.11+ compatibility
 - Fully async API (asyncio)
 - Zero required external services (all optional)
 - Protocol-based extensibility

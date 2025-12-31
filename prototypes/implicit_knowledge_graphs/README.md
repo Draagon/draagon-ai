@@ -306,7 +306,7 @@ docs/
 ## Dependencies
 
 **Required:**
-- Python 3.10+
+- Python 3.11+
 - `nltk` (WordNet access)
 - `anthropic` (Opus 4.5 evaluation)
 

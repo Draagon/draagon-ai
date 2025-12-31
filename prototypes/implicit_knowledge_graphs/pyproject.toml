@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "implicit_knowledge_graphs"
 version = "0.1.0"
 description = "Implicit knowledge graphs prototype for draagon-ai"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 
 [tool.setuptools.packages.find]
 where = ["src"]

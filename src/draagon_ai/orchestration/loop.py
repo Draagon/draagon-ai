@@ -25,7 +25,6 @@ ReAct Pattern (REQ-002-01):
         FINAL_ANSWER: "You have a conflict on Tuesday at 3pm..."
 """
 
-from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -42,35 +41,13 @@ from .execution import ActionExecutor, ActionResult
 logger = logging.getLogger(__name__)
 
 
-# Python 3.10 compatibility for asyncio.timeout (added in 3.11)
-if sys.version_info >= (3, 11):
-    async_timeout = asyncio.timeout
-else:
-    @asynccontextmanager
-    async def async_timeout(delay: float | None):
-        """Compatibility shim for asyncio.timeout on Python 3.10."""
-        if delay is None:
-            yield
-            return
-
-        loop = asyncio.get_event_loop()
-        deadline = loop.time() + delay
-        task = asyncio.current_task()
-        if task is None:
-            raise RuntimeError("async_timeout must be called from a coroutine")
-
-        def timeout_callback():
-            task.cancel()
-
-        handle = loop.call_at(deadline, timeout_callback)
-        try:
-            yield
-        except asyncio.CancelledError:
-            if loop.time() >= deadline:
-                raise asyncio.TimeoutError()
-            raise
-        finally:
-            handle.cancel()
+# Require Python 3.11+ for asyncio.timeout and asyncio.Barrier
+if sys.version_info < (3, 11):
+    raise RuntimeError(
+        f"draagon-ai requires Python 3.11+, but you are running {sys.version_info.major}.{sys.version_info.minor}. "
+        "Please upgrade Python."
+    )
+async_timeout = asyncio.timeout
 
 
 class LoopMode(Enum):

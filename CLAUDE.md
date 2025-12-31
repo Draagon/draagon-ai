@@ -767,7 +767,7 @@ A prototype is ready to graduate when:
 
 ### Version Compatibility
 
-- Python 3.10+
+- Python 3.11+
 - Qdrant 1.7+
 - Supports Groq, OpenAI, Ollama LLM providers
 

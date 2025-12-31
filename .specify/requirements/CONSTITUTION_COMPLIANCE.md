@@ -253,7 +253,7 @@ Tests **outcome** (correct belief), not **process** (specific LLM reasoning).
 
 | Constraint | Compliance | Evidence |
 |-----------|-----------|----------|
-| Python 3.10+ compatibility | ✅ PASS | All FRs use modern Python patterns (dataclasses, Protocols, async/await) |
+| Python 3.11+ compatibility | ✅ PASS | All FRs use modern Python patterns (dataclasses, Protocols, async/await) |
 | Fully async API | ✅ PASS | All methods are `async def` |
 | Zero required external services | ✅ PASS | LLMProvider, embedding provider are optional protocols |
 | Protocol-based extensibility | ✅ PASS | See Protocol-Based Design section |

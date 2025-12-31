@@ -49,7 +49,7 @@ Risk Management:            85/100 ✅ GOOD
 ### ✅ Technical Constraints: 10/10 PASS
 
 **Must Have (5/5):**
-- ✅ Python 3.10+ compatibility (`@dataclass`, `|` union types)
+- ✅ Python 3.11+ compatibility (`@dataclass`, `|` union types)
 - ✅ Fully async API (all methods `async def`)
 - ✅ Zero required services (embedding provider optional)
 - ✅ Protocol-based (`EmbeddingProvider` Protocol)
