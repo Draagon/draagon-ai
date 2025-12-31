@@ -14,10 +14,126 @@ Each extractor follows a hybrid pattern:
 1. Fast heuristic analysis first
 2. LLM fallback for complex cases
 
+Example:
+    >>> from draagon_ai.cognition.decomposition.extractors import (
+    ...     DecompositionPipeline,
+    ...     DecompositionConfig,
+    ...     PresuppositionExtractor,
+    ... )
+    >>>
+    >>> config = DecompositionConfig()
+    >>> pipeline = DecompositionPipeline(config, llm=my_llm)
+    >>> result = await pipeline.decompose("Doug forgot the meeting again")
+
 Based on prototype work in prototypes/implicit_knowledge_graphs/
 """
 
-# Note: Extractors will be imported here as they are migrated
-# For now, the main decomposition module provides the simplified versions
+# Models - Core data structures
+from .models import (
+    # Enumerations
+    PresuppositionTrigger,
+    CommonsenseRelation,
+    Aspect,
+    Tense,
+    ModalType,
+    Polarity,
+    # Data structures
+    SemanticRole,
+    Presupposition,
+    CommonsenseInference,
+    TemporalInfo,
+    ModalityInfo,
+    NegationInfo,
+    CrossReference,
+    WeightedBranch,
+    DecomposedKnowledge,
+)
 
-__all__ = []
+# Configuration
+from .config import (
+    StageEnablement,
+    SemanticRoleConfig,
+    PresuppositionConfig,
+    CommonsenseConfig,
+    NegationConfig,
+    TemporalConfig,
+    ModalityConfig,
+    WeightingConfig,
+    DecompositionConfig,
+)
+
+# Extractors
+from .semantic_roles import SemanticRoleExtractor
+from .presuppositions import PresuppositionExtractor
+from .commonsense import CommonsenseExtractor
+from .temporal import TemporalExtractor
+from .modality import ModalityExtractor
+from .negation import NegationExtractor
+
+# Pipeline
+from .pipeline import (
+    DecompositionPipeline,
+    PipelineMetrics,
+    PipelineError,
+    StageStatus,
+    StageResult,
+    BranchBuilder,
+    decompose,
+    decompose_sync,
+)
+
+__all__ = [
+    # ==========================================================================
+    # Enumerations
+    # ==========================================================================
+    "PresuppositionTrigger",
+    "CommonsenseRelation",
+    "Aspect",
+    "Tense",
+    "ModalType",
+    "Polarity",
+    # ==========================================================================
+    # Data Structures
+    # ==========================================================================
+    "SemanticRole",
+    "Presupposition",
+    "CommonsenseInference",
+    "TemporalInfo",
+    "ModalityInfo",
+    "NegationInfo",
+    "CrossReference",
+    "WeightedBranch",
+    "DecomposedKnowledge",
+    # ==========================================================================
+    # Configuration
+    # ==========================================================================
+    "StageEnablement",
+    "SemanticRoleConfig",
+    "PresuppositionConfig",
+    "CommonsenseConfig",
+    "NegationConfig",
+    "TemporalConfig",
+    "ModalityConfig",
+    "WeightingConfig",
+    "DecompositionConfig",
+    # ==========================================================================
+    # Extractors
+    # ==========================================================================
+    "SemanticRoleExtractor",
+    "PresuppositionExtractor",
+    "CommonsenseExtractor",
+    "TemporalExtractor",
+    "ModalityExtractor",
+    "NegationExtractor",
+    # ==========================================================================
+    # Pipeline
+    # ==========================================================================
+    "DecompositionPipeline",
+    "PipelineMetrics",
+    "PipelineError",
+    "StageStatus",
+    "StageResult",
+    "BranchBuilder",
+    "decompose",
+    "decompose_sync",
+]
