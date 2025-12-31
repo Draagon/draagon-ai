@@ -1254,10 +1254,14 @@ class TestExecutorFormatting:
         assert "No results found" in result
 
     def test_format_result_value_list_with_items(self, executor):
-        """Test formatting list with items."""
+        """Test formatting list with items shows actual content."""
         result = executor._format_result_value([1, 2, 3, 4])
 
-        assert "4 result(s)" in result
+        # Format changed to show actual content: "1; 2; 3; 4"
+        assert "1" in result
+        assert "2" in result
+        assert "3" in result
+        assert "4" in result
 
     def test_format_result_value_other_type(self, executor):
         """Test formatting other types returns str()."""

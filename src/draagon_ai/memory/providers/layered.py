@@ -1017,6 +1017,8 @@ class LayeredMemoryProvider(MemoryProvider):
         self,
         entities: list[str],
         *,
+        agent_id: str | None = None,
+        user_id: str | None = None,
         limit: int = 5,
     ) -> list[SearchResult]:
         """Search memories by entity overlap.
@@ -1027,6 +1029,8 @@ class LayeredMemoryProvider(MemoryProvider):
 
         Args:
             entities: List of entities to search for.
+            agent_id: Filter by agent (not yet implemented).
+            user_id: Filter by user (not yet implemented).
             limit: Maximum results to return.
 
         Returns:
@@ -1036,6 +1040,8 @@ class LayeredMemoryProvider(MemoryProvider):
             # Find memories mentioning Doug or cats
             results = await provider.search_by_entities(["Doug", "cats"])
         """
+        # TODO: Implement agent_id and user_id filtering
+        _ = agent_id, user_id  # Suppress unused parameter warning
         self._ensure_initialized()
 
         if not entities:

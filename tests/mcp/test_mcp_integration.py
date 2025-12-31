@@ -54,9 +54,22 @@ def check_ollama_available() -> bool:
         return False
 
 
+def check_ollama_package() -> bool:
+    """Check if ollama Python package is installed."""
+    try:
+        import ollama  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+
 # Skip if Qdrant or Ollama not available
 pytestmark = [
     pytest.mark.integration,
+    pytest.mark.skipif(
+        not check_ollama_package(),
+        reason="ollama package not installed"
+    ),
     pytest.mark.skipif(
         not check_qdrant_available(),
         reason=f"Qdrant not accessible at {QDRANT_URL}"

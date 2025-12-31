@@ -100,7 +100,7 @@ class TestAgentLoopConfig:
         assert config.mode == LoopMode.AUTO
         assert config.max_iterations == 10
         assert config.iteration_timeout_seconds == 30.0
-        assert config.complexity_threshold == 0.7
+        assert config.complexity_threshold == 0.33  # Lowered for sensor queries
         assert config.log_thought_traces is True
 
     def test_custom_config(self):
