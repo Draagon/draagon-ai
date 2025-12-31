@@ -53,8 +53,8 @@ Example:
 Based on prototype work in prototypes/implicit_knowledge_graphs/
 """
 
+# Types from the simple service layer
 from .types import (
-    EntityType,
     DecompositionResult,
     ExtractedEntity,
     ExtractedFact,
@@ -66,11 +66,82 @@ from .types import (
     ModalityInfo,
     InterpretationBranch,
 )
+
+# Service layer
 from .service import DecompositionService
 
+# Phase 0: Identifiers and Universal Semantic Identifier
+from .identifiers import (
+    EntityType,
+    UniversalSemanticIdentifier,
+    SynsetInfo,
+    LearnedSynset,
+    SynsetSource,
+    create_instance_identifier,
+    create_class_identifier,
+    create_role_identifier,
+    create_anaphora_identifier,
+    create_generic_identifier,
+)
+
+# Phase 0: Word Sense Disambiguation
+from .wsd import (
+    WordSenseDisambiguator,
+    WSDConfig,
+    DisambiguationResult,
+    LeskDisambiguator,
+    LLMDisambiguator,
+    WordNetInterface,
+    WordNetNotAvailableError,
+    get_synset_id,
+    synset_ids_match,
+    are_same_word_different_sense,
+)
+
+# Phase 0: Entity Classification
+from .entity_classifier import (
+    EntityClassifier,
+    ClassifierConfig,
+    ClassificationResult,
+    HeuristicClassifier,
+    LLMClassifier,
+    is_pronoun,
+    is_generic,
+    is_likely_proper_noun,
+    extract_role_anchor,
+)
+
+# Phase 0: Content Analysis
+from .content_analyzer import (
+    ContentAnalyzer,
+    ContentAnalysis,
+    ContentType,
+    ProcessingStrategy,
+    ContentComponent,
+    StructuralKnowledge,
+    analyze_content,
+    extract_natural_language,
+)
+
+# Phase 0: Evolving Synset Database
+from .evolving_synsets import (
+    EvolvingSynsetDatabase,
+    EvolvingDBConfig,
+    create_evolving_database,
+)
+
+# Memory Integration
+from .memory_integration import (
+    MemoryIntegration,
+    DecompositionMemoryService,
+    IntegrationConfig,
+    IntegrationResult,
+)
+
 __all__ = [
-    # Types
-    "EntityType",
+    # ==========================================================================
+    # Types (from simple service layer)
+    # ==========================================================================
     "DecompositionResult",
     "ExtractedEntity",
     "ExtractedFact",
@@ -81,6 +152,70 @@ __all__ = [
     "TemporalInfo",
     "ModalityInfo",
     "InterpretationBranch",
+    # ==========================================================================
     # Service
+    # ==========================================================================
     "DecompositionService",
+    # ==========================================================================
+    # Phase 0: Identifiers
+    # ==========================================================================
+    "EntityType",
+    "UniversalSemanticIdentifier",
+    "SynsetInfo",
+    "LearnedSynset",
+    "SynsetSource",
+    "create_instance_identifier",
+    "create_class_identifier",
+    "create_role_identifier",
+    "create_anaphora_identifier",
+    "create_generic_identifier",
+    # ==========================================================================
+    # Phase 0: Word Sense Disambiguation
+    # ==========================================================================
+    "WordSenseDisambiguator",
+    "WSDConfig",
+    "DisambiguationResult",
+    "LeskDisambiguator",
+    "LLMDisambiguator",
+    "WordNetInterface",
+    "WordNetNotAvailableError",
+    "get_synset_id",
+    "synset_ids_match",
+    "are_same_word_different_sense",
+    # ==========================================================================
+    # Phase 0: Entity Classification
+    # ==========================================================================
+    "EntityClassifier",
+    "ClassifierConfig",
+    "ClassificationResult",
+    "HeuristicClassifier",
+    "LLMClassifier",
+    "is_pronoun",
+    "is_generic",
+    "is_likely_proper_noun",
+    "extract_role_anchor",
+    # ==========================================================================
+    # Phase 0: Content Analysis
+    # ==========================================================================
+    "ContentAnalyzer",
+    "ContentAnalysis",
+    "ContentType",
+    "ProcessingStrategy",
+    "ContentComponent",
+    "StructuralKnowledge",
+    "analyze_content",
+    "extract_natural_language",
+    # ==========================================================================
+    # Phase 0: Evolving Synset Database
+    # ==========================================================================
+    "EvolvingSynsetDatabase",
+    "EvolvingDBConfig",
+    "create_evolving_database",
+    # ==========================================================================
+    # Memory Integration
+    # ==========================================================================
+    "MemoryIntegration",
+    "DecompositionMemoryService",
+    "IntegrationConfig",
+    "IntegrationResult",
 ]
