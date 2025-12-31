@@ -6,12 +6,14 @@ Provides comprehensive word sense disambiguation using:
 3. Extended Lesk with hypernym/hyponym glosses
 4. LLM-based disambiguation for complex/ambiguous cases
 5. Hybrid pipeline with evolvable thresholds
+6. Smart context extraction for large texts
 
 Key Principles:
 - WSD is FOUNDATIONAL - must happen before any other processing
 - Hybrid approach: fast algorithms first, LLM fallback when uncertain
 - All thresholds and parameters are evolvable
 - XML output format for LLM responses
+- Large texts are automatically chunked for efficient processing
 
 Example:
     >>> from wsd import WordSenseDisambiguator, WSDConfig
@@ -23,6 +25,9 @@ Example:
     >>> result = await wsd.disambiguate("bank", "I deposited money in the bank")
     >>> print(result.synset_id)  # "bank.n.01"
     >>> print(result.confidence)  # 0.92
+    >>>
+    >>> # Works with very long texts too - context is automatically extracted
+    >>> result = await wsd.disambiguate("bank", very_long_document)
 
 Based on research from:
 - WordNet (https://wordnet.princeton.edu/)
@@ -36,10 +41,11 @@ import re
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Protocol
 
-from identifiers import SynsetInfo, UniversalSemanticIdentifier, EntityType
+from identifiers import SynsetInfo, UniversalSemanticIdentifier, EntityType, LearnedSynset
 
 if TYPE_CHECKING:
-    pass
+    from evolving_synsets import EvolvingSynsetDatabase
+    from synset_learning import SynsetLearningService
 
 
 # =============================================================================
@@ -98,6 +104,8 @@ class WSDConfig:
         wsd_prompt_template: The prompt template for LLM disambiguation
         wsd_temperature: Temperature for LLM calls
         max_synset_candidates: Maximum synsets to consider
+        large_text_threshold: Character count above which to use smart chunking
+        smart_context_words: Words to extract around target in large texts
     """
 
     # Lesk parameters
@@ -129,6 +137,10 @@ Respond in XML:
     wsd_temperature: float = 0.1
     max_synset_candidates: int = 5
 
+    # Large text handling
+    large_text_threshold: int = 1000  # Chars above which to use smart chunking
+    smart_context_words: int = 30  # Words around target for large texts
+
     def to_dict(self) -> dict[str, Any]:
         """Serialize config for evolution/storage."""
         return {
@@ -141,6 +153,8 @@ Respond in XML:
             "wsd_prompt_template": self.wsd_prompt_template,
             "wsd_temperature": self.wsd_temperature,
             "max_synset_candidates": self.max_synset_candidates,
+            "large_text_threshold": self.large_text_threshold,
+            "smart_context_words": self.smart_context_words,
         }
 
     @classmethod
@@ -478,73 +492,191 @@ COMMON_SYNSETS: dict[str, list[MockSynset]] = {
 # =============================================================================
 
 
+class WordNetNotAvailableError(Exception):
+    """Raised when WordNet is required but not available.
+
+    To fix this error, install NLTK and download the WordNet corpus:
+
+        pip install nltk
+        python -c "import nltk; nltk.download('wordnet'); nltk.download('omw-1.4')"
+
+    See docs/research/EVOLVING_SYNSET_DATABASE.md for the future vision
+    of a self-learning synset database that won't require this dependency.
+    """
+
+    def __init__(self, original_error: Exception | None = None):
+        message = (
+            "WordNet is required but not available.\n\n"
+            "To install WordNet:\n"
+            "  pip install nltk\n"
+            "  python -c \"import nltk; nltk.download('wordnet'); nltk.download('omw-1.4')\"\n\n"
+            "See docs/research/EVOLVING_SYNSET_DATABASE.md for the future vision\n"
+            "of a self-learning synset database."
+        )
+        if original_error:
+            message += f"\n\nOriginal error: {original_error}"
+        super().__init__(message)
+        self.original_error = original_error
+
+
 class WordNetInterface:
     """Interface for WordNet synset operations.
 
-    Provides a unified API for WordNet access, falling back to mock data
-    when NLTK WordNet is unavailable.
+    Requires NLTK WordNet to be installed. Raises WordNetNotAvailableError
+    if WordNet is not available.
+
+    Supports an evolving synset database that extends WordNet with:
+    - Technology terms (kubernetes, docker, terraform)
+    - Domain-specific jargon
+    - User-defined terms and corrections
+    - LLM-generated definitions
+
+    See docs/research/EVOLVING_SYNSET_DATABASE.md for the architecture.
     """
 
-    def __init__(self, use_nltk: bool = True):
+    def __init__(
+        self,
+        require_wordnet: bool = True,
+        evolving_db: "EvolvingSynsetDatabase | None" = None,
+        prefer_evolved: bool = True,
+    ):
         """Initialize the WordNet interface.
 
         Args:
-            use_nltk: Whether to attempt using NLTK WordNet
+            require_wordnet: If True (default), raise error if WordNet unavailable.
+                             If False, allow graceful degradation (for testing).
+            evolving_db: Optional evolving synset database for extended vocabulary
+            prefer_evolved: If True, prefer evolved synsets over WordNet when both exist
+
+        Raises:
+            WordNetNotAvailableError: If require_wordnet=True and WordNet unavailable
         """
-        self.use_nltk = use_nltk
         self._wordnet = None
+        self._available = False
+        self._evolving_db = evolving_db
+        self._prefer_evolved = prefer_evolved
 
-        if use_nltk:
-            try:
-                from nltk.corpus import wordnet
-                # Test that the corpus is actually available
-                wordnet.synsets("test")
-                self._wordnet = wordnet
-            except (ImportError, LookupError):
-                self.use_nltk = False
+        try:
+            from nltk.corpus import wordnet
+            # Test that the corpus is actually available
+            wordnet.synsets("test")
+            self._wordnet = wordnet
+            self._available = True
+        except ImportError as e:
+            if require_wordnet:
+                raise WordNetNotAvailableError(e) from e
+        except LookupError as e:
+            if require_wordnet:
+                raise WordNetNotAvailableError(e) from e
 
-    def get_synsets(self, word: str, pos: str | None = None) -> list[SynsetInfo]:
-        """Get synsets for a word.
+    @property
+    def is_available(self) -> bool:
+        """Check if WordNet is available."""
+        return self._available
+
+    @property
+    def has_evolving_db(self) -> bool:
+        """Check if an evolving database is attached."""
+        return self._evolving_db is not None
+
+    def set_evolving_db(self, db: "EvolvingSynsetDatabase | None") -> None:
+        """Set or replace the evolving synset database.
 
         Args:
-            word: The word to look up (lemmatized)
+            db: The evolving database, or None to remove
+        """
+        self._evolving_db = db
+
+    def get_synsets(
+        self,
+        word: str,
+        pos: str | None = None,
+        domain: str | None = None,
+    ) -> list[SynsetInfo]:
+        """Get synsets for a word, merging evolved and WordNet results.
+
+        Priority when both sources have the word:
+        1. If prefer_evolved=True: Evolved synsets first, then WordNet
+        2. If prefer_evolved=False: WordNet first, then evolved synsets
+
+        Args:
+            word: The word to look up (case-insensitive)
             pos: Part of speech filter (n, v, a, r)
+            domain: Optional domain filter (only applies to evolved synsets)
 
         Returns:
             List of SynsetInfo objects
+
+        Raises:
+            WordNetNotAvailableError: If WordNet is not available and no evolved synsets
         """
-        if self.use_nltk and self._wordnet:
-            synsets = self._wordnet.synsets(word, pos=pos)
-            return [self._synset_to_info(s) for s in synsets]
-        else:
-            # Use mock synsets
-            mock_synsets = COMMON_SYNSETS.get(word.lower(), [])
-            if pos:
-                mock_synsets = [s for s in mock_synsets if s.pos == pos]
-            return [self._mock_synset_to_info(s) for s in mock_synsets]
+        results: list[SynsetInfo] = []
+        evolved_ids: set[str] = set()
+
+        # Get evolved synsets first if available
+        if self._evolving_db:
+            evolved = self._evolving_db.get_synsets(word, pos, domain)
+            for learned in evolved:
+                evolved_ids.add(learned.synset_id)
+                results.append(learned.to_synset_info())
+
+        # Get WordNet synsets
+        wordnet_synsets: list[SynsetInfo] = []
+        if self._available and self._wordnet:
+            synsets = self._wordnet.synsets(word.lower(), pos=pos)
+            wordnet_synsets = [self._synset_to_info(s) for s in synsets]
+
+        # Merge based on preference
+        if self._prefer_evolved and results:
+            # Add WordNet synsets that don't conflict with evolved
+            for wn_syn in wordnet_synsets:
+                # Don't add if we have an evolved synset for the same word
+                # (evolved definitions are domain-specific and preferred)
+                if wn_syn.synset_id not in evolved_ids:
+                    results.append(wn_syn)
+        elif wordnet_synsets:
+            # WordNet first, then evolved as supplements
+            results = wordnet_synsets + [r for r in results if r.synset_id not in {s.synset_id for s in wordnet_synsets}]
+        elif not results:
+            # No evolved synsets and WordNet not available
+            if not self._available:
+                raise WordNetNotAvailableError()
+
+        return results
 
     def get_synset_by_id(self, synset_id: str) -> SynsetInfo | None:
         """Get a specific synset by ID.
 
+        Checks evolving database first, then WordNet.
+
         Args:
-            synset_id: The synset ID (e.g., "bank.n.01")
+            synset_id: The synset ID (e.g., "bank.n.01" or "kubernetes.tech.01")
 
         Returns:
             SynsetInfo or None if not found
+
+        Raises:
+            WordNetNotAvailableError: If WordNet is not available and synset not in evolving DB
         """
-        if self.use_nltk and self._wordnet:
+        # Check evolving database first
+        if self._evolving_db:
+            learned = self._evolving_db.get_synset_by_id(synset_id)
+            if learned:
+                return learned.to_synset_info()
+
+        # Check WordNet
+        if self._available and self._wordnet:
             try:
                 synset = self._wordnet.synset(synset_id)
                 return self._synset_to_info(synset)
             except Exception:
-                return None
-        else:
-            # Search mock synsets
-            word = synset_id.split(".")[0] if "." in synset_id else synset_id
-            for mock in COMMON_SYNSETS.get(word.lower(), []):
-                if mock.name == synset_id:
-                    return self._mock_synset_to_info(mock)
-            return None
+                pass
+
+        # Not found in either
+        if not self._available and not self._evolving_db:
+            raise WordNetNotAvailableError()
+
+        return None
 
     def get_hypernym_chain(self, synset_id: str, max_depth: int = 10) -> list[str]:
         """Get the hypernym chain for a synset.
@@ -555,29 +687,26 @@ class WordNetInterface:
 
         Returns:
             List of hypernym synset IDs from most specific to most general
-        """
-        chain = []
 
-        if self.use_nltk and self._wordnet:
-            try:
-                synset = self._wordnet.synset(synset_id)
-                current = synset
-                for _ in range(max_depth):
-                    hypernyms = current.hypernyms()
-                    if not hypernyms:
-                        break
-                    # Take first hypernym (most common)
-                    current = hypernyms[0]
-                    chain.append(current.name())
-            except Exception:
-                pass
-        else:
-            # Use mock hypernyms
-            word = synset_id.split(".")[0] if "." in synset_id else synset_id
-            for mock in COMMON_SYNSETS.get(word.lower(), []):
-                if mock.name == synset_id:
-                    chain.extend(mock._hypernyms)
+        Raises:
+            WordNetNotAvailableError: If WordNet is not available
+        """
+        if not self._available or not self._wordnet:
+            raise WordNetNotAvailableError()
+
+        chain = []
+        try:
+            synset = self._wordnet.synset(synset_id)
+            current = synset
+            for _ in range(max_depth):
+                hypernyms = current.hypernyms()
+                if not hypernyms:
                     break
+                # Take first hypernym (most common)
+                current = hypernyms[0]
+                chain.append(current.name())
+        except Exception:
+            pass
 
         return chain
 
@@ -592,19 +721,6 @@ class WordNetInterface:
             hypernyms=[h.name() for h in synset.hypernyms()],
             hyponyms=[h.name() for h in synset.hyponyms()],
         )
-
-    def _mock_synset_to_info(self, mock: MockSynset) -> SynsetInfo:
-        """Convert mock synset to SynsetInfo."""
-        return SynsetInfo(
-            synset_id=mock.name,
-            pos=mock.pos,
-            lemmas=mock.lemmas,
-            definition=mock._definition,
-            examples=mock._examples,
-            hypernyms=mock._hypernyms,
-            hyponyms=mock._hyponyms,
-        )
-
 
 # =============================================================================
 # Lesk Disambiguator
@@ -994,11 +1110,20 @@ class WordSenseDisambiguator:
     """Hybrid Word Sense Disambiguation system.
 
     Combines multiple methods in an efficient pipeline:
-    1. Single synset → Return immediately (confidence=1.0)
-    2. Extended Lesk → High confidence? → Return
-    3. LLM fallback → Return LLM result
+    1. Smart context extraction for large texts
+    2. Single synset → Return immediately (confidence=1.0)
+    3. Extended Lesk → High confidence? → Return
+    4. LLM fallback → Return LLM result
 
     All thresholds are evolvable via WSDConfig.
+
+    Large Text Handling:
+        When sentences exceed the configured threshold (default 1000 chars),
+        the system automatically extracts relevant context around the target
+        word rather than processing the entire text. This ensures:
+        - Efficient processing of documents and long paragraphs
+        - Consistent memory usage regardless of input size
+        - Preservation of semantic context for accurate disambiguation
 
     Example:
         >>> config = WSDConfig(llm_fallback_threshold=0.6)
@@ -1007,6 +1132,9 @@ class WordSenseDisambiguator:
         >>> result = await wsd.disambiguate("bank", "I deposited money at the bank")
         >>> print(result.synset_id)  # "bank.n.01"
         >>> print(result.method)  # "extended_lesk" or "llm"
+        >>>
+        >>> # Also works with very long documents
+        >>> result = await wsd.disambiguate("bank", very_long_document)
     """
 
     # Map common POS tags to WordNet POS
@@ -1026,19 +1154,26 @@ class WordSenseDisambiguator:
         self,
         config: WSDConfig | None = None,
         llm: LLMProvider | None = None,
-        use_nltk: bool = True,
+        require_wordnet: bool = True,
+        synset_learner: "SynsetLearningService | None" = None,
     ):
         """Initialize the hybrid disambiguator.
 
         Args:
             config: WSD configuration (uses defaults if not provided)
             llm: LLM provider for fallback disambiguation
-            use_nltk: Whether to use NLTK WordNet
+            require_wordnet: If True (default), raise error if WordNet unavailable
+            synset_learner: Optional synset learning service for recording unknown terms
+
+        Raises:
+            WordNetNotAvailableError: If require_wordnet=True and WordNet unavailable
         """
         self.config = config or WSDConfig()
         self.llm = llm
-        self.wordnet = WordNetInterface(use_nltk=use_nltk)
+        self.wordnet = WordNetInterface(require_wordnet=require_wordnet)
         self.lesk = LeskDisambiguator(self.wordnet, self.config)
+        self._synset_learner = synset_learner
+        self._chunker = None  # Lazy init
 
         if llm:
             self.llm_disambiguator = LLMDisambiguator(llm, self.wordnet, self.config)
@@ -1052,7 +1187,40 @@ class WordSenseDisambiguator:
             "lesk_accepted": 0,
             "llm_calls": 0,
             "failures": 0,
+            "unknown_terms_recorded": 0,
+            "large_texts_chunked": 0,
         }
+
+    def _get_chunker(self):
+        """Lazy initialization of text chunker."""
+        if self._chunker is None:
+            from text_chunking import TextChunker, ChunkingConfig
+            self._chunker = TextChunker(ChunkingConfig(
+                context_window_words=self.config.smart_context_words,
+            ))
+        return self._chunker
+
+    def _maybe_extract_context(self, word: str, text: str) -> str:
+        """Extract context from large texts, or return text unchanged if small.
+
+        Args:
+            word: Target word to find context around
+            text: The input text (may be short sentence or long document)
+
+        Returns:
+            Either the original text (if short) or extracted context (if long)
+        """
+        if len(text) <= self.config.large_text_threshold:
+            return text
+
+        self.metrics["large_texts_chunked"] += 1
+        chunker = self._get_chunker()
+        return chunker.extract_context_around_word(
+            text,
+            word,
+            context_words=self.config.smart_context_words,
+            include_full_sentences=True,
+        )
 
     async def disambiguate(
         self,
@@ -1064,13 +1232,23 @@ class WordSenseDisambiguator:
 
         Args:
             word: The word to disambiguate
-            sentence: The full sentence for context
+            sentence: The full sentence/text for context (can be very long)
             pos: Part of speech (optional)
 
         Returns:
             DisambiguationResult or None if cannot disambiguate
+
+        Note:
+            If a synset_learner is configured and no synsets are found,
+            the unknown term will be recorded for later learning.
+
+            Large texts (>1000 chars by default) are automatically chunked
+            to extract relevant context around the target word.
         """
         self.metrics["total_calls"] += 1
+
+        # Extract context from large texts
+        context_text = self._maybe_extract_context(word, sentence)
 
         # Normalize POS
         wn_pos = self.POS_MAP.get(pos) if pos else None
@@ -1080,6 +1258,14 @@ class WordSenseDisambiguator:
 
         if not synsets:
             self.metrics["failures"] += 1
+            # Record unknown term if learner is available
+            if self._synset_learner:
+                await self._synset_learner.record_unknown_term(
+                    term=word,
+                    context=context_text,  # Use extracted context, not full text
+                    pos=wn_pos,
+                )
+                self.metrics["unknown_terms_recorded"] += 1
             return None
 
         # Step 1: Single synset = unambiguous
@@ -1096,8 +1282,8 @@ class WordSenseDisambiguator:
                 method="unambiguous",
             )
 
-        # Step 2: Try Extended Lesk
-        context = self._extract_context(word, sentence)
+        # Step 2: Try Extended Lesk (using extracted context)
+        context = self._extract_context(word, context_text)
         lesk_result = self.lesk.extended_disambiguate(word.lower(), context, wn_pos)
 
         if lesk_result and lesk_result.confidence >= self.config.lesk_high_confidence:
@@ -1113,7 +1299,7 @@ class WordSenseDisambiguator:
             self.metrics["llm_calls"] += 1
             llm_result = await self.llm_disambiguator.disambiguate(
                 word.lower(),
-                sentence,
+                context_text,  # Use extracted context for LLM too
                 candidates=synsets,
                 pos=wn_pos,
             )
@@ -1127,6 +1313,14 @@ class WordSenseDisambiguator:
 
         self.metrics["failures"] += 1
         return None
+
+    def set_synset_learner(self, learner: "SynsetLearningService | None") -> None:
+        """Set or replace the synset learning service.
+
+        Args:
+            learner: The synset learning service, or None to disable
+        """
+        self._synset_learner = learner
 
     async def disambiguate_all(
         self,

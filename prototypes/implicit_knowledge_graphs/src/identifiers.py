@@ -128,6 +128,238 @@ class SynsetInfo:
 
 
 # =============================================================================
+# Learned Synset (Evolving Database)
+# =============================================================================
+
+
+class SynsetSource(str, Enum):
+    """Source of a learned synset.
+
+    BOOTSTRAP: Pre-loaded vocabulary from initialization
+    USER: User-provided correction or new definition
+    LLM: LLM-generated definition (may need verification)
+    WORDNET: From WordNet (passthrough, not stored in learned DB)
+    """
+
+    BOOTSTRAP = "bootstrap"
+    USER = "user"
+    LLM = "llm"
+    WORDNET = "wordnet"
+
+
+@dataclass
+class LearnedSynset:
+    """A synset learned outside of WordNet.
+
+    Extends the concept of SynsetInfo with provenance tracking,
+    usage statistics, and reinforcement learning support.
+
+    Used for:
+    - Technology terms (kubernetes, docker, terraform)
+    - Domain-specific jargon not in WordNet
+    - User-defined terms and corrections
+    - LLM-generated definitions
+
+    Synset ID Convention for learned terms:
+    - Format: {word}.{domain_code}.{sense_number}
+    - Examples: kubernetes.tech.01, rag.ai.01
+    - This distinguishes from WordNet IDs which use {word}.{pos}.{sense}
+
+    Attributes:
+        synset_id: Unique identifier (e.g., "kubernetes.tech.01")
+        word: The primary word/term
+        pos: Part of speech (n=noun, v=verb, a=adjective, r=adverb)
+        definition: Human-readable definition
+        examples: Example sentences showing usage
+        hypernyms: Parent concept synset IDs
+        hyponyms: Child concept synset IDs
+        aliases: Alternative names/abbreviations (e.g., ["k8s", "kube"])
+        domain: Semantic domain (e.g., "CLOUD_INFRASTRUCTURE", "AI_ML")
+
+        source: Where this synset came from
+        confidence: Confidence in the definition (0.0-1.0)
+        usage_count: Number of times this synset was used in disambiguation
+        success_count: Number of successful disambiguations
+        failure_count: Number of failed disambiguations
+        last_used: ISO timestamp of last usage
+        created_at: ISO timestamp of creation
+    """
+
+    # Core synset data
+    synset_id: str
+    word: str
+    pos: str
+    definition: str
+    examples: list[str] = field(default_factory=list)
+    hypernyms: list[str] = field(default_factory=list)
+    hyponyms: list[str] = field(default_factory=list)
+    aliases: list[str] = field(default_factory=list)
+    domain: str = ""
+
+    # Provenance
+    source: SynsetSource = SynsetSource.BOOTSTRAP
+    confidence: float = 1.0
+
+    # Usage statistics for reinforcement learning
+    usage_count: int = 0
+    success_count: int = 0
+    failure_count: int = 0
+    last_used: str | None = None
+    created_at: str = field(default_factory=lambda: "")
+
+    def __post_init__(self):
+        """Set created_at if not provided."""
+        if not self.created_at:
+            from datetime import datetime, timezone
+
+            self.created_at = datetime.now(timezone.utc).isoformat()
+
+    @property
+    def success_rate(self) -> float:
+        """Calculate the success rate from usage statistics."""
+        total = self.success_count + self.failure_count
+        if total == 0:
+            return 1.0  # No data, assume success
+        return self.success_count / total
+
+    @property
+    def lemmas(self) -> list[str]:
+        """Return word and aliases as lemmas for compatibility with SynsetInfo."""
+        return [self.word] + self.aliases
+
+    @property
+    def sense_number(self) -> int:
+        """Extract sense number from synset_id."""
+        parts = self.synset_id.rsplit(".", 2)
+        if len(parts) >= 3:
+            try:
+                return int(parts[2])
+            except ValueError:
+                return 1
+        return 1
+
+    def to_synset_info(self) -> SynsetInfo:
+        """Convert to SynsetInfo for compatibility with existing code.
+
+        Returns:
+            SynsetInfo with equivalent data
+        """
+        return SynsetInfo(
+            synset_id=self.synset_id,
+            pos=self.pos,
+            lemmas=self.lemmas,
+            definition=self.definition,
+            examples=self.examples,
+            hypernyms=self.hypernyms,
+            hyponyms=self.hyponyms,
+        )
+
+    def record_usage(self, success: bool = True) -> None:
+        """Record a usage of this synset.
+
+        Args:
+            success: Whether the disambiguation was successful
+        """
+        from datetime import datetime, timezone
+
+        self.usage_count += 1
+        if success:
+            self.success_count += 1
+        else:
+            self.failure_count += 1
+        self.last_used = datetime.now(timezone.utc).isoformat()
+
+    def matches_word(self, query: str) -> bool:
+        """Check if this synset matches a word query.
+
+        Args:
+            query: The word to match (case-insensitive)
+
+        Returns:
+            True if the word or any alias matches
+        """
+        query_lower = query.lower()
+        if self.word.lower() == query_lower:
+            return True
+        return any(alias.lower() == query_lower for alias in self.aliases)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to dictionary for JSON storage.
+
+        Returns:
+            Dictionary representation
+        """
+        return {
+            "synset_id": self.synset_id,
+            "word": self.word,
+            "pos": self.pos,
+            "definition": self.definition,
+            "examples": self.examples,
+            "hypernyms": self.hypernyms,
+            "hyponyms": self.hyponyms,
+            "aliases": self.aliases,
+            "domain": self.domain,
+            "source": self.source.value if isinstance(self.source, SynsetSource) else self.source,
+            "confidence": self.confidence,
+            "usage_count": self.usage_count,
+            "success_count": self.success_count,
+            "failure_count": self.failure_count,
+            "last_used": self.last_used,
+            "created_at": self.created_at,
+        }
+
+    def to_json(self) -> str:
+        """Serialize to JSON string."""
+        return json.dumps(self.to_dict(), indent=2)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "LearnedSynset":
+        """Deserialize from dictionary.
+
+        Args:
+            data: Dictionary representation
+
+        Returns:
+            Reconstructed LearnedSynset
+        """
+        source = data.get("source", "bootstrap")
+        if isinstance(source, str):
+            source = SynsetSource(source)
+
+        return cls(
+            synset_id=data["synset_id"],
+            word=data["word"],
+            pos=data.get("pos", "n"),
+            definition=data.get("definition", ""),
+            examples=data.get("examples", []),
+            hypernyms=data.get("hypernyms", []),
+            hyponyms=data.get("hyponyms", []),
+            aliases=data.get("aliases", []),
+            domain=data.get("domain", ""),
+            source=source,
+            confidence=data.get("confidence", 1.0),
+            usage_count=data.get("usage_count", 0),
+            success_count=data.get("success_count", 0),
+            failure_count=data.get("failure_count", 0),
+            last_used=data.get("last_used"),
+            created_at=data.get("created_at", ""),
+        )
+
+    @classmethod
+    def from_json(cls, json_str: str) -> "LearnedSynset":
+        """Deserialize from JSON string."""
+        return cls.from_dict(json.loads(json_str))
+
+    def __repr__(self) -> str:
+        """Concise string representation."""
+        return (
+            f"LearnedSynset({self.synset_id}: {self.word}, "
+            f"source={self.source.value}, "
+            f"success_rate={self.success_rate:.2%})"
+        )
+
+
+# =============================================================================
 # Universal Semantic Identifier
 # =============================================================================
 

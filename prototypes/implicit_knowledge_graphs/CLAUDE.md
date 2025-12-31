@@ -87,6 +87,33 @@ Every component is evolvable:
 
 **From the beginning**, build with evolution in mind.
 
+### 6. Content-Aware Processing (NEW)
+
+**WSD is for natural language, not all semantic understanding.**
+
+Different content types have different kinds of meaning:
+
+| Content Type | Process With | Extracts |
+|--------------|--------------|----------|
+| **PROSE** | Full WSD → Decomposition | Word senses, presuppositions, inferences |
+| **CODE** | Extract NL → WSD on that | Types, contracts + NL disambiguation |
+| **DATA** | Schema extraction | Column types, relationships, constraints |
+| **CONFIG** | Pattern extraction | Key hierarchies, common patterns |
+
+**NEVER** apply WSD to code syntax:
+```
+WRONG:
+  bank.deposit(100)  → WSD on "bank" as financial institution
+  "bank_account": "12345"  → WSD on "bank_account"
+
+RIGHT:
+  Detect content type first
+  For CODE: Extract docstrings/comments → WSD only on those
+  Code syntax carries TYPE meaning, not WORD SENSE meaning
+```
+
+See: [DD-001-CONTENT_TYPE_AWARE_PROCESSING.md](docs/design-decisions/DD-001-CONTENT_TYPE_AWARE_PROCESSING.md)
+
 ---
 
 ## File Structure
@@ -96,6 +123,12 @@ src/
 ├── __init__.py              # Package exports
 ├── identifiers.py           # UniversalSemanticIdentifier, EntityType enum
 ├── wsd.py                   # Word Sense Disambiguation (Lesk + LLM)
+├── entity_classifier.py     # Entity type classification
+├── synset_learning.py       # Runtime synset learning for unknown terms
+├── evolving_synsets.py      # Extensible synset database
+├── text_chunking.py         # Large text handling and context extraction
+├── content_analyzer.py      # LLM-driven content type classification
+├── content_aware_wsd.py     # Content-aware WSD integration
 ├── decomposition.py         # Multi-type implicit knowledge extraction
 ├── branches.py              # Weighted branch generation and scoring
 ├── storage.py               # Graph storage with synset-based linking
@@ -107,6 +140,11 @@ tests/
 ├── conftest.py              # Fixtures, path setup
 ├── test_identifiers.py      # Identifier system tests
 ├── test_wsd.py              # WSD accuracy tests
+├── test_entity_classifier.py
+├── test_synset_learning.py
+├── test_text_chunking.py
+├── test_content_analyzer.py # Content type classification tests
+├── test_content_aware_wsd.py # Content-aware WSD tests
 ├── test_decomposition.py    # Decomposition completeness tests
 ├── test_branches.py         # Branch generation tests
 ├── test_evolution.py        # Evolution framework tests
@@ -117,13 +155,16 @@ docs/
 ├── research/
 │   ├── DECOMPOSITION_THEORY.md       # Taxonomy of decomposition types
 │   ├── WSD_AND_ENTITY_LINKING.md     # WSD research summary
-│   └── CONTINUED_RESEARCH.md         # Future research directions
+│   ├── CONTINUED_RESEARCH.md         # Future research directions
+│   └── CONTENT_TYPE_HANDLING.md      # Content type semantic extraction
 ├── requirements/
 │   ├── PHASE_0_IDENTIFIERS.md        # Phase 0 requirements
 │   ├── PHASE_1_DECOMPOSITION.md      # Phase 1 requirements
 │   └── ...
 ├── specs/
 │   └── EVOLUTIONARY_TESTING.md       # Evolution framework spec
+├── design-decisions/
+│   └── DD-001-CONTENT_TYPE_AWARE_PROCESSING.md  # Content type design
 └── findings/
     └── (experiment results go here)
 ```
@@ -327,14 +368,52 @@ This prototype is STANDALONE but designed for eventual integration:
 
 ---
 
-## Current Phase: Phase 0 - Identifiers
+## Current Phase: Phase 1 - Decomposition (Integrated with Phase 0)
 
-Focus areas:
-- [ ] `UniversalSemanticIdentifier` implementation
-- [ ] `EntityType` enum and classification
-- [ ] WordNet synset lookup
-- [ ] LLM-based disambiguation fallback
-- [ ] Basic Wikidata linking
+### Phase 0 + Phase 1 Integration (COMPLETE)
+
+The `IntegratedPipeline` provides full Phase 0 → Phase 1 orchestration:
+
+```python
+from decomposition import IntegratedPipeline
+
+pipeline = IntegratedPipeline(llm=my_llm)
+result = await pipeline.process("Doug forgot the meeting again")
+
+# Phase 0 results
+print(result.wsd_results)   # {"forgot": DisambiguationResult(...)}
+print(result.entities)      # {"Doug": UniversalSemanticIdentifier(...)}
+
+# Phase 1 results
+print(result.presuppositions)  # [Presupposition(content="Doug forgot before", ...)]
+print(result.inferences)       # [CommonsenseInference(...)]
+```
+
+**Phase 0 Implemented:**
+- [x] `UniversalSemanticIdentifier` implementation
+- [x] `EntityType` enum and classification
+- [x] WordNet synset lookup
+- [x] LLM-based disambiguation fallback
+- [x] Hybrid WSD pipeline (Lesk + LLM)
+- [x] Entity classifier (heuristic + LLM)
+- [x] Synset learning service
+- [x] Text chunking for large documents
+- [x] Content type analysis (REQ-0.8)
+- [x] Content-aware WSD integration (REQ-0.9)
+
+**Phase 1 Implemented:**
+- [x] Presupposition extraction
+- [x] Semantic role labeling
+- [x] Commonsense inference generation
+- [x] Temporal/aspectual analysis
+- [x] Modality detection
+- [x] Negation scope detection
+- [x] Integrated Phase 0 → Phase 1 pipeline
+- [x] Document chunking for long texts
+- [x] Content-type aware processing
+
+**Remaining (Backlog):**
+- [ ] Basic Wikidata linking (optional)
 - [ ] Evolution framework skeleton
 
 ---
@@ -344,8 +423,11 @@ Focus areas:
 - `README.md` - Project overview and architecture
 - `docs/research/DECOMPOSITION_THEORY.md` - Full taxonomy of decomposition types
 - `docs/research/CONTINUED_RESEARCH.md` - Future research directions
+- `docs/research/CONTENT_TYPE_HANDLING.md` - Content type semantic extraction
 - `docs/requirements/PHASE_0_IDENTIFIERS.md` - Current phase requirements
+- `docs/requirements/PHASE_1_DECOMPOSITION.md` - Decomposition pipeline requirements
 - `docs/specs/EVOLUTIONARY_TESTING.md` - Evolution framework specification
+- `docs/design-decisions/DD-001-CONTENT_TYPE_AWARE_PROCESSING.md` - Content type design decision
 
 ---
 

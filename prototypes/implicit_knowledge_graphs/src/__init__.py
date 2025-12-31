@@ -15,12 +15,12 @@ Key Principles:
 Modules:
     identifiers: Universal semantic identifier system
     wsd: Word sense disambiguation
-    decomposition: Multi-type implicit knowledge extraction
-    branches: Weighted branch generation
-    storage: Graph storage with synset-based linking
-    retrieval: Optimized context retrieval
-    evolution: Evolutionary optimization framework
-    evaluation: Multi-dimensional Opus 4.5 scoring
+    content_analyzer: LLM-driven content type classification
+    content_aware_wsd: Content-aware WSD integration
+    text_chunking: Large text handling and context extraction
+    entity_classifier: Entity type classification
+    synset_learning: Learning new synsets from context
+    evolving_synsets: Extensible synset database
 
 Example:
     >>> from implicit_knowledge_graphs import (
@@ -46,6 +46,8 @@ __author__ = "draagon-ai"
 from identifiers import (
     EntityType,
     SynsetInfo,
+    SynsetSource,
+    LearnedSynset,
     UniversalSemanticIdentifier,
     create_instance_identifier,
     create_class_identifier,
@@ -54,10 +56,17 @@ from identifiers import (
     create_generic_identifier,
 )
 
+from evolving_synsets import (
+    EvolvingDBConfig,
+    EvolvingSynsetDatabase,
+    create_evolving_database,
+)
+
 from wsd import (
     WSDConfig,
     DisambiguationResult,
     WordNetInterface,
+    WordNetNotAvailableError,
     LeskDisambiguator,
     LLMDisambiguator,
     WordSenseDisambiguator,
@@ -78,22 +87,66 @@ from entity_classifier import (
     extract_role_anchor,
 )
 
+from synset_learning import (
+    SynsetLearningConfig,
+    SynsetLearningService,
+    QdrantSynsetStore,
+    UnknownTermRecord,
+    DefinitionExtraction,
+    ReinforcementResult,
+    ResolutionSource,
+)
+
+from text_chunking import (
+    TextChunker,
+    TextChunk,
+    ChunkingConfig,
+    segment_sentences,
+    get_context_for_wsd,
+    chunk_large_text,
+)
+
+from content_analyzer import (
+    ContentAnalyzer,
+    ContentAnalysis,
+    ContentComponent,
+    ContentType,
+    ProcessingStrategy,
+    StructuralKnowledge,
+    analyze_content,
+    extract_natural_language,
+)
+
+from content_aware_wsd import (
+    ContentAwareWSD,
+    ContentAwareWSDResult,
+    process_content_for_wsd,
+    disambiguate_in_context,
+)
+
 __all__ = [
     # Version
     "__version__",
     # Identifiers
     "EntityType",
     "SynsetInfo",
+    "SynsetSource",
+    "LearnedSynset",
     "UniversalSemanticIdentifier",
     "create_instance_identifier",
     "create_class_identifier",
     "create_role_identifier",
     "create_anaphora_identifier",
     "create_generic_identifier",
+    # Evolving Synsets
+    "EvolvingDBConfig",
+    "EvolvingSynsetDatabase",
+    "create_evolving_database",
     # WSD
     "WSDConfig",
     "DisambiguationResult",
     "WordNetInterface",
+    "WordNetNotAvailableError",
     "LeskDisambiguator",
     "LLMDisambiguator",
     "WordSenseDisambiguator",
@@ -110,4 +163,33 @@ __all__ = [
     "is_generic",
     "is_likely_proper_noun",
     "extract_role_anchor",
+    # Synset Learning
+    "SynsetLearningConfig",
+    "SynsetLearningService",
+    "QdrantSynsetStore",
+    "UnknownTermRecord",
+    "DefinitionExtraction",
+    "ReinforcementResult",
+    "ResolutionSource",
+    # Text Chunking
+    "TextChunker",
+    "TextChunk",
+    "ChunkingConfig",
+    "segment_sentences",
+    "get_context_for_wsd",
+    "chunk_large_text",
+    # Content Analyzer
+    "ContentAnalyzer",
+    "ContentAnalysis",
+    "ContentComponent",
+    "ContentType",
+    "ProcessingStrategy",
+    "StructuralKnowledge",
+    "analyze_content",
+    "extract_natural_language",
+    # Content-Aware WSD
+    "ContentAwareWSD",
+    "ContentAwareWSDResult",
+    "process_content_for_wsd",
+    "disambiguate_in_context",
 ]

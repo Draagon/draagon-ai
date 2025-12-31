@@ -10,6 +10,10 @@ import pytest
 src_path = Path(__file__).parent.parent / "src"
 sys.path.insert(0, str(src_path))
 
+# Add tests directory to path for test fixtures like ground_truth
+tests_path = Path(__file__).parent
+sys.path.insert(0, str(tests_path))
+
 # Also add project root for draagon-ai imports
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root / "src"))
@@ -271,16 +275,42 @@ def mock_opus_client():
 # =============================================================================
 
 
-@pytest.fixture
-def has_wordnet():
+def _check_wordnet_available() -> bool:
     """Check if WordNet is available."""
     try:
         from nltk.corpus import wordnet
-
         wordnet.synsets("test")
         return True
     except (ImportError, LookupError):
         return False
+
+
+# Cache the result
+WORDNET_AVAILABLE = _check_wordnet_available()
+
+
+@pytest.fixture
+def has_wordnet():
+    """Check if WordNet is available."""
+    return WORDNET_AVAILABLE
+
+
+@pytest.fixture
+def require_wordnet():
+    """Skip test if WordNet is not available.
+
+    Use this fixture to skip tests that require WordNet:
+
+        def test_something(require_wordnet):
+            # This test will be skipped if WordNet is not installed
+            ...
+    """
+    if not WORDNET_AVAILABLE:
+        pytest.skip(
+            "WordNet not available. Install with:\n"
+            "  pip install nltk\n"
+            "  python -c \"import nltk; nltk.download('wordnet'); nltk.download('omw-1.4')\""
+        )
 
 
 @pytest.fixture

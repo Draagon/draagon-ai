@@ -186,6 +186,89 @@ async def link_to_wikidata(
 - [ ] Rate limiting and caching
 - [ ] Graceful failure (return None if uncertain)
 
+### REQ-0.8: Content Type Analysis
+
+**Description:** Analyze content type BEFORE applying WSD to ensure appropriate processing.
+
+**Rationale:** WSD is for natural language understanding, not all semantic understanding. Different content types (code, data, config) need different processing strategies. Applying WSD to code syntax or JSON keys produces nonsensical results.
+
+See: [DD-001-CONTENT_TYPE_AWARE_PROCESSING.md](../design-decisions/DD-001-CONTENT_TYPE_AWARE_PROCESSING.md)
+
+**Content Types:**
+| Type | Description | WSD Strategy |
+|------|-------------|--------------|
+| `PROSE` | Natural language documents | Full WSD |
+| `CODE` | Source code | Extract NL (docstrings, comments) → WSD on those |
+| `DATA` | CSV, JSON data | Schema extraction (no WSD) |
+| `CONFIG` | YAML, TOML configuration | Pattern extraction (no WSD) |
+| `LOGS` | Log files | Selective NL extraction |
+| `MIXED` | Multiple types combined | Split and process per-component |
+
+**Functions Required:**
+```python
+class ContentType(str, Enum):
+    PROSE = "prose"
+    CODE = "code"
+    DATA = "data"
+    CONFIG = "config"
+    LOGS = "logs"
+    MIXED = "mixed"
+
+@dataclass
+class ContentAnalysis:
+    content_type: ContentType
+    components: list[ContentComponent]
+    structural_knowledge: list[StructuralKnowledge]
+    detected_language: str
+    detected_format: str
+    processing_recommendation: ProcessingStrategy
+
+    def get_natural_language_text(self) -> str:
+        """Extract all NL portions combined."""
+
+async def analyze_content(
+    content: str,
+    llm: LLMProvider | None = None,
+) -> ContentAnalysis
+```
+
+**Acceptance Criteria:**
+- [x] `ContentType` enum with all types
+- [x] `ContentAnalysis` dataclass with components
+- [x] LLM-based content classification (preferred)
+- [x] Heuristic fallback when LLM unavailable
+- [x] NL extraction from code (docstrings, comments)
+- [x] Structural knowledge extraction
+- [x] Unit tests for each content type
+- [x] Integration with WSD pipeline
+
+### REQ-0.9: Content-Aware WSD Integration
+
+**Description:** Wrap WSD with content-aware preprocessing.
+
+**Functions Required:**
+```python
+class ContentAwareWSD:
+    async def process(self, content: str) -> ContentAwareWSDResult
+    async def disambiguate_word(self, word: str, content: str) -> DisambiguationResult | None
+
+@dataclass
+class ContentAwareWSDResult:
+    content_analysis: ContentAnalysis
+    disambiguation_results: dict[str, DisambiguationResult]
+    structural_knowledge: list[dict]
+    processed_text: str
+    skipped_processing: bool
+    skip_reason: str
+```
+
+**Acceptance Criteria:**
+- [x] Routes prose through full WSD
+- [x] Extracts NL from code for WSD
+- [x] Skips WSD for data/config
+- [x] Metrics tracking per content type
+- [x] Unit tests for all processing paths
+
 ---
 
 ## Evolution Framework Requirements
@@ -339,6 +422,79 @@ Phase 0 is complete when:
 | LLM cost | High cost if called frequently | Threshold tuning, caching |
 | Wikidata rate limits | Linking fails | Caching, optional feature |
 | Low accuracy | Poor downstream performance | Iterative improvement via evolution |
+
+---
+
+## Backlog (LOW Priority)
+
+The following items were identified during the Phase 0 code review but are NOT blocking for Phase 1. They should be addressed as time permits or when the relevant feature becomes critical.
+
+### BACKLOG-0.1: Implement QdrantSynsetStore Fully
+
+**Description:** The `QdrantSynsetStore` in `synset_learning.py` is currently a stub that uses in-memory dict storage. For production use with large learned synset databases, implement full Qdrant vector storage.
+
+**Current State:** Stub class with in-memory dict
+**Target State:** Full Qdrant integration with:
+- Vector embeddings for synset definitions
+- Efficient semantic search for unknown terms
+- Persistence across restarts
+
+**Priority:** Low (in-memory works for prototype)
+**Estimated Effort:** 2-3 days
+
+### BACKLOG-0.2: Wikidata Entity Linking
+
+**Description:** REQ-0.7 (Wikidata linking) was marked optional and not implemented. For production knowledge graphs with named entities, linking to Wikidata QIDs enables cross-system interoperability.
+
+**Current State:** `UniversalSemanticIdentifier.wikidata_qid` is always None
+**Target State:**
+- Wikidata API integration
+- Named entity search by name
+- Context-based disambiguation
+- Rate limiting and caching
+
+**Priority:** Low (not needed for Phase 1 decomposition)
+**Estimated Effort:** 3-4 days
+
+### BACKLOG-0.3: Evolution Framework Skeleton
+
+**Description:** The evolution framework for WSD config optimization is mentioned in CLAUDE.md but not implemented. This enables Promptbreeder-style optimization of WSD prompts and thresholds.
+
+**Current State:** `WSDConfig` is evolvable but no mutation/crossover/selection implemented
+**Target State:**
+- Config mutation strategies
+- Fitness function based on accuracy metrics
+- Train/holdout evaluation
+- Population management
+
+**Priority:** Low (Phase 1 can work with static config)
+**Estimated Effort:** 5-7 days
+
+### BACKLOG-0.4: BabelNet Integration
+
+**Description:** `UniversalSemanticIdentifier.babelnet_synset` field exists but is never populated. BabelNet provides multilingual synsets and better coverage for named concepts.
+
+**Current State:** Field exists, always None
+**Target State:**
+- BabelNet API integration
+- Fallback when WordNet has no synset
+- Multilingual support for named concepts
+
+**Priority:** Very Low (WordNet sufficient for English)
+**Estimated Effort:** 4-5 days
+
+### BACKLOG-0.5: Mutation Testing for Test Suite
+
+**Description:** While test coverage is good (552+ tests), mutation testing would verify that tests actually catch bugs, not just execute code.
+
+**Current State:** No mutation testing
+**Target State:**
+- Add `mutmut` or similar mutation testing tool
+- Run mutation tests on critical paths
+- Achieve >80% mutation kill rate
+
+**Priority:** Low (current tests are validated against ground truth)
+**Estimated Effort:** 1-2 days
 
 ---
 

@@ -273,4 +273,236 @@ The `search_by_entities` method in the layered memory provider is a good startin
 
 ---
 
-**Status:** Queued for research after Deep Dive 1 (Commonsense Inference Selection)
+**Status:** Research Complete
+
+---
+
+## 6. Research Findings (Added 2025-12-31)
+
+Based on recent research, here are key findings to inform implementation:
+
+### Cross-Document Coreference Resolution
+
+From [2024 research on cross-document coreference](https://arxiv.org/abs/2504.05767):
+
+> "These methods employ dynamic linking mechanisms that associate entities in the knowledge graph with their corresponding textual mentions. By utilizing contextual embeddings along with graph-based inference strategies, they effectively capture the relationships and interactions among entities."
+
+**Key Insight:** Use contextual embeddings + graph-based inference for entity linking across documents/episodes.
+
+### LLM-Based Coreference for Knowledge Graphs
+
+From [LINK-KG framework](https://arxiv.org/html/2510.26486):
+
+> "LINK-KG is a modular framework that integrates a three-stage, LLM-guided coreference resolution pipeline with downstream KG extraction. At the core of this approach is a type-specific Prompt Cache, which consistently tracks and resolves references across document chunks."
+
+**Key Insight:** Maintain a "Prompt Cache" that tracks entities across conversation chunks - similar to our working memory layer.
+
+### Dialogue-Level Coreference (NLPCC 2024)
+
+From [NLPCC 2024 shared task](https://dl.acm.org/doi/10.1007/978-981-97-9443-0_11):
+
+> "Dialogue relation extraction that identifies the relations between argument pairs in dialogue text suffers much from the frequent occurrence of personal pronouns, or entity and speaker coreference."
+
+**Key Insight:** Dialogue/conversation context requires special handling - pronouns are frequent and speaker attribution matters.
+
+### Memory-Augmented Approaches
+
+From [dialogue state tracking research](https://dl.acm.org/doi/abs/10.1016/j.csl.2024.101741):
+
+> "Memory-augmented transformations further contribute to accuracy in knowledge-intensive tasks by efficiently integrating external knowledge."
+
+**Key Insight:** Our 4-layer memory architecture is well-suited for this - use working memory for recent context, episodic for conversation history.
+
+---
+
+## 7. Updated Implementation Recommendations
+
+Based on research, here's the recommended approach:
+
+### 7.1 Three-Stage Linking Pipeline
+
+```python
+class CrossReferencePipeline:
+    """Three-stage cross-reference linking (inspired by LINK-KG)."""
+
+    async def link(
+        self,
+        decomposed: DecomposedKnowledge,
+        memory: LayeredMemoryProvider,
+        config: CrossRefConfig,
+    ) -> LinkedKnowledge:
+        """Link decomposed knowledge to existing memory."""
+
+        # Stage 1: Entity Resolution
+        # Resolve pronouns and definite descriptions to known entities
+        entity_links = await self._resolve_entities(
+            decomposed.entities,
+            decomposed.anaphora,
+            memory.working_memory,  # Recent context first
+        )
+
+        # Stage 2: Cross-Reference Search
+        # Find related episodes and facts in memory
+        cross_refs = await self._search_cross_references(
+            decomposed.presuppositions,
+            entity_links,
+            memory,
+            config,
+        )
+
+        # Stage 3: Link Scoring and Selection
+        # Score links by confidence, select best
+        scored_links = await self._score_and_select(
+            cross_refs,
+            decomposed,
+            config,
+        )
+
+        return LinkedKnowledge(
+            decomposed=decomposed,
+            entity_links=entity_links,
+            cross_references=scored_links,
+        )
+```
+
+### 7.2 Entity Resolution with Memory Context
+
+```python
+async def _resolve_entities(
+    self,
+    entities: list[UniversalSemanticIdentifier],
+    anaphora: list[Anaphora],
+    working_memory: WorkingMemory,
+) -> dict[str, UniversalSemanticIdentifier]:
+    """Resolve anaphora using working memory context."""
+
+    resolutions = {}
+
+    for anaphor in anaphora:
+        if anaphor.text.lower() in ["he", "him", "his"]:
+            # Find most recent male entity
+            candidates = working_memory.get_recent_entities(
+                entity_type="PERSON",
+                gender="male",
+                limit=3,
+            )
+        elif anaphor.text.lower() in ["she", "her", "hers"]:
+            candidates = working_memory.get_recent_entities(
+                entity_type="PERSON",
+                gender="female",
+                limit=3,
+            )
+        elif anaphor.text.lower() in ["it", "this", "that"]:
+            # Find most recent non-person entity
+            candidates = working_memory.get_recent_entities(
+                entity_type="THING",
+                limit=3,
+            )
+        else:
+            candidates = []
+
+        if candidates:
+            # Score by recency and context fit
+            best = max(candidates, key=lambda c: c.recency_score)
+            resolutions[anaphor.text] = best.identifier
+            resolutions[anaphor.text + "_confidence"] = best.recency_score
+
+    return resolutions
+```
+
+### 7.3 Trigger-Specific Search Strategies
+
+```python
+TRIGGER_SEARCH_STRATEGIES = {
+    "ITERATIVE": {
+        "search_type": "predicate_entity",
+        "description": "Find prior instances of same action by same entity",
+        "example": "'again' → find prior 'forgot' events by Doug",
+    },
+    "DEFINITE_DESC": {
+        "search_type": "entity_lookup",
+        "description": "Find the specific entity referenced",
+        "example": "'the meeting' → find meeting entity",
+    },
+    "ANAPHORA": {
+        "search_type": "recency_ranked",
+        "description": "Find recent entity matching type",
+        "example": "'he' → find recent male person",
+    },
+    "TEMPORAL": {
+        "search_type": "temporal_search",
+        "description": "Find events in temporal relation",
+        "example": "'before that' → find prior event",
+    },
+    "FACTIVE": {
+        "search_type": "fact_lookup",
+        "description": "Find factual basis for knowledge claim",
+        "example": "'knew that X' → find X in semantic memory",
+    },
+}
+```
+
+### 7.4 Branch Weighting Integration
+
+```python
+async def boost_branch_with_memory(
+    branch: WeightedBranch,
+    cross_refs: list[CrossReference],
+    config: CrossRefConfig,
+) -> WeightedBranch:
+    """Boost branch confidence based on memory support."""
+
+    support_score = 0.0
+    contradiction_score = 0.0
+
+    for ref in cross_refs:
+        if ref.relation_type == "SUPPORTS":
+            support_score += ref.confidence * config.support_weight
+        elif ref.relation_type == "CONTRADICTS":
+            contradiction_score += ref.confidence * config.contradiction_weight
+
+    # Net adjustment
+    adjustment = support_score - contradiction_score
+
+    # Clamp to reasonable range
+    adjustment = max(-0.3, min(0.3, adjustment))
+
+    branch.memory_support_adjustment = adjustment
+    branch.base_confidence += adjustment
+
+    return branch
+```
+
+---
+
+## 8. Fitness Metrics for Evolution
+
+```python
+@dataclass
+class CrossRefFitness:
+    """Fitness metrics for cross-reference linking."""
+
+    # Accuracy metrics
+    entity_resolution_accuracy: float  # Correct anaphora resolution
+    link_precision: float              # Links that were correct
+    link_recall: float                 # Correct links that were found
+
+    # Efficiency metrics
+    search_latency: float              # Average search time
+    memory_queries: int                # Number of memory queries
+
+    # Impact metrics
+    branch_improvement: float          # Did linking improve branch selection?
+    retrieval_improvement: float       # Did links improve downstream retrieval?
+```
+
+---
+
+## Research References
+
+- [Cross-Document Contextual Coreference Resolution in KGs (2024)](https://arxiv.org/abs/2504.05767)
+- [LINK-KG: LLM-Driven Coreference for KG Construction](https://arxiv.org/html/2510.26486)
+- [NLPCC 2024 Dialogue-Level Coreference Task](https://dl.acm.org/doi/10.1007/978-981-97-9443-0_11)
+- [End-to-End Dialog Neural Coreference (2024)](https://arxiv.org/html/2504.05824v1)
+- [Coreference Resolution in Conversational AI](https://spotintelligence.com/2024/01/17/coreference-resolution-nlp/)
+- [ECDG-DST: Dialogue State Tracking with Memory](https://dl.acm.org/doi/abs/10.1016/j.csl.2024.101741)
