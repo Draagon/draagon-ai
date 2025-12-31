@@ -93,6 +93,12 @@ from .multi_agent_orchestrator import (
     OrchestratorResult,
     execute_single_agent,
 )
+from .shared_memory import (
+    SharedWorkingMemory,
+    SharedWorkingMemoryConfig,
+    SharedObservation,
+    EmbeddingProvider,
+)
 from .autonomous import (
     AutonomousAgentService,
     AutonomousConfig,
@@ -168,6 +174,11 @@ __all__ = [
     "AgentResult",
     "OrchestratorResult",
     "execute_single_agent",
+    # Shared Working Memory (FR-001)
+    "SharedWorkingMemory",
+    "SharedWorkingMemoryConfig",
+    "SharedObservation",
+    "EmbeddingProvider",
     # Autonomous Agent (REQ-004)
     "AutonomousAgentService",
     "AutonomousConfig",

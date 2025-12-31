@@ -60,6 +60,7 @@ src/draagon_ai/
 │   ├── execution.py        # Action executor
 │   ├── loop.py             # ReAct loop, AgentResponse
 │   ├── registry.py         # Tool, ToolParameter, ToolRegistry
+│   ├── shared_memory.py    # Multi-agent shared working memory
 │   └── autonomous/         # Background agent service
 ├── tools/                  # Tool system
 │   ├── decorator.py        # @tool decorator
@@ -262,6 +263,74 @@ FACT: 0.8
 KNOWLEDGE: 0.7
 INSIGHT: 0.65
 EPISODIC: 0.5
+```
+
+### Shared Cognitive Working Memory (Multi-Agent)
+
+For multi-agent coordination, use `SharedWorkingMemory` to enable agents to share observations with attention-weighted access and conflict detection. Based on cognitive psychology research (Miller's Law: 7±2 items, Baddeley's Working Memory Model).
+
+```python
+from draagon_ai.orchestration.shared_memory import (
+    SharedWorkingMemory,
+    SharedWorkingMemoryConfig,
+    SharedObservation,
+)
+from draagon_ai.orchestration.multi_agent_orchestrator import AgentRole
+
+# Create shared memory for a task
+shared_memory = SharedWorkingMemory(task_id="task_123")
+
+# Agent A adds an observation
+obs = await shared_memory.add_observation(
+    content="User prefers dark mode",
+    source_agent_id="agent_a",
+    attention_weight=0.8,
+    is_belief_candidate=True,
+    belief_type="PREFERENCE",
+)
+
+# Agent B retrieves context (filtered by role, Miller's Law: 7 items max)
+context = await shared_memory.get_context_for_agent(
+    agent_id="agent_b",
+    role=AgentRole.RESEARCHER,
+    max_items=7,
+)
+
+# Apply periodic attention decay (call every N iterations)
+await shared_memory.apply_attention_decay()
+
+# Get conflicts for reconciliation
+conflicts = await shared_memory.get_conflicts()
+
+# Get belief candidates (non-conflicting observations ready for belief formation)
+candidates = await shared_memory.get_belief_candidates()
+```
+
+**Key Features:**
+- **Miller's Law Capacity**: 7±2 items per agent, 50 global max
+- **Attention Weighting**: Decay (×0.9) and boost (+0.2) with 1.0 cap
+- **Conflict Detection**: Phase 1 heuristic (same belief_type), Phase 2 embeddings (optional)
+- **Role-Based Filtering**: CRITIC sees candidates, RESEARCHER sees all, EXECUTOR sees SKILL/FACT
+- **Concurrent Safety**: asyncio.Lock for safe multi-agent access
+
+**Role-Based Context Filtering:**
+
+| Role | Sees |
+|------|------|
+| CRITIC | Only belief candidates (for evaluation) |
+| RESEARCHER | All observations |
+| EXECUTOR | Only SKILL and FACT types |
+
+**Integration with TaskContext:**
+
+```python
+from draagon_ai.orchestration.multi_agent_orchestrator import TaskContext
+
+# Inject shared memory into TaskContext for parallel agents
+context = TaskContext(task_id="task_123", query="Analyze user preferences")
+context.working_memory["__shared__"] = SharedWorkingMemory(context.task_id)
+
+# Agents access via context.working_memory["__shared__"]
 ```
 
 ---
