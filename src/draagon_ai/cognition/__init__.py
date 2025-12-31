@@ -81,6 +81,30 @@ from draagon_ai.cognition.learning import (
     MODE_LEARNING_GUIDANCE,
 )
 
+from draagon_ai.cognition.decomposition import (
+    # Types
+    EntityType as DecompositionEntityType,  # Avoid potential conflicts
+    DecompositionResult,
+    ExtractedEntity,
+    ExtractedFact,
+    ExtractedRelationship,
+    SemanticRole,
+    Presupposition,
+    CommonsenseInference,
+    TemporalInfo,
+    ModalityInfo,
+    InterpretationBranch,
+    # Service
+    DecompositionService,
+)
+
+from draagon_ai.cognition.decomposition.memory_integration import (
+    MemoryIntegration,
+    DecompositionMemoryService,
+    IntegrationConfig,
+    IntegrationResult,
+)
+
 __all__ = [
     # Beliefs
     "BeliefReconciliationService",
@@ -142,4 +166,21 @@ __all__ = [
     "LEARNING_DETECTION_PROMPT",
     "LEARNING_EXTRACTION_PROMPT",
     "MODE_LEARNING_GUIDANCE",
+    # Decomposition
+    "DecompositionEntityType",
+    "DecompositionResult",
+    "ExtractedEntity",
+    "ExtractedFact",
+    "ExtractedRelationship",
+    "SemanticRole",
+    "Presupposition",
+    "CommonsenseInference",
+    "TemporalInfo",
+    "ModalityInfo",
+    "InterpretationBranch",
+    "DecompositionService",
+    "MemoryIntegration",
+    "DecompositionMemoryService",
+    "IntegrationConfig",
+    "IntegrationResult",
 ]
