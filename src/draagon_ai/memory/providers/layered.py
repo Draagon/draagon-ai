@@ -1013,6 +1013,69 @@ class LayeredMemoryProvider(MemoryProvider):
         results.sort(key=lambda r: r.score, reverse=True)
         return results[:limit]
 
+    async def search_by_entities(
+        self,
+        entities: list[str],
+        *,
+        limit: int = 5,
+    ) -> list[SearchResult]:
+        """Search memories by entity overlap.
+
+        Finds memories that mention any of the given entities.
+        Uses semantic search with entity names as the query, then
+        filters and re-scores by actual entity overlap.
+
+        Args:
+            entities: List of entities to search for.
+            limit: Maximum results to return.
+
+        Returns:
+            List of SearchResult objects sorted by entity overlap score.
+
+        Example:
+            # Find memories mentioning Doug or cats
+            results = await provider.search_by_entities(["Doug", "cats"])
+        """
+        self._ensure_initialized()
+
+        if not entities:
+            return []
+
+        # Normalize entities for case-insensitive matching
+        query_entities = {e.lower() for e in entities}
+
+        # Use entity names as search query to leverage semantic search
+        query = " ".join(entities)
+
+        # Get more results than needed so we can filter and re-rank
+        search_results = await self.search(query, limit=limit * 3)
+
+        # Re-score by actual entity overlap
+        scored_results: list[SearchResult] = []
+        for result in search_results:
+            memory_entities = {e.lower() for e in (result.memory.entities or [])}
+            overlap = query_entities & memory_entities
+
+            if overlap:
+                # Score by fraction of query entities matched
+                entity_score = len(overlap) / len(query_entities)
+                # Blend with original semantic score
+                combined_score = 0.7 * entity_score + 0.3 * result.score
+                scored_results.append(
+                    SearchResult(
+                        memory=result.memory,
+                        score=combined_score,
+                    )
+                )
+            elif result.score >= 0.6:
+                # Keep high-scoring semantic matches even without explicit entity overlap
+                # (entities might not be extracted but content is relevant)
+                scored_results.append(result)
+
+        # Sort by score and limit
+        scored_results.sort(key=lambda r: r.score, reverse=True)
+        return scored_results[:limit]
+
     async def get(self, memory_id: str) -> Memory | None:
         """Get a specific memory by ID.
 
@@ -1096,6 +1159,248 @@ class LayeredMemoryProvider(MemoryProvider):
             return await self._graph.delete_node(memory_id)
         except Exception:
             return False
+
+    # --- Memory Reinforcement ---
+
+    # Reinforcement constants
+    BOOST_AMOUNT = 0.05  # Importance boost per successful use
+    DEMOTE_AMOUNT = 0.08  # Importance penalty per failure (slightly higher to be conservative)
+    MAX_IMPORTANCE = 1.0
+    MIN_IMPORTANCE = 0.1
+
+    # Layer promotion thresholds (based on importance)
+    PROMOTION_THRESHOLD_WORKING_TO_EPISODIC = 0.7
+    PROMOTION_THRESHOLD_EPISODIC_TO_SEMANTIC = 0.8
+    PROMOTION_THRESHOLD_SEMANTIC_TO_METACOGNITIVE = 0.9
+
+    # Layer demotion thresholds
+    DEMOTION_THRESHOLD_METACOGNITIVE_TO_SEMANTIC = 0.6
+    DEMOTION_THRESHOLD_SEMANTIC_TO_EPISODIC = 0.4
+    DEMOTION_THRESHOLD_EPISODIC_TO_WORKING = 0.3
+
+    async def boost_memory(
+        self,
+        memory_id: str,
+        boost_amount: float | None = None,
+    ) -> Memory | None:
+        """Boost a memory's importance after successful use.
+
+        When a memory is retrieved and contributes to a correct response,
+        its importance increases. High-importance memories get promoted
+        to higher layers (episodic → semantic → metacognitive).
+
+        Args:
+            memory_id: The memory to boost.
+            boost_amount: Custom boost amount (default: BOOST_AMOUNT).
+
+        Returns:
+            Updated Memory if found, None otherwise.
+
+        Example:
+            # After memory helped answer a question correctly
+            await provider.boost_memory(memory_id)
+
+            # Custom boost for highly valuable usage
+            await provider.boost_memory(memory_id, boost_amount=0.1)
+        """
+        self._ensure_initialized()
+        node = await self._graph.get_node(memory_id)
+        if node is None:
+            return None
+
+        boost = boost_amount or self.BOOST_AMOUNT
+        old_importance = node.importance
+        new_importance = min(old_importance + boost, self.MAX_IMPORTANCE)
+        node.importance = new_importance
+
+        # Track access for promotion eligibility
+        node.metadata["access_count"] = node.metadata.get("access_count", 0) + 1
+        node.metadata["last_successful_use"] = datetime.now().isoformat()
+
+        logger.debug(
+            f"Boosted memory {memory_id}: {old_importance:.2f} → {new_importance:.2f}"
+        )
+
+        # Check if promotion is warranted
+        await self._check_promotion_on_boost(memory_id, node, new_importance)
+
+        return Memory(
+            id=node.node_id,
+            content=node.content,
+            memory_type=MemoryType.FACT,  # Default
+            scope=MemoryScope.USER,
+            importance=new_importance,
+            created_at=node.created_at,
+        )
+
+    async def demote_memory(
+        self,
+        memory_id: str,
+        demote_amount: float | None = None,
+    ) -> Memory | None:
+        """Demote a memory's importance after failed use.
+
+        When a memory is retrieved but leads to an incorrect response
+        or conflict, its importance decreases. Low-importance memories
+        in higher layers get demoted to lower layers.
+
+        Args:
+            memory_id: The memory to demote.
+            demote_amount: Custom demotion amount (default: DEMOTE_AMOUNT).
+
+        Returns:
+            Updated Memory if found, None otherwise.
+
+        Example:
+            # After memory led to a wrong answer
+            await provider.demote_memory(memory_id)
+        """
+        self._ensure_initialized()
+        node = await self._graph.get_node(memory_id)
+        if node is None:
+            return None
+
+        demote = demote_amount or self.DEMOTE_AMOUNT
+        old_importance = node.importance
+        new_importance = max(old_importance - demote, self.MIN_IMPORTANCE)
+        node.importance = new_importance
+
+        # Track failure
+        node.metadata["failure_count"] = node.metadata.get("failure_count", 0) + 1
+        node.metadata["last_failure"] = datetime.now().isoformat()
+
+        logger.debug(
+            f"Demoted memory {memory_id}: {old_importance:.2f} → {new_importance:.2f}"
+        )
+
+        # Check if demotion to lower layer is warranted
+        await self._check_demotion_on_penalty(memory_id, node, new_importance)
+
+        return Memory(
+            id=node.node_id,
+            content=node.content,
+            memory_type=MemoryType.FACT,  # Default
+            scope=MemoryScope.USER,
+            importance=new_importance,
+            created_at=node.created_at,
+        )
+
+    async def record_usage(
+        self,
+        memory_id: str,
+        outcome: str,
+        confidence: float = 1.0,
+    ) -> Memory | None:
+        """Record memory usage with outcome for reinforcement learning.
+
+        This is the primary interface for memory reinforcement. Call this
+        after using a memory to update its importance based on outcome.
+
+        Args:
+            memory_id: The memory that was used.
+            outcome: "success" | "failure" | "neutral"
+            confidence: How confident we are in the outcome (0-1).
+
+        Returns:
+            Updated Memory if found, None otherwise.
+
+        Example:
+            # After using memory to answer correctly
+            await provider.record_usage(memory_id, "success")
+
+            # After memory led to wrong answer
+            await provider.record_usage(memory_id, "failure")
+
+            # After using memory but outcome unclear
+            await provider.record_usage(memory_id, "neutral")
+        """
+        if outcome == "success":
+            # Scale boost by confidence
+            boost = self.BOOST_AMOUNT * confidence
+            return await self.boost_memory(memory_id, boost_amount=boost)
+        elif outcome == "failure":
+            # Scale demote by confidence
+            demote = self.DEMOTE_AMOUNT * confidence
+            return await self.demote_memory(memory_id, demote_amount=demote)
+        else:
+            # Neutral: just record access without changing importance
+            self._ensure_initialized()
+            node = await self._graph.get_node(memory_id)
+            if node is None:
+                return None
+            node.metadata["access_count"] = node.metadata.get("access_count", 0) + 1
+            return Memory(
+                id=node.node_id,
+                content=node.content,
+                memory_type=MemoryType.FACT,
+                scope=MemoryScope.USER,
+                importance=node.importance,
+                created_at=node.created_at,
+            )
+
+    async def _check_promotion_on_boost(
+        self,
+        memory_id: str,
+        node: Any,
+        new_importance: float,
+    ) -> None:
+        """Check if a boosted memory should be promoted to a higher layer."""
+        current_layer = node.metadata.get("layer", "working")
+
+        # Determine if promotion threshold is met
+        should_promote = False
+        target_layer = None
+
+        if current_layer == "working" and new_importance >= self.PROMOTION_THRESHOLD_WORKING_TO_EPISODIC:
+            should_promote = True
+            target_layer = "episodic"
+        elif current_layer == "episodic" and new_importance >= self.PROMOTION_THRESHOLD_EPISODIC_TO_SEMANTIC:
+            should_promote = True
+            target_layer = "semantic"
+        elif current_layer == "semantic" and new_importance >= self.PROMOTION_THRESHOLD_SEMANTIC_TO_METACOGNITIVE:
+            should_promote = True
+            target_layer = "metacognitive"
+
+        if should_promote and target_layer:
+            logger.info(
+                f"Memory {memory_id} promoted: {current_layer} → {target_layer} "
+                f"(importance: {new_importance:.2f})"
+            )
+            node.metadata["layer"] = target_layer
+            node.metadata["promoted_at"] = datetime.now().isoformat()
+            node.metadata["promotion_reason"] = "importance_threshold"
+
+    async def _check_demotion_on_penalty(
+        self,
+        memory_id: str,
+        node: Any,
+        new_importance: float,
+    ) -> None:
+        """Check if a demoted memory should move to a lower layer."""
+        current_layer = node.metadata.get("layer", "working")
+
+        # Determine if demotion threshold is met
+        should_demote = False
+        target_layer = None
+
+        if current_layer == "metacognitive" and new_importance < self.DEMOTION_THRESHOLD_METACOGNITIVE_TO_SEMANTIC:
+            should_demote = True
+            target_layer = "semantic"
+        elif current_layer == "semantic" and new_importance < self.DEMOTION_THRESHOLD_SEMANTIC_TO_EPISODIC:
+            should_demote = True
+            target_layer = "episodic"
+        elif current_layer == "episodic" and new_importance < self.DEMOTION_THRESHOLD_EPISODIC_TO_WORKING:
+            should_demote = True
+            target_layer = "working"
+
+        if should_demote and target_layer:
+            logger.warning(
+                f"Memory {memory_id} demoted: {current_layer} → {target_layer} "
+                f"(importance: {new_importance:.2f})"
+            )
+            node.metadata["layer"] = target_layer
+            node.metadata["demoted_at"] = datetime.now().isoformat()
+            node.metadata["demotion_reason"] = "importance_threshold"
 
 
 __all__ = [

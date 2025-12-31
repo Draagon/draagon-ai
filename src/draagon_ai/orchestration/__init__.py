@@ -92,12 +92,27 @@ from .multi_agent_orchestrator import (
     AgentResult,
     OrchestratorResult,
     execute_single_agent,
+    # A+ enhancements
+    RetryConfig,
+    CircuitBreakerConfig,
+    CircuitBreaker,
+    CircuitState,
 )
 from .shared_memory import (
     SharedWorkingMemory,
     SharedWorkingMemoryConfig,
     SharedObservation,
     EmbeddingProvider,
+)
+from .parallel_orchestrator import (
+    ParallelCognitiveOrchestrator,
+    ParallelOrchestrationMode,
+    ResultMergeStrategy,
+    ParallelExecutionConfig,
+    IterativeAgentExecutor,
+    AgentPhaseResult,
+    ObservationEvent,
+    DependencyResolver,
 )
 from .autonomous import (
     AutonomousAgentService,
@@ -174,11 +189,25 @@ __all__ = [
     "AgentResult",
     "OrchestratorResult",
     "execute_single_agent",
+    # A+ Enhancements (FR-002)
+    "RetryConfig",
+    "CircuitBreakerConfig",
+    "CircuitBreaker",
+    "CircuitState",
     # Shared Working Memory (FR-001)
     "SharedWorkingMemory",
     "SharedWorkingMemoryConfig",
     "SharedObservation",
     "EmbeddingProvider",
+    # Parallel Orchestration (FR-002)
+    "ParallelCognitiveOrchestrator",
+    "ParallelOrchestrationMode",
+    "ResultMergeStrategy",
+    "ParallelExecutionConfig",
+    "IterativeAgentExecutor",
+    "AgentPhaseResult",
+    "ObservationEvent",
+    "DependencyResolver",
     # Autonomous Agent (REQ-004)
     "AutonomousAgentService",
     "AutonomousConfig",

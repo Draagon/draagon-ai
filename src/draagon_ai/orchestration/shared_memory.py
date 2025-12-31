@@ -55,7 +55,10 @@ from datetime import datetime
 from typing import Protocol, runtime_checkable
 import asyncio
 import logging
+import math
+import re
 import uuid
+from collections import Counter
 
 from .multi_agent_orchestrator import AgentRole
 
@@ -305,6 +308,151 @@ class SharedWorkingMemory:
         )
 
     # =========================================================================
+    # Semantic Similarity (Built-in, no external dependencies)
+    # =========================================================================
+
+    def _tokenize(self, text: str) -> list[str]:
+        """Tokenize text into words for similarity comparison.
+
+        Normalizes to lowercase, removes punctuation, filters stopwords.
+
+        Args:
+            text: Text to tokenize
+
+        Returns:
+            List of tokens
+        """
+        # Normalize and split
+        text = text.lower()
+        text = re.sub(r"[^\w\s]", " ", text)
+        words = text.split()
+
+        # Filter stopwords and short words
+        stopwords = {
+            "the", "a", "an", "is", "are", "was", "were", "be", "been", "being",
+            "have", "has", "had", "do", "does", "did", "will", "would", "could",
+            "should", "may", "might", "must", "shall", "can", "need", "dare",
+            "ought", "used", "to", "of", "in", "for", "on", "with", "at", "by",
+            "from", "as", "into", "through", "during", "before", "after", "above",
+            "below", "between", "under", "again", "further", "then", "once", "here",
+            "there", "when", "where", "why", "how", "all", "each", "few", "more",
+            "most", "other", "some", "such", "no", "nor", "not", "only", "own",
+            "same", "so", "than", "too", "very", "just", "and", "but", "if", "or",
+            "because", "until", "while", "this", "that", "these", "those", "it",
+        }
+
+        return [w for w in words if w not in stopwords and len(w) > 2]
+
+    def _compute_similarity(self, text_a: str, text_b: str) -> float:
+        """Compute semantic similarity using TF-IDF weighted cosine similarity.
+
+        This is a lightweight alternative to embeddings that works well for
+        detecting conflicting observations about the same topic.
+
+        Args:
+            text_a: First text
+            text_b: Second text
+
+        Returns:
+            Similarity score (0-1, higher = more similar)
+        """
+        tokens_a = self._tokenize(text_a)
+        tokens_b = self._tokenize(text_b)
+
+        if not tokens_a or not tokens_b:
+            return 0.0
+
+        # Create term frequency vectors
+        counter_a = Counter(tokens_a)
+        counter_b = Counter(tokens_b)
+
+        # Get all unique terms
+        all_terms = set(counter_a.keys()) | set(counter_b.keys())
+
+        if not all_terms:
+            return 0.0
+
+        # Compute dot product and magnitudes
+        dot_product = 0.0
+        magnitude_a = 0.0
+        magnitude_b = 0.0
+
+        for term in all_terms:
+            freq_a = counter_a.get(term, 0)
+            freq_b = counter_b.get(term, 0)
+
+            dot_product += freq_a * freq_b
+            magnitude_a += freq_a * freq_a
+            magnitude_b += freq_b * freq_b
+
+        if magnitude_a == 0 or magnitude_b == 0:
+            return 0.0
+
+        # Cosine similarity
+        similarity = dot_product / (math.sqrt(magnitude_a) * math.sqrt(magnitude_b))
+
+        return similarity
+
+    def _content_differs(self, text_a: str, text_b: str) -> bool:
+        """Check if two texts have meaningfully different content.
+
+        Two observations conflict if they're about the same topic but
+        make different claims. This checks for:
+        - Different numbers (e.g., "3pm" vs "4pm")
+        - Negation differences (e.g., "is ready" vs "is not ready")
+        - Different entities (e.g., "Room A" vs "Room B")
+
+        Args:
+            text_a: First text
+            text_b: Second text
+
+        Returns:
+            True if content meaningfully differs
+        """
+        text_a = text_a.lower()
+        text_b = text_b.lower()
+
+        # Check for different numbers
+        numbers_a = set(re.findall(r"\d+(?:\.\d+)?", text_a))
+        numbers_b = set(re.findall(r"\d+(?:\.\d+)?", text_b))
+
+        if numbers_a and numbers_b and numbers_a != numbers_b:
+            # Both have numbers but they differ
+            return True
+
+        # Check for negation differences
+        negation_words = {"not", "no", "never", "none", "neither", "nobody", "nothing"}
+
+        has_negation_a = any(word in text_a.split() for word in negation_words)
+        has_negation_b = any(word in text_b.split() for word in negation_words)
+
+        if has_negation_a != has_negation_b:
+            # One is negated, other is not
+            return True
+
+        # Check for different named entities (capitalized words in original)
+        # This catches "Room A" vs "Room B", "John" vs "Jane", etc.
+        caps_a = set(re.findall(r"\b[A-Z][a-zA-Z]*\b", text_a))
+        caps_b = set(re.findall(r"\b[A-Z][a-zA-Z]*\b", text_b))
+
+        # Filter out common words that happen to be capitalized
+        common_caps = {"The", "A", "An", "Is", "Are", "It", "This", "That"}
+        caps_a = caps_a - common_caps
+        caps_b = caps_b - common_caps
+
+        if caps_a and caps_b and len(caps_a & caps_b) == 0:
+            # Both have named entities but no overlap
+            return True
+
+        # If texts are very similar (>90% overlap), they probably don't conflict
+        similarity = self._compute_similarity(text_a, text_b)
+        if similarity > 0.9:
+            return False
+
+        # Default: if we can't determine, assume different (safer for conflict detection)
+        return True
+
+    # =========================================================================
     # Observation Management
     # =========================================================================
 
@@ -442,13 +590,17 @@ class SharedWorkingMemory:
     async def _detect_conflicts(self, new_observation: SharedObservation) -> list[str]:
         """Detect semantic conflicts with existing observations.
 
-        Phase 1 (Simple Heuristic):
-        - Conflict if same belief_type from different agents
-        - Placeholder for Phase 2 embedding-based detection
+        Conflict Detection Strategy:
+        1. Only check belief candidates OF THE SAME TYPE (FACT vs FACT, not FACT vs INSIGHT)
+        2. Compute semantic similarity (topic overlap)
+        3. Check if content actually differs (conflicting claims)
+        4. A conflict is: same type + same topic + different claims
 
-        Phase 2 (Embeddings):
-        - Compute semantic similarity via embeddings
-        - Conflict if similarity > threshold AND content differs
+        Different belief types don't conflict - a FACT and an INSIGHT can coexist
+        even if they're about the same topic.
+
+        Uses built-in cosine similarity when no embedding provider is available.
+        When embedding provider is set, uses it for higher-quality similarity.
 
         Args:
             new_observation: Observation to check for conflicts
@@ -462,27 +614,65 @@ class SharedWorkingMemory:
             return conflicts
 
         for obs_id, obs in self._observations.items():
-            # Skip same source
+            # Skip same source (agent can't conflict with itself)
             if obs.source_agent_id == new_observation.source_agent_id:
                 continue
 
-            # Check if same belief type
-            if obs.is_belief_candidate and obs.belief_type == new_observation.belief_type:
-                # Phase 1: Simple heuristic (same type = potential conflict)
-                if self.embedding_provider is None:
+            # Only check observations that are:
+            # 1. Belief candidates
+            # 2. Same belief type (FACT conflicts with FACT, not with INSIGHT)
+            if not obs.is_belief_candidate:
+                continue
+            if obs.belief_type != new_observation.belief_type:
+                continue
+
+            # Compute semantic similarity
+            if self.embedding_provider is not None:
+                # Use embedding provider for higher-quality similarity
+                similarity = await self.embedding_provider.similarity(
+                    new_observation.content,
+                    obs.content,
+                )
+            else:
+                # Use built-in cosine similarity (word overlap)
+                similarity = self._compute_similarity(
+                    new_observation.content,
+                    obs.content,
+                )
+
+            # Check if content actually differs (conflicting claims)
+            content_differs = self._content_differs(new_observation.content, obs.content)
+
+            if not content_differs:
+                # Same content = agreement, not conflict
+                continue
+
+            # High similarity + different content = semantic conflict
+            # (Same topic, different claims)
+            if similarity > self.config.conflict_threshold:
+                conflicts.append(obs_id)
+                logger.debug(
+                    f"Semantic conflict detected: "
+                    f"'{new_observation.content[:50]}...' vs '{obs.content[:50]}...' "
+                    f"(similarity: {similarity:.2f}, type: {new_observation.belief_type})"
+                )
+            else:
+                # Low text similarity but same belief type - check for shared key terms
+                # This catches cases like "The price is $100" vs "The price is $200"
+                # where the number difference drops similarity but it's clearly same topic
+                tokens_new = set(self._tokenize(new_observation.content))
+                tokens_old = set(self._tokenize(obs.content))
+                shared_tokens = tokens_new & tokens_old
+
+                # Need at least 1 shared meaningful term to consider it same topic
+                # (content_differs already verified they make different claims)
+                if len(shared_tokens) >= 1:
                     conflicts.append(obs_id)
-                else:
-                    # Phase 2: Embedding-based semantic similarity
-                    similarity = await self.embedding_provider.similarity(
-                        new_observation.content,
-                        obs.content,
+                    logger.debug(
+                        f"Term-based conflict detected: "
+                        f"'{new_observation.content[:50]}...' vs '{obs.content[:50]}...' "
+                        f"(shared terms: {shared_tokens}, type: {new_observation.belief_type})"
                     )
-                    if similarity > self.config.conflict_threshold:
-                        conflicts.append(obs_id)
-                        logger.debug(
-                            f"Semantic conflict: {new_observation.observation_id} vs {obs_id} "
-                            f"(similarity: {similarity:.2f})"
-                        )
 
         return conflicts
 

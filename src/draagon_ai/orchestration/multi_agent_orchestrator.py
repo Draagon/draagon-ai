@@ -55,11 +55,180 @@ class AgentRole(str, Enum):
 
 
 @dataclass
+class RetryConfig:
+    """Configuration for retry behavior with exponential backoff.
+
+    Example:
+        ```python
+        retry = RetryConfig(
+            max_attempts=3,
+            initial_delay_seconds=1.0,
+            backoff_multiplier=2.0,  # 1s -> 2s -> 4s
+            max_delay_seconds=30.0,
+        )
+        ```
+    """
+
+    max_attempts: int = 3
+    initial_delay_seconds: float = 1.0
+    backoff_multiplier: float = 2.0
+    max_delay_seconds: float = 30.0
+    jitter_factor: float = 0.1  # Add ±10% randomness to delays
+
+    # Which exceptions are retryable
+    retry_on_timeout: bool = True
+    retry_on_error: bool = True
+
+    def get_delay(self, attempt: int) -> float:
+        """Calculate delay for a given attempt number (0-indexed).
+
+        Args:
+            attempt: Attempt number (0 = first retry)
+
+        Returns:
+            Delay in seconds with jitter applied
+        """
+        import random
+
+        base_delay = self.initial_delay_seconds * (self.backoff_multiplier ** attempt)
+        delay = min(base_delay, self.max_delay_seconds)
+
+        # Apply jitter
+        jitter = delay * self.jitter_factor * (2 * random.random() - 1)
+        return max(0.0, delay + jitter)
+
+
+@dataclass
+class CircuitBreakerConfig:
+    """Configuration for circuit breaker pattern.
+
+    Circuit breaker prevents repeated calls to failing agents:
+    - CLOSED: Normal operation, calls go through
+    - OPEN: Failures exceeded threshold, calls blocked
+    - HALF_OPEN: After reset timeout, allow limited test calls
+
+    Example:
+        ```python
+        cb = CircuitBreakerConfig(
+            failure_threshold=3,      # Open after 3 failures
+            reset_timeout_seconds=60, # Try again after 60s
+            half_open_max_calls=1,    # Allow 1 test call
+        )
+        ```
+    """
+
+    failure_threshold: int = 3  # Failures before opening circuit
+    reset_timeout_seconds: float = 60.0  # Time before trying again
+    half_open_max_calls: int = 1  # Test calls allowed in half-open state
+    success_threshold: int = 2  # Successes needed to close from half-open
+
+
+class CircuitState(str, Enum):
+    """Circuit breaker states."""
+
+    CLOSED = "closed"      # Normal operation
+    OPEN = "open"          # Blocking calls
+    HALF_OPEN = "half_open"  # Testing recovery
+
+
+@dataclass
+class CircuitBreaker:
+    """Circuit breaker for an individual agent.
+
+    Tracks failure/success and controls whether calls should proceed.
+    """
+
+    agent_id: str
+    config: CircuitBreakerConfig = field(default_factory=CircuitBreakerConfig)
+
+    # State tracking
+    state: CircuitState = CircuitState.CLOSED
+    failure_count: int = 0
+    success_count: int = 0  # In half-open state
+    last_failure_time: datetime | None = None
+    half_open_calls: int = 0
+
+    def can_execute(self) -> bool:
+        """Check if execution is allowed.
+
+        Returns:
+            True if call should proceed, False if blocked
+        """
+        if self.state == CircuitState.CLOSED:
+            return True
+
+        if self.state == CircuitState.OPEN:
+            # Check if reset timeout has passed
+            if self.last_failure_time is None:
+                return True
+
+            elapsed = (datetime.now() - self.last_failure_time).total_seconds()
+            if elapsed >= self.config.reset_timeout_seconds:
+                # Transition to half-open
+                self.state = CircuitState.HALF_OPEN
+                self.half_open_calls = 0
+                self.success_count = 0
+                return True
+
+            return False  # Still in timeout
+
+        if self.state == CircuitState.HALF_OPEN:
+            # Allow limited test calls
+            return self.half_open_calls < self.config.half_open_max_calls
+
+        return False
+
+    def record_success(self) -> None:
+        """Record a successful execution."""
+        if self.state == CircuitState.HALF_OPEN:
+            self.success_count += 1
+            if self.success_count >= self.config.success_threshold:
+                # Recovery confirmed, close circuit
+                self.state = CircuitState.CLOSED
+                self.failure_count = 0
+                self.success_count = 0
+        elif self.state == CircuitState.CLOSED:
+            # Reset failure count on success
+            self.failure_count = 0
+
+    def record_failure(self) -> None:
+        """Record a failed execution."""
+        self.failure_count += 1
+        self.last_failure_time = datetime.now()
+
+        if self.state == CircuitState.HALF_OPEN:
+            # Failed during recovery test, reopen
+            self.state = CircuitState.OPEN
+            self.half_open_calls = 0
+        elif self.state == CircuitState.CLOSED:
+            if self.failure_count >= self.config.failure_threshold:
+                # Too many failures, open circuit
+                self.state = CircuitState.OPEN
+
+    def record_call(self) -> None:
+        """Record that a call was made (for half-open tracking)."""
+        if self.state == CircuitState.HALF_OPEN:
+            self.half_open_calls += 1
+
+
+@dataclass
 class AgentSpec:
     """Specification for an agent in the orchestration.
 
     This is a lightweight reference to an agent, not the full agent.
     The actual agent implementation is provided by the host application.
+
+    Example:
+        ```python
+        # Agent with dependencies and retry config
+        analyst = AgentSpec(
+            agent_id="analyst",
+            role=AgentRole.SPECIALIST,
+            depends_on=["researcher"],  # Must wait for researcher
+            retry_config=RetryConfig(max_attempts=3),
+            circuit_breaker_config=CircuitBreakerConfig(failure_threshold=5),
+        )
+        ```
     """
 
     agent_id: str
@@ -77,6 +246,15 @@ class AgentSpec:
 
     # Conditions (evaluated by orchestrator)
     run_condition: str | None = None  # Expression like "prev.success == True"
+
+    # === NEW: Dependency ordering (FR-002 A+ enhancement) ===
+    depends_on: list[str] = field(default_factory=list)  # Agent IDs this agent depends on
+
+    # === NEW: Retry configuration (FR-002 A+ enhancement) ===
+    retry_config: RetryConfig | None = None  # Custom retry config (overrides max_retries)
+
+    # === NEW: Circuit breaker configuration (FR-002 A+ enhancement) ===
+    circuit_breaker_config: CircuitBreakerConfig | None = None
 
 
 @dataclass
