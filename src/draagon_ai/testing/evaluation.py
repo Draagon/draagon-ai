@@ -201,11 +201,13 @@ Respond with ONLY this XML:
 
         for attempt in range(self.max_retries):
             try:
-                return await self.llm.chat(
+                response = await self.llm.chat(
                     messages,
                     temperature=0.0,  # Deterministic for evaluation
                     max_tokens=500,
                 )
+                # Extract content string from ChatResponse
+                return response.content if hasattr(response, 'content') else str(response)
             except Exception as e:
                 last_error = e
                 if attempt < self.max_retries - 1:

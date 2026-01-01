@@ -560,10 +560,25 @@ class ToolProvider(Protocol):
 
 ## 🧪 Testing
 
+### API Keys and Environment Variables
+
+**IMPORTANT:** API keys are stored in `.env` in the project root. Always check there first!
+
+```bash
+# .env contains:
+GROQ_API_KEY=gsk_...      # Primary LLM provider for testing
+ANTHROPIC_API_KEY=sk-...  # Claude API key
+```
+
+**Loading .env for tests:**
+- Use `python-dotenv` to load: `from dotenv import load_dotenv; load_dotenv()`
+- Or set in shell: `source .env` or `export $(cat .env | xargs)`
+- pytest with dotenv: `pip install pytest-dotenv` (auto-loads .env)
+
 ### Running Tests
 
 ```bash
-# Run all tests
+# Run all tests (loads .env automatically with pytest-dotenv)
 pytest tests/ -v
 
 # Run specific module
@@ -571,6 +586,9 @@ pytest tests/orchestration/ -v
 
 # Run with coverage
 pytest tests/ --cov=src/draagon_ai --cov-report=html
+
+# If .env not loading, explicitly source it:
+source .env && pytest tests/integration/ -v
 ```
 
 ### Test Structure
