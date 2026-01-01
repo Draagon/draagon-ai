@@ -20,7 +20,7 @@ class TestEmbeddingProviderFixture:
         embedding = await embedding_provider.embed("test text")
 
         assert isinstance(embedding, list)
-        assert len(embedding) == 1536  # OpenAI-compatible dimension
+        assert len(embedding) == 768  # Neo4j-compatible dimension
         assert all(isinstance(x, float) for x in embedding)
 
     @pytest.mark.asyncio
