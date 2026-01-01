@@ -107,9 +107,11 @@ CONVERSATION HISTORY: {conversation_history}
 CONTEXT: {context}
 
 AVAILABLE ACTIONS:
-- answer: Respond directly when you know the answer
-- get_weather: Get weather for a location
-- calculate: Perform mathematical calculations
+- answer: Respond directly - use this for questions you can answer OR to express uncertainty about things you cannot predict or don't know
+- get_weather: Get current weather for a location (only for weather questions with a specific location)
+- calculate: Perform mathematical calculations (only for math expressions)
+
+IMPORTANT: For questions about the future, predictions, or topics you cannot know, use the "answer" action to honestly express that you cannot predict or don't know. Never try to use unrelated actions.
 
 Respond with XML:
 <response>
@@ -293,7 +295,6 @@ class TestConfidenceBasedResponses:
 
         assert result.correct, f"Response not confident: {result.reasoning}"
 
-    @pytest.mark.skip(reason="Requires fully configured behavior with prompts - flaky with minimal test behavior")
     @pytest.mark.skipif(
         not os.getenv("GROQ_API_KEY"), reason="GROQ_API_KEY not set"
     )
