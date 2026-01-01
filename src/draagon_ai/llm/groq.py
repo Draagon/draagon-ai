@@ -116,8 +116,15 @@ class GroqLLM(LLMProvider):
                     converted["name"] = msg.name
                 if msg.tool_call_id:
                     converted["tool_call_id"] = msg.tool_call_id
-            else:
+            elif isinstance(msg, dict):
                 converted = dict(msg)
+            else:
+                # Handle dataclass-like objects (e.g., LLMMessage from protocols)
+                converted = {"role": msg.role, "content": msg.content}
+                if hasattr(msg, "name") and msg.name:
+                    converted["name"] = msg.name
+                if hasattr(msg, "tool_call_id") and msg.tool_call_id:
+                    converted["tool_call_id"] = msg.tool_call_id
             result.append(converted)
 
         return result
@@ -152,6 +159,8 @@ class GroqLLM(LLMProvider):
         tools: list[ToolDefinition] | None = None,
         tier: ModelTier = ModelTier.LOCAL,
         response_format: dict[str, Any] | None = None,
+        model: str | None = None,  # Accept but ignore - use tier instead
+        **kwargs: Any,  # Accept any additional kwargs for protocol compatibility
     ) -> ChatResponse:
         """Complete a chat conversation using Groq.
 
