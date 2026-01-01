@@ -362,18 +362,33 @@ class DecisionEngine:
             root = ET.fromstring(xml_content)
 
             # Extract basic fields
+            # Note: element.text can be None even if element exists (e.g., <action></action>)
             action_elem = root.find("action")
-            result.action = action_elem.text.strip() if action_elem is not None else "answer"
+            result.action = (
+                action_elem.text.strip()
+                if action_elem is not None and action_elem.text
+                else "answer"
+            )
 
             reasoning_elem = root.find("reasoning")
-            result.reasoning = reasoning_elem.text.strip() if reasoning_elem is not None else ""
+            result.reasoning = (
+                reasoning_elem.text.strip()
+                if reasoning_elem is not None and reasoning_elem.text
+                else ""
+            )
 
             answer_elem = root.find("answer")
-            result.answer = answer_elem.text.strip() if answer_elem is not None else None
+            result.answer = (
+                answer_elem.text.strip()
+                if answer_elem is not None and answer_elem.text
+                else None
+            )
 
             model_tier_elem = root.find("model_tier")
             result.model_tier = (
-                model_tier_elem.text.strip() if model_tier_elem is not None else "local"
+                model_tier_elem.text.strip()
+                if model_tier_elem is not None and model_tier_elem.text
+                else "local"
             )
 
             # Extract confidence if present (REQ-002-02)
@@ -424,8 +439,14 @@ class DecisionEngine:
         """
         args: dict[str, Any] = {}
 
-        # Search query
+        # Some LLMs wrap args in an <args> element, some put them at root level
+        # Check both locations
+        args_elem = root.find("args")
+
+        # Search query - check both root and args element
         query_elem = root.find("query")
+        if query_elem is None and args_elem is not None:
+            query_elem = args_elem.find("query")
         if query_elem is not None and query_elem.text:
             args["query"] = query_elem.text.strip()
 
