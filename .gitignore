@@ -49,3 +49,5 @@ Thumbs.db
 *.out
 *.pid
 *.seed
+
+.neo4j*

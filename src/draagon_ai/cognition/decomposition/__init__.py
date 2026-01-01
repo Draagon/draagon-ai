@@ -138,6 +138,24 @@ from .memory_integration import (
     IntegrationResult,
 )
 
+# Phase 2: Semantic Graph (REQ-2.8)
+from .graph import (
+    GraphNode,
+    GraphEdge,
+    NodeType,
+    EdgeRelationType,
+    ConflictType,
+    MergeConflict,
+    MergeResult,
+    SemanticGraph,
+    TraversalResult,
+    # Graph Builder for Phase 0/1 Integration
+    GraphBuilder,
+    GraphBuilderConfig,
+    GraphBuildResult,
+    SemanticEdgeType,
+)
+
 __all__ = [
     # ==========================================================================
     # Types (from simple service layer)
@@ -218,4 +236,21 @@ __all__ = [
     "DecompositionMemoryService",
     "IntegrationConfig",
     "IntegrationResult",
+    # ==========================================================================
+    # Phase 2: Semantic Graph (REQ-2.8)
+    # ==========================================================================
+    "GraphNode",
+    "GraphEdge",
+    "NodeType",
+    "EdgeRelationType",
+    "ConflictType",
+    "MergeConflict",
+    "MergeResult",
+    "SemanticGraph",
+    "TraversalResult",
+    # Graph Builder for Phase 0/1 Integration
+    "GraphBuilder",
+    "GraphBuilderConfig",
+    "GraphBuildResult",
+    "SemanticEdgeType",
 ]
