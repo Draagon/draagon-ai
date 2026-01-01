@@ -268,3 +268,72 @@ if not result.correct:
 | `evaluator` | function | AgentEvaluator with mock LLM |
 | `llm_provider` | session | LLM provider (mock by default) |
 | `mock_llm` | session | MockLLMProvider |
+
+## Seed Registration Patterns
+
+### Global Registration (Simple Cases)
+
+Use `@SeedFactory.register()` decorator for seeds in standalone test files:
+
+```python
+@SeedFactory.register("my_seed")
+class MySeed(SeedItem):
+    async def create(self, provider, **deps):
+        return await provider.store(...)
+```
+
+**Pros:** Simple, declarative, seeds available globally
+**Cons:** Can conflict if other tests clear the global registry
+
+### Instance Registration (Test Isolation)
+
+Use fixture-based registration when running alongside tests that clear the global registry:
+
+```python
+@pytest.fixture
+def factory_with_seeds():
+    factory = SeedFactory()
+    factory.register_instance("my_seed", MySeed())
+    factory.register_instance("other_seed", OtherSeed())
+    return factory
+
+def test_something(factory_with_seeds):
+    seeds = factory_with_seeds.list_seeds()
+    assert "my_seed" in seeds
+```
+
+**Pros:** Isolated, no conflicts with other tests
+**Cons:** Slightly more verbose
+
+### When to Use Each
+
+| Scenario | Recommendation |
+|----------|----------------|
+| Standalone integration test file | Global `@SeedFactory.register()` |
+| Tests run with unit tests that clear registry | Instance `register_instance()` |
+| Parallel test execution | Instance (each test gets own factory) |
+| Shared seeds across test files | Global, but be aware of cleanup |
+
+## Known Issues
+
+### Event Loop Teardown Error
+
+You may see this error at the end of test session:
+
+```
+RuntimeError: Event loop is closed
+```
+
+**What's happening:** The Neo4j async driver tries to close its socket connection after pytest-asyncio has already closed the event loop. This is a timing issue between pytest-asyncio fixture teardown and the driver's cleanup.
+
+**Impact:** None - all tests pass correctly. The error occurs during cleanup after tests complete.
+
+**Status:** Known interaction between pytest-asyncio and neo4j async driver. Not a test failure.
+
+**Workaround:** Ignore this specific teardown error. If you need cleaner output, you can suppress it with:
+
+```python
+# In conftest.py
+import warnings
+warnings.filterwarnings("ignore", message="Event loop is closed")
+```
