@@ -145,6 +145,15 @@ from draagon_ai.testing.evaluation import (
     QualityResult,
 )
 
+from draagon_ai.testing.profiles import (
+    AppProfile,
+    ToolSet,
+    DEFAULT_PROFILE,
+    RESEARCHER_PROFILE,
+    ASSISTANT_PROFILE,
+    MINIMAL_PROFILE,
+)
+
 __all__ = [
     # Cache
     "CacheMode",
@@ -186,4 +195,11 @@ __all__ = [
     "AgentEvaluator",
     "EvaluationResult",
     "QualityResult",
+    # Profiles (FR-009)
+    "AppProfile",
+    "ToolSet",
+    "DEFAULT_PROFILE",
+    "RESEARCHER_PROFILE",
+    "ASSISTANT_PROFILE",
+    "MINIMAL_PROFILE",
 ]
