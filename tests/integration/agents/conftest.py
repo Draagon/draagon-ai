@@ -99,9 +99,9 @@ class MockEmbeddingProvider:
         pass
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 async def embedding_provider():
-    """Real embedding provider for vector operations.
+    """Embedding provider for vector operations.
 
     Provides mock embeddings that are deterministic and don't require external APIs.
     For production testing with real embeddings, configure actual provider.
@@ -120,7 +120,7 @@ async def embedding_provider():
 # ============================================================================
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def real_llm():
     """Real LLM provider (Groq or OpenAI based on env vars).
 
@@ -155,11 +155,12 @@ def real_llm():
 # ============================================================================
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 async def test_database():
-    """Session-scoped test database manager.
+    """Test database manager.
 
-    Initializes Neo4j connection once per test session.
+    Creates a fresh Neo4j connection per test to avoid event loop issues.
+    Connection is closed after each test.
 
     Returns:
         TestDatabase instance
@@ -223,13 +224,15 @@ async def memory_provider(clean_database, embedding_provider, real_llm):
     db_config = clean_database.get_config()
 
     # Create memory config
+    # Note: semantic decomposition disabled for basic fixture tests
+    # (requires nltk/wordnet). Enable for specific decomposition tests.
     config = Neo4jMemoryConfig(
         uri=db_config["uri"],
         username=db_config["username"],
         password=db_config["password"],
         database=db_config.get("database", "neo4j"),
         embedding_dimension=1536,
-        enable_semantic_decomposition=True,
+        enable_semantic_decomposition=False,
     )
 
     # Create provider
