@@ -854,7 +854,9 @@ class AgentLoop:
         response = await self.llm.chat(messages)
 
         # Parse structured response (XML or JSON)
-        content = response.content.strip()
+        # Handle None content defensively
+        raw_content = response.content if response.content is not None else ""
+        content = raw_content.strip()
 
         # Try XML first (preferred format per LLM-First architecture)
         if "<synthesis>" in content or "<answer>" in content:

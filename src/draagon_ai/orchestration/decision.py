@@ -318,7 +318,9 @@ class DecisionEngine:
         Returns:
             Parsed DecisionResult
         """
-        content = response.content.strip()
+        # Handle None content defensively (can happen with tool-only responses)
+        raw_content = response.content if response.content is not None else ""
+        content = raw_content.strip()
         logger.debug(f"Raw LLM decision content: {content[:500]}...")
 
         # Try XML parsing first (our default format)
