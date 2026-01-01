@@ -132,6 +132,19 @@ from draagon_ai.testing.fixtures import (
     seed,
 )
 
+from draagon_ai.testing.sequences import (
+    StepDependencyError,
+    StepOrderError,
+    TestSequence,
+    step,
+)
+
+from draagon_ai.testing.evaluation import (
+    AgentEvaluator,
+    EvaluationResult,
+    QualityResult,
+)
+
 __all__ = [
     # Cache
     "CacheMode",
@@ -164,4 +177,13 @@ __all__ = [
     "create_test_database",
     "seed_factory",
     "seed",
+    # Sequences (FR-009)
+    "TestSequence",
+    "step",
+    "StepDependencyError",
+    "StepOrderError",
+    # Evaluation (FR-009)
+    "AgentEvaluator",
+    "EvaluationResult",
+    "QualityResult",
 ]
