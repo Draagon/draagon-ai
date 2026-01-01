@@ -35,10 +35,10 @@ from typing import Any, Protocol
 from enum import Enum
 
 from ..content_analyzer import ContentType, ContentAnalysis, ProcessingStrategy
-from content_aware_wsd import ContentAwareWSD, ContentAwareWSDResult
+from ..content_aware_wsd import ContentAwareWSD, ContentAwareWSDResult
 from ..entity_classifier import EntityClassifier, ClassificationResult
 from ..identifiers import EntityType, UniversalSemanticIdentifier
-from text_chunking import TextChunker, ChunkingConfig, TextChunk
+from ..text_chunking import TextChunker, ChunkingConfig, TextChunk
 from ..wsd import WSDConfig, DisambiguationResult
 
 from .models import (

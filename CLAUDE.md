@@ -146,13 +146,19 @@ When confidence is uncertain, use graduated responses:
 | 0.5-0.7 | Confirm for most operations |
 | < 0.5 | Require explicit confirmation |
 
-### Async-First Processing
+### Pragmatic Async
 
-Non-blocking operations should run in background:
-- Learning extraction (after response sent)
-- Episode summaries (on conversation expiry)
-- Memory consolidation (scheduled job)
-- Reflection/quality assessment (after response)
+Use async when it provides real benefit. Keep sync code simple.
+
+**Use async for:**
+- External I/O (LLM calls, database, HTTP)
+- Concurrent operations (parallel agents)
+- Background tasks (learning, consolidation)
+
+**Keep synchronous:**
+- Pure computation and data transformation
+- Configuration and initialization
+- Simple utilities, getters, builders
 
 ---
 
@@ -748,6 +754,200 @@ A prototype is ready to graduate when:
 
 ---
 
+## 🧪 Integration Testing Framework (FR-009)
+
+The integration testing framework provides tools for testing agentic AI behavior with real LLM providers and Neo4j databases. Core principle: **Test outcomes, not processes**.
+
+### Key Concepts
+
+| Concept | Purpose |
+|---------|---------|
+| **TestDatabase** | Neo4j lifecycle manager (initialize, clear, close) |
+| **SeedItem** | Declarative test data with dependency resolution |
+| **SeedSet** | Collection of seeds for a test scenario |
+| **TestSequence** | Multi-step tests with shared database state |
+| **AgentEvaluator** | LLM-as-judge for semantic evaluation |
+| **AppProfile** | Configurable agent configurations |
+
+### Critical Design Decision: Seeds Use Real MemoryProvider
+
+Seeds receive the **REAL MemoryProvider**, not a wrapper. This ensures tests validate production APIs:
+
+```python
+from draagon_ai.testing import SeedItem, SeedFactory
+from draagon_ai.memory import MemoryProvider
+
+@SeedFactory.register("user_doug")
+class DougUserSeed(SeedItem):
+    """Seeds use REAL provider API - not wrapper methods."""
+
+    async def create(self, provider: MemoryProvider) -> str:
+        # Direct production API usage
+        return await provider.store(
+            content="User profile: Doug",
+            metadata={"memory_type": "USER_PROFILE", "user_name": "Doug"}
+        )
+```
+
+**Why?**
+- Tests validate actual production interfaces
+- No leaky abstractions from helper methods
+- If seeds work, production will work
+
+### Writing Integration Tests
+
+```python
+import pytest
+from draagon_ai.testing import SeedSet, SeedFactory, SeedItem, AgentEvaluator
+from draagon_ai.memory import MemoryProvider
+
+# 1. Define seed items
+@SeedFactory.register("user_preference")
+class UserPreferenceSeed(SeedItem):
+    async def create(self, provider: MemoryProvider) -> str:
+        return await provider.store(
+            content="User prefers dark mode",
+            metadata={"memory_type": "PREFERENCE", "importance": 0.9}
+        )
+
+# 2. Create seed sets
+USER_WITH_PREFS = SeedSet("user_with_prefs", ["user_preference"])
+
+# 3. Write test using fixtures
+@pytest.mark.memory_integration
+async def test_preference_recall(agent, memory_provider, seed, evaluator):
+    """Test agent recalls user preferences."""
+
+    # Apply seeds using REAL provider
+    await seed.apply(USER_WITH_PREFS, memory_provider)
+
+    # Query agent
+    response = await agent.process("What theme do I prefer?")
+
+    # LLM-as-judge evaluation (NOT string matching)
+    result = await evaluator.evaluate_correctness(
+        query="What theme do I prefer?",
+        expected_outcome="Agent should mention dark mode",
+        actual_response=response.answer
+    )
+
+    assert result.correct, f"Failed: {result.reasoning}"
+```
+
+### Writing Test Sequences
+
+For multi-step tests where database state persists between steps:
+
+```python
+from draagon_ai.testing import TestSequence, step
+
+class TestLearningFlow(TestSequence):
+    """Test agent learning across interactions."""
+
+    @step(1)
+    async def test_initial_unknown(self, agent):
+        """Agent doesn't know birthday initially."""
+        response = await agent.process("When is my birthday?")
+        assert response.confidence < 0.5
+
+    @step(2, depends_on="test_initial_unknown")
+    async def test_learn_birthday(self, agent):
+        """Agent learns birthday from user."""
+        response = await agent.process("My birthday is March 15")
+        assert "march 15" in response.answer.lower()
+
+    @step(3, depends_on="test_learn_birthday")
+    async def test_recall_birthday(self, agent):
+        """Agent recalls learned birthday."""
+        response = await agent.process("When is my birthday?")
+        assert "march 15" in response.answer.lower()
+```
+
+### Available Fixtures
+
+| Fixture | Scope | Purpose |
+|---------|-------|---------|
+| `test_database` | session | Neo4j lifecycle manager |
+| `clean_database` | function | Clears data before each test |
+| `memory_provider` | function | REAL MemoryProvider instance |
+| `seed` | function | Seed applicator |
+| `evaluator` | function | LLM-as-judge evaluator |
+| `agent_factory` | function | Create agents from profiles |
+| `llm_provider` | session | Real LLM (Groq/OpenAI) |
+
+### Creating New Seed Items
+
+1. Define seed class with `@SeedFactory.register`:
+
+```python
+@SeedFactory.register("my_seed")
+class MySeed(SeedItem):
+    dependencies = ["other_seed"]  # Optional dependencies
+
+    async def create(self, provider: MemoryProvider, other_seed: str = None) -> str:
+        # Use REAL provider API
+        return await provider.store(
+            content="My test data",
+            metadata={"memory_type": "FACT"}
+        )
+```
+
+2. Create seed set:
+
+```python
+MY_SCENARIO = SeedSet("my_scenario", ["other_seed", "my_seed"])
+```
+
+3. Use in test:
+
+```python
+async def test_something(seed, memory_provider):
+    await seed.apply(MY_SCENARIO, memory_provider)
+    # Test continues with seeded data
+```
+
+### Extending with App Profiles
+
+```python
+from draagon_ai.testing import AppProfile, ToolSet
+
+MY_PROFILE = AppProfile(
+    name="custom",
+    personality="You are a specialized assistant...",
+    tool_set=ToolSet.BASIC,
+    memory_config={"working_ttl": 300},
+    llm_model_tier="fast",
+)
+
+async def test_with_profile(agent_factory):
+    agent = await agent_factory.create(MY_PROFILE)
+    response = await agent.process("Hello!")
+```
+
+### Test Markers
+
+```bash
+pytest -m "memory_integration"     # Memory tests only
+pytest -m "smoke"                  # Critical tests
+pytest -m "learning_integration"   # Learning tests
+pytest -m "not slow"               # Skip slow tests
+```
+
+### Running Integration Tests
+
+```bash
+# Requires API key and Neo4j
+GROQ_API_KEY=your_key pytest tests/integration/ -v
+
+# With OpenAI instead
+OPENAI_API_KEY=your_key pytest tests/integration/ -v
+
+# Specific test file
+pytest tests/integration/test_memory.py -v
+```
+
+---
+
 ## 📝 Development Notes
 
 ### Adding New Cognitive Service
@@ -768,7 +968,7 @@ A prototype is ready to graduate when:
 ### Version Compatibility
 
 - Python 3.11+
-- Qdrant 1.7+
+- Neo4j 5.26+ (Community or Enterprise)
 - Supports Groq, OpenAI, Ollama LLM providers
 
 ---

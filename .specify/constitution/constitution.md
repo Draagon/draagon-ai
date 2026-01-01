@@ -58,11 +58,21 @@ All LLM prompts use XML output, never JSON. XML is:
 ### 4. Protocol-Based Design
 Use Python `Protocol` abstractions for all integrations. Host applications implement protocols; the framework provides implementations.
 
-### 5. Async-First Processing
-Non-blocking operations for everything non-critical:
-- Learning extraction (after response)
-- Memory consolidation (background)
-- Reflection (post-task)
+### 5. Pragmatic Async (NOT Async-First)
+Use async when it provides real benefit. Keep synchronous code simple.
+
+**Use async for:**
+- External I/O (LLM calls, database queries, HTTP requests)
+- Concurrent operations (parallel agents, tool batching)
+- Background tasks that shouldn't block user response (learning, consolidation)
+
+**Keep synchronous:**
+- Pure computation and data transformation
+- Configuration and initialization
+- Simple utilities and helpers
+- Getters, builders, validators
+
+**Rationale:** Async adds complexity. Every `async def` forces callers to be async (viral). Only pay that cost when you get real concurrency or non-blocking I/O benefits.
 
 ### 6. Research-Grounded Development
 Every architectural decision is backed by research:
@@ -113,7 +123,7 @@ BAD TEST:  "Agent MUST use tool 'get_weather' exactly"
 
 ### Must Have
 - Python 3.11+ compatibility
-- Fully async API (asyncio)
+- Async for I/O operations (LLM, database, HTTP)
 - Zero required external services (all optional)
 - Protocol-based extensibility
 - Comprehensive type hints
@@ -121,7 +131,8 @@ BAD TEST:  "Agent MUST use tool 'get_weather' exactly"
 ### Must Avoid
 - **Regex for semantic understanding** (except security blocklists, TTS transforms, entity IDs)
 - **JSON output from LLM prompts** (XML only)
-- **Synchronous blocking in hot paths** (async-first)
+- **Sync I/O in hot paths** (use async for LLM/database/HTTP)
+- **Unnecessary async** (don't make pure functions async)
 - **Hard dependencies on specific LLM providers** (protocol-based)
 - **Breaking changes without major version bump** (semantic versioning)
 - **Hardcoded trigger phrases** (LLM understands naturally)
@@ -222,10 +233,10 @@ These principles are derived from running Roxy Voice Assistant in production:
 
 **Evidence:** When we relaxed "must use tool X" tests to "must return correct answer," Roxy made smarter decisions about when to use knowledge vs. web search.
 
-### 4. Async-First Prevents Latency
-**Lesson:** Learning extraction, memory consolidation, and reflection should never block user responses.
+### 4. Pragmatic Async Prevents Latency
+**Lesson:** Background tasks (learning, consolidation, reflection) should never block user responses. But not everything needs to be async.
 
-**Evidence:** Roxy's learning service runs post-response. Users get answers in <2s; learning happens in background without impacting UX.
+**Evidence:** Roxy's learning service runs post-response. Users get answers in <2s; learning happens in background. Pure computation stays synchronous for simplicity.
 
 ### 5. Belief Reconciliation Handles Conflicts
 **Lesson:** Users contradict themselves. Users contradict each other. Treat statements as observations, not facts.
@@ -255,7 +266,7 @@ These principles are derived from running Roxy Voice Assistant in production:
 Before merging changes, verify:
 - [ ] Zero semantic regex patterns introduced
 - [ ] All LLM prompts use XML output
-- [ ] Async-first for non-critical operations
+- [ ] Async used appropriately (I/O yes, pure computation no)
 - [ ] Tests validate outcomes, not processes
 - [ ] Protocol-based for all integrations
 

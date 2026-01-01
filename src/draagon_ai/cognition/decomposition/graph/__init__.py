@@ -80,11 +80,19 @@ from .operations import (
     UpdateResult,
 )
 
-from .neo4j_store import (
-    Neo4jGraphStore,
-    Neo4jGraphStoreSync,
-    Neo4jConfig,
-)
+# Neo4j is optional - only import if available
+try:
+    from .neo4j_store import (
+        Neo4jGraphStore,
+        Neo4jGraphStoreSync,
+        Neo4jConfig,
+    )
+    _NEO4J_AVAILABLE = True
+except ImportError:
+    Neo4jGraphStore = None  # type: ignore
+    Neo4jGraphStoreSync = None  # type: ignore
+    Neo4jConfig = None  # type: ignore
+    _NEO4J_AVAILABLE = False
 
 __all__ = [
     # ==========================================================================

@@ -29,6 +29,18 @@ from .context import (
     RetrievedContext,
 )
 
+from .memory import (
+    MemoryLayer,
+    ContentType,
+    MemoryProperties,
+    VolatileObservation,
+    VolatileWorkingMemory,
+    MemoryAwareGraphStore,
+    classify_phase1_content,
+    LAYER_TTL,
+    DECAY_RATES,
+)
+
 __all__ = [
     # Main Loop
     "ReasoningLoop",
@@ -42,4 +54,14 @@ __all__ = [
     "ContextRetriever",
     "RecencyWindow",
     "RetrievedContext",
+    # Memory
+    "MemoryLayer",
+    "ContentType",
+    "MemoryProperties",
+    "VolatileObservation",
+    "VolatileWorkingMemory",
+    "MemoryAwareGraphStore",
+    "classify_phase1_content",
+    "LAYER_TTL",
+    "DECAY_RATES",
 ]

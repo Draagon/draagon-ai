@@ -42,6 +42,16 @@ def neo4j_available() -> bool:
         return False
 
 
+def nltk_wordnet_available() -> bool:
+    """Check if NLTK with WordNet is available."""
+    try:
+        from nltk.corpus import wordnet
+        wordnet.synsets("test")
+        return True
+    except Exception:
+        return False
+
+
 # =============================================================================
 # Mock Providers
 # =============================================================================
@@ -490,6 +500,7 @@ class TestGraphTraversal:
 
 
 @pytest.mark.skipif(not neo4j_available(), reason="Neo4j not available")
+@pytest.mark.skipif(not nltk_wordnet_available(), reason="NLTK with WordNet not available")
 class TestSemanticDecomposition:
     """Test semantic decomposition integration."""
 

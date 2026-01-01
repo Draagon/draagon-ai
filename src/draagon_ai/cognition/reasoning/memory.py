@@ -541,42 +541,131 @@ class MemoryAwareGraphStore:
         Returns:
             Graph with only active (non-expired) nodes/edges
         """
-        # Load full graph
-        full_graph = self.store.load(self.instance_id, current_only=True)
-
-        # Filter by expiration and layer
-        now = datetime.now(timezone.utc)
+        now = datetime.now(timezone.utc).isoformat()
         active_graph = SemanticGraph()
 
-        for node in full_graph.iter_nodes():
-            # Check expiration
-            expires_at = node.properties.get("memory_expires_at")
-            if expires_at:
-                if datetime.fromisoformat(expires_at) < now:
-                    continue  # Expired
+        # Build layer filter
+        layer_filter = ""
+        if include_layers:
+            layer_values = [layer.value for layer in include_layers]
+            layer_filter = f"AND n.memory_layer IN {layer_values}"
 
-            # Check layer filter
-            if include_layers:
-                layer = node.properties.get("memory_layer", "working")
-                if MemoryLayer(layer) not in include_layers:
-                    continue
+        # Query only active (non-expired) nodes directly from Neo4j
+        with self.store.driver.session() as session:
+            # Load active nodes
+            result = session.run(f"""
+                MATCH (n:Entity {{instance_id: $instance_id}})
+                WHERE (n.memory_expires_at IS NULL OR n.memory_expires_at > $now)
+                {layer_filter}
+                RETURN n
+            """, instance_id=self.instance_id, now=now)
 
-            active_graph.add_node(node)
+            for record in result:
+                node = self._record_to_node(record["n"])
+                active_graph.add_node(node)
 
-        # Add edges between active nodes
-        for edge in full_graph.iter_edges():
-            if (edge.source_node_id in active_graph.nodes and
-                edge.target_node_id in active_graph.nodes):
+            # Load edges between active nodes
+            result = session.run(f"""
+                MATCH (s:Entity {{instance_id: $instance_id}})
+                      -[r]->(t:Entity {{instance_id: $instance_id}})
+                WHERE (s.memory_expires_at IS NULL OR s.memory_expires_at > $now)
+                  AND (t.memory_expires_at IS NULL OR t.memory_expires_at > $now)
+                  AND (r.memory_expires_at IS NULL OR r.memory_expires_at > $now)
+                  {layer_filter.replace('n.', 's.').replace('AND ', 'AND ')}
+                RETURN s.node_id AS source_id, t.node_id AS target_id,
+                       type(r) AS rel_type, properties(r) AS props
+            """, instance_id=self.instance_id, now=now)
 
-                # Check edge expiration
-                expires_at = edge.properties.get("memory_expires_at")
-                if expires_at:
-                    if datetime.fromisoformat(expires_at) < now:
-                        continue
-
+            for record in result:
+                edge = self._record_to_edge(
+                    record["source_id"],
+                    record["target_id"],
+                    record["rel_type"],
+                    record["props"],
+                )
                 active_graph.add_edge(edge)
 
         return active_graph
+
+    def _record_to_node(self, neo4j_node) -> GraphNode:
+        """Convert a Neo4j node record to GraphNode."""
+        props = dict(neo4j_node)
+
+        # Determine node type from label or property
+        node_type_str = props.pop("node_type", "instance")
+        try:
+            node_type = NodeType(node_type_str)
+        except ValueError:
+            node_type = NodeType.INSTANCE
+
+        # Parse datetime fields
+        created_at = props.pop("created_at", None)
+        if isinstance(created_at, str):
+            created_at = datetime.fromisoformat(created_at)
+        updated_at = props.pop("updated_at", None)
+        if isinstance(updated_at, str):
+            updated_at = datetime.fromisoformat(updated_at)
+
+        # Extract standard fields
+        node = GraphNode(
+            node_id=props.pop("node_id", ""),
+            node_type=node_type,
+            canonical_name=props.pop("canonical_name", ""),
+            synset_id=props.pop("synset_id", None),
+            wikidata_qid=props.pop("wikidata_qid", None),
+            created_at=created_at or datetime.now(timezone.utc),
+            updated_at=updated_at or datetime.now(timezone.utc),
+            confidence=props.pop("confidence", 1.0),
+            source_ids=props.pop("source_ids", []),
+            embedding=props.pop("embedding", None),
+        )
+
+        # Store remaining properties (including memory properties)
+        props.pop("instance_id", None)  # Don't store instance_id in properties
+        props.pop("entity_type", None)
+
+        # Extract prop_ prefixed properties
+        for key in list(props.keys()):
+            if key.startswith("prop_"):
+                node.properties[key[5:]] = props.pop(key)
+            elif key.startswith("memory_"):
+                node.properties[key] = props.pop(key)
+
+        return node
+
+    def _record_to_edge(
+        self,
+        source_id: str,
+        target_id: str,
+        rel_type: str,
+        props: dict,
+    ) -> GraphEdge:
+        """Convert Neo4j edge data to GraphEdge."""
+        from ..decomposition.graph.models import GraphEdge
+
+        # Parse datetime fields
+        valid_from = props.get("valid_from")
+        if isinstance(valid_from, str):
+            valid_from = datetime.fromisoformat(valid_from)
+
+        valid_to = props.get("valid_to")
+        if isinstance(valid_to, str) and valid_to:
+            valid_to = datetime.fromisoformat(valid_to)
+        else:
+            valid_to = None
+
+        return GraphEdge(
+            edge_id=props.get("edge_id", ""),
+            source_node_id=source_id,
+            target_node_id=target_id,
+            relation_type=props.get("relation_type", rel_type.lower()),
+            valid_from=valid_from or datetime.now(timezone.utc),
+            valid_to=valid_to,
+            confidence=props.get("confidence", 1.0),
+            source_ids=props.get("source_ids", []),
+            properties={k: v for k, v in props.items()
+                       if k.startswith("memory_") or k.startswith("prop_")},
+        )
 
     def reinforce_nodes(
         self,

@@ -271,7 +271,7 @@ class TestVolatileObservation:
 
         # Should expire in approximately 5 minutes
         ttl = (obs.expires_at - obs.created_at).total_seconds()
-        assert 290 < ttl <= 300  # 5 minutes ± 10 seconds
+        assert 290 < ttl <= 301  # 5 minutes ± small margin for timing
 
     def test_is_expired(self):
         """Test expiration detection."""

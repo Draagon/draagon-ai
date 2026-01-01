@@ -134,6 +134,11 @@ from .autonomous import (
     ContextProvider,
     NotificationProvider,
 )
+from .semantic_context import (
+    SemanticContextService,
+    SemanticContext,
+    SemanticContextConfig,
+)
 
 __all__ = [
     # Core Agent
@@ -227,4 +232,8 @@ __all__ = [
     "MemoryStoreProvider",
     "ContextProvider",
     "NotificationProvider",
+    # Semantic Context (Phase 2)
+    "SemanticContextService",
+    "SemanticContext",
+    "SemanticContextConfig",
 ]

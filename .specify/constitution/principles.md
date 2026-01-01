@@ -182,23 +182,29 @@ Never binary. Always graduated.
 | 0.5-0.7 | Confirm for most operations |
 | < 0.5 | Require explicit confirmation |
 
-## 8. Async-First Processing
+## 8. Pragmatic Async
 
-Non-blocking for non-critical operations:
+Use async when it provides real benefit. Don't add async complexity unnecessarily.
 
 ```yaml
-synchronous:
-  - Decision making
-  - Tool execution
-  - Response generation
+use_async_for:
+  - External I/O (LLM calls, database, HTTP)
+  - Concurrent operations (parallel agents, tool batching)
+  - Background tasks (learning, consolidation, reflection)
 
-asynchronous:
-  - Learning extraction (post-response)
-  - Episode summaries (on conversation expiry)
-  - Memory consolidation (scheduled job)
-  - Reflection/quality assessment (post-response)
-  - Curiosity question identification
+keep_synchronous:
+  - Pure computation (parsing, filtering, transforming)
+  - Configuration and initialization
+  - Simple utilities and helpers
+  - Getters, builders, validators
+  - Data structure operations
 ```
+
+**Why This Matters:**
+- Every `async def` forces callers to be async (viral complexity)
+- Async adds debugging difficulty (stack traces, exception handling)
+- Testing becomes more complex (pytest-asyncio, async fixtures)
+- Only pay the complexity cost when you get real I/O or concurrency benefits
 
 ## 9. Protocol-Based Extensibility
 

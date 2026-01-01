@@ -22,9 +22,21 @@ from ..decomposition.graph import (
     Neo4jGraphStoreSync,
     NodeType,
 )
+from ..decomposition.extractors.integrated_pipeline import (
+    IntegratedPipeline,
+    IntegratedPipelineConfig,
+    IntegratedResult,
+)
 
 from .context import RecencyWindow, ContextRetriever, RetrievedContext
 from .expander import ProbabilisticExpander, ExpansionResult, InterpretationBranch
+from .memory import (
+    MemoryLayer,
+    ContentType,
+    MemoryAwareGraphStore,
+    VolatileWorkingMemory,
+    classify_phase1_content,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -65,9 +77,16 @@ class ReasoningConfig:
 
     # Phase 0/1 (optional - can be disabled)
     use_phase01_extraction: bool = True
+    require_wordnet: bool = False  # False = graceful degradation if WordNet unavailable
 
     # Beam search (for future)
     beam_width: int = 2
+
+    # Memory settings
+    default_memory_layer: MemoryLayer = MemoryLayer.WORKING
+    enable_memory_reinforcement: bool = True
+    reinforcement_amount: float = 0.1
+    volatile_memory_capacity: int = 9  # Miller's Law: 7±2
 
 
 @dataclass
@@ -97,6 +116,14 @@ class ReasoningResult:
     nodes_added: int = 0
     edges_added: int = 0
 
+    # Memory tracking
+    memory_layer: MemoryLayer = MemoryLayer.WORKING
+    nodes_reinforced: int = 0
+    content_types_used: list[ContentType] = field(default_factory=list)
+
+    # Additional metadata (e.g., IntegratedResult)
+    metadata: dict[str, Any] = field(default_factory=dict)
+
     # Total time
     total_time_ms: float = 0.0
 
@@ -123,7 +150,10 @@ class ReasoningResult:
             lines.append(f"Best: {self.best_interpretation.interpretation}")
 
         if self.stored_to_graph:
-            lines.append(f"Stored: +{self.nodes_added} nodes, +{self.edges_added} edges")
+            lines.append(f"Stored: +{self.nodes_added} nodes, +{self.edges_added} edges (layer: {self.memory_layer.value})")
+
+        if self.nodes_reinforced > 0:
+            lines.append(f"Reinforced: {self.nodes_reinforced} nodes")
 
         return "\n".join(lines)
 
@@ -166,9 +196,17 @@ class ReasoningLoop:
 
         # Neo4j store (lazy init)
         self._store: Neo4jGraphStoreSync | None = None
+        self._memory_store: MemoryAwareGraphStore | None = None
+
+        # Volatile working memory for current session
+        self._volatile_memory: VolatileWorkingMemory | None = None
 
         # Graph builder for Phase 0/1 results
         self.graph_builder = GraphBuilder()
+
+        # Phase 0/1 pipeline (lazy init)
+        self._pipeline: IntegratedPipeline | None = None
+        self._pipeline_initialized = False
 
     @property
     def store(self) -> Neo4jGraphStoreSync | None:
@@ -185,6 +223,71 @@ class ReasoningLoop:
                 logger.warning(f"Failed to connect to Neo4j: {e}")
         return self._store
 
+    @property
+    def memory_store(self) -> MemoryAwareGraphStore | None:
+        """Get memory-aware graph store (lazy init)."""
+        if self._memory_store is None and self._store is not None:
+            self._memory_store = MemoryAwareGraphStore(
+                store=self._store,
+                instance_id=self.config.instance_id,
+            )
+        return self._memory_store
+
+    @property
+    def volatile_memory(self) -> VolatileWorkingMemory:
+        """Get volatile working memory for current session."""
+        if self._volatile_memory is None:
+            self._volatile_memory = VolatileWorkingMemory(
+                task_id=f"reasoning-{self.config.instance_id}",
+                max_items=self.config.volatile_memory_capacity,
+            )
+        return self._volatile_memory
+
+    @property
+    def pipeline(self) -> IntegratedPipeline | None:
+        """Get or create the Phase 0/1 pipeline (lazy init)."""
+        if not self._pipeline_initialized:
+            self._pipeline_initialized = True
+
+            if not self.config.use_phase01_extraction:
+                logger.info("Phase 0/1 extraction disabled by config")
+                self._pipeline = None
+                return None
+
+            try:
+                self._pipeline = IntegratedPipeline(
+                    config=IntegratedPipelineConfig(
+                        require_wordnet=self.config.require_wordnet,
+                    ),
+                    llm=self.llm,
+                )
+                logger.info("IntegratedPipeline initialized successfully")
+            except Exception as e:
+                logger.warning(f"Failed to initialize IntegratedPipeline: {e}")
+                self._pipeline = None
+        return self._pipeline
+
+    async def _extract_with_pipeline(self, message: str) -> tuple[SemanticGraph, IntegratedResult | None]:
+        """Extract semantic graph using the Phase 0/1 pipeline.
+
+        Returns:
+            Tuple of (SemanticGraph, IntegratedResult) - result may be None if pipeline unavailable.
+        """
+        # Try full pipeline if available
+        if self.pipeline is not None:
+            try:
+                integrated_result = await self.pipeline.process(message)
+                # Build semantic graph from pipeline result
+                graph = self.graph_builder.build_from_integrated(integrated_result)
+                logger.debug(f"Pipeline extracted {graph.node_count} nodes, {graph.edge_count} edges")
+                return graph, integrated_result
+            except Exception as e:
+                logger.warning(f"Pipeline extraction failed, falling back to simple: {e}")
+
+        # Fallback to simple extraction
+        graph = await self._simple_extraction(message)
+        return graph, None
+
     async def process(self, message: str) -> ReasoningResult:
         """
         Process a message through the full reasoning loop.
@@ -199,12 +302,15 @@ class ReasoningLoop:
 
         result = ReasoningResult(original_message=message, message_graph=None)
 
-        # Step 1: Extract semantic graph (simplified - skip Phase 0/1 for now)
-        # TODO: Integrate full IntegratedPipeline when available
+        # Step 1: Extract semantic graph via Phase 0/1 pipeline (with fallback)
         extraction_start = time.perf_counter()
-        message_graph = await self._simple_extraction(message)
+        message_graph, integrated_result = await self._extract_with_pipeline(message)
         result.message_graph = message_graph
         result.extraction_time_ms = (time.perf_counter() - extraction_start) * 1000
+
+        # Store integrated result for later use (e.g., in context enrichment)
+        if integrated_result:
+            result.metadata = {"integrated_result": integrated_result}  # type: ignore
 
         # Step 2: Recency context is already maintained
         # (recency window is updated at end of each process call)
@@ -245,16 +351,49 @@ class ReasoningLoop:
         # TODO: Implement beam search ReAct
         result.best_interpretation = expansion.top_branch
 
-        # Step 7: Skip reinforcement for MVP
+        # Step 7: Reinforce context nodes that were used
+        if (self._store is not None and
+            self.config.enable_memory_reinforcement and
+            result.retrieved_context and
+            result.retrieved_context.node_count > 0):
+            try:
+                # Reinforce nodes that were retrieved as context
+                context_node_ids = [
+                    n.node_id for n in result.retrieved_context.subgraph.iter_nodes()
+                ]
+                if context_node_ids and self.memory_store:
+                    reinforced = self.memory_store.reinforce_nodes(
+                        context_node_ids,
+                        amount=self.config.reinforcement_amount,
+                    )
+                    result.nodes_reinforced = reinforced
+                    logger.debug(f"Reinforced {reinforced} context nodes")
+            except Exception as e:
+                logger.warning(f"Failed to reinforce nodes: {e}")
 
-        # Step 8: Store message graph to Neo4j (only if store already connected)
+        # Step 8: Store message graph to Neo4j with memory properties
         if self._store is not None and message_graph and message_graph.node_count > 0:
             try:
-                save_result = self.store.save(
-                    message_graph,
-                    self.config.instance_id,
-                    clear_existing=False,
-                )
+                # Classify content types for differential decay
+                content_type_map = classify_phase1_content(message_graph)
+                result.content_types_used = list(set(content_type_map.values()))
+                result.memory_layer = self.config.default_memory_layer
+
+                # Use memory-aware store for saving with TTL
+                if self.memory_store:
+                    save_result = self.memory_store.save_with_memory(
+                        message_graph,
+                        default_layer=self.config.default_memory_layer,
+                        content_type_map=content_type_map,
+                    )
+                else:
+                    # Fallback to basic store
+                    save_result = self.store.save(
+                        message_graph,
+                        self.config.instance_id,
+                        clear_existing=False,
+                    )
+
                 result.stored_to_graph = True
                 result.nodes_added = save_result["nodes"]
                 result.edges_added = save_result["edges"]

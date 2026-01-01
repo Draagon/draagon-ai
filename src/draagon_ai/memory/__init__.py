@@ -95,6 +95,20 @@ from draagon_ai.memory.layers import (
 from draagon_ai.memory.providers import (
     LayeredMemoryProvider,
     LayeredMemoryConfig,
+    # Neo4j provider (RECOMMENDED)
+    Neo4jMemoryProvider,
+    Neo4jMemoryConfig,
+    NEO4J_AVAILABLE,
+)
+
+# Document Loaders
+from draagon_ai.memory.loaders import (
+    Document,
+    DocumentLoader,
+    LoaderConfig,
+    MarkdownLoader,
+    TextLoader,
+    DirectoryLoader,
 )
 
 # Retrieval Augmentation (Self-RAG, CRAG)
@@ -169,6 +183,16 @@ __all__ = [
     # Memory Providers
     "LayeredMemoryProvider",
     "LayeredMemoryConfig",
+    "Neo4jMemoryProvider",
+    "Neo4jMemoryConfig",
+    "NEO4J_AVAILABLE",
+    # Document Loaders
+    "Document",
+    "DocumentLoader",
+    "LoaderConfig",
+    "MarkdownLoader",
+    "TextLoader",
+    "DirectoryLoader",
     # Retrieval Augmentation
     "RetrievalAugmenter",
     "RetrievalConfig",

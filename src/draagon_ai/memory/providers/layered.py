@@ -175,19 +175,36 @@ def can_scope_write(query_scope: MemoryScope, target_scope: MemoryScope) -> bool
 class LayeredMemoryConfig:
     """Configuration for the layered memory provider.
 
-    Example:
+    Example (Neo4j - RECOMMENDED):
         config = LayeredMemoryConfig(
-            qdrant_url="http://192.168.168.216:6333",
+            neo4j_uri="bolt://localhost:7687",
+            neo4j_username="neo4j",
+            neo4j_password="password",
             working_ttl_seconds=300,
             episodic_ttl_days=14,
             semantic_ttl_days=180,
             metacognitive_ttl_days=365,
         )
+        provider = LayeredMemoryProvider(config=config, embedding_provider=embedder, llm_provider=llm)
+        await provider.initialize()
+
+    Example (Qdrant - DEPRECATED):
+        config = LayeredMemoryConfig(
+            qdrant_url="http://192.168.168.216:6333",
+            working_ttl_seconds=300,
+        )
         provider = LayeredMemoryProvider(config=config, embedding_provider=embedder)
         await provider.initialize()
     """
 
-    # Qdrant settings (optional - if None, uses in-memory graph)
+    # Neo4j settings (RECOMMENDED - if set, uses Neo4j with semantic decomposition)
+    neo4j_uri: str | None = None
+    neo4j_username: str = "neo4j"
+    neo4j_password: str = "neo4j"
+    neo4j_database: str = "neo4j"
+    enable_semantic_decomposition: bool = True  # Run Phase 0/1 on all content
+
+    # Qdrant settings (DEPRECATED - if None and no Neo4j, uses in-memory graph)
     qdrant_url: str | None = None
     qdrant_api_key: str | None = None
     qdrant_nodes_collection: str = "draagon_memory_nodes"
@@ -295,17 +312,24 @@ class LayeredMemoryProvider(MemoryProvider):
     This provider maps incoming memories to the appropriate layer based on
     their MemoryType, and aggregates search results from all layers.
 
-    When configured with a Qdrant URL, memories are persisted to Qdrant for
-    cross-session retrieval. Otherwise, uses in-memory storage.
+    Backend options (in priority order):
+    1. Neo4j (RECOMMENDED): Full semantic graph with Phase 0/1 decomposition
+    2. Qdrant (DEPRECATED): Vector storage only
+    3. In-memory: No persistence
 
     Example:
-        # In-memory mode
-        provider = LayeredMemoryProvider()
+        # With Neo4j semantic memory (RECOMMENDED)
+        config = LayeredMemoryConfig(neo4j_uri="bolt://localhost:7687")
+        provider = LayeredMemoryProvider(config=config, embedding_provider=embedder, llm_provider=llm)
+        await provider.initialize()
 
-        # With Qdrant persistence
+        # With Qdrant persistence (DEPRECATED)
         config = LayeredMemoryConfig(qdrant_url="http://localhost:6333")
         provider = LayeredMemoryProvider(config=config, embedding_provider=embedder)
-        await provider.initialize()  # Required for Qdrant mode
+        await provider.initialize()
+
+        # In-memory mode
+        provider = LayeredMemoryProvider()
     """
 
     def __init__(
@@ -313,24 +337,36 @@ class LayeredMemoryProvider(MemoryProvider):
         graph: TemporalCognitiveGraph | None = None,
         config: LayeredMemoryConfig | None = None,
         embedding_provider: EmbeddingProvider | None = None,
+        llm_provider: Any | None = None,  # LLMProvider for semantic decomposition
     ):
         """Initialize the layered memory provider.
 
         Args:
             graph: The temporal cognitive graph to use. If None, creates one
-                   (or QdrantGraphStore if qdrant_url is configured).
+                   based on config (Neo4j > Qdrant > in-memory).
             config: Configuration options. If None, uses defaults.
             embedding_provider: Provider for generating embeddings. Required
-                                for Qdrant mode and semantic search.
+                                for Neo4j/Qdrant modes and semantic search.
+            llm_provider: LLM provider for semantic decomposition (Neo4j mode only).
         """
         self._config = config or LayeredMemoryConfig()
         self._embedding_provider = embedding_provider
+        self._llm_provider = llm_provider
         self._initialized = False
         self._owns_graph = graph is None  # Track if we created the graph
 
-        # Create graph (QdrantGraphStore if Qdrant configured, else in-memory)
+        # Neo4j semantic provider (for dual-pipeline approach)
+        self._neo4j_provider = None
+        self._pending_neo4j = False
+        self._pending_qdrant = False
+
+        # Create graph based on config priority: Neo4j > Qdrant > in-memory
         if graph is not None:
             self._graph = graph
+        elif self._config.neo4j_uri:
+            # Defer Neo4jMemoryProvider creation to initialize()
+            self._graph = None  # type: ignore
+            self._pending_neo4j = True
         elif self._config.qdrant_url:
             # Defer QdrantGraphStore creation to initialize()
             self._graph = None  # type: ignore
@@ -339,7 +375,6 @@ class LayeredMemoryProvider(MemoryProvider):
             self._graph = TemporalCognitiveGraph(
                 embedding_provider=embedding_provider,
             )
-            self._pending_qdrant = False
 
         # Session tracking
         self._session_id = str(uuid.uuid4())
@@ -361,18 +396,57 @@ class LayeredMemoryProvider(MemoryProvider):
             self._initialized = True
 
     async def initialize(self) -> None:
-        """Initialize the provider, including Qdrant connection if configured.
+        """Initialize the provider, including Neo4j/Qdrant connection if configured.
 
-        This method must be called before using the provider when Qdrant is
-        configured. For in-memory mode, this is optional.
+        This method must be called before using the provider when Neo4j or Qdrant
+        is configured. For in-memory mode, this is optional.
 
         Raises:
-            RuntimeError: If Qdrant is configured but embedding_provider is not set.
+            RuntimeError: If Neo4j/Qdrant is configured but embedding_provider is not set.
         """
         if self._initialized:
             return
 
-        if self._pending_qdrant:
+        if self._pending_neo4j:
+            if not self._embedding_provider:
+                raise RuntimeError(
+                    "embedding_provider is required when using Neo4j backend. "
+                    "Pass embedding_provider to LayeredMemoryProvider constructor."
+                )
+
+            # Import here to avoid circular imports
+            from draagon_ai.memory.providers.neo4j import (
+                Neo4jMemoryProvider,
+                Neo4jMemoryConfig,
+            )
+
+            neo4j_config = Neo4jMemoryConfig(
+                uri=self._config.neo4j_uri,
+                username=self._config.neo4j_username,
+                password=self._config.neo4j_password,
+                database=self._config.neo4j_database,
+                embedding_dimension=self._config.embedding_dimension,
+                enable_semantic_decomposition=self._config.enable_semantic_decomposition,
+            )
+
+            self._neo4j_provider = Neo4jMemoryProvider(
+                config=neo4j_config,
+                embedding_provider=self._embedding_provider,
+                llm_provider=self._llm_provider,
+            )
+            await self._neo4j_provider.initialize()
+
+            # Still need TemporalCognitiveGraph for layer operations
+            # Neo4j provider handles persistence, graph is for layer logic
+            self._graph = TemporalCognitiveGraph(
+                embedding_provider=self._embedding_provider,
+            )
+
+            logger.info(
+                f"LayeredMemoryProvider initialized with Neo4j at {self._config.neo4j_uri}"
+            )
+
+        elif self._pending_qdrant:
             if not self._embedding_provider:
                 raise RuntimeError(
                     "embedding_provider is required when using Qdrant backend. "
@@ -399,7 +473,7 @@ class LayeredMemoryProvider(MemoryProvider):
             )
             await self._graph.initialize()
             logger.info(
-                f"LayeredMemoryProvider initialized with Qdrant at {self._config.qdrant_url}"
+                f"LayeredMemoryProvider initialized with Qdrant at {self._config.qdrant_url} (DEPRECATED)"
             )
 
         self._setup_layers()
@@ -459,8 +533,12 @@ class LayeredMemoryProvider(MemoryProvider):
     async def close(self) -> None:
         """Close the provider and release resources.
 
-        If using QdrantGraphStore, this closes the Qdrant connection.
+        Closes Neo4j/Qdrant connections and releases resources.
         """
+        if self._neo4j_provider:
+            await self._neo4j_provider.close()
+            logger.info("LayeredMemoryProvider closed Neo4j connection")
+
         if self._owns_graph and hasattr(self._graph, 'close'):
             await self._graph.close()
             logger.info("LayeredMemoryProvider closed")
@@ -516,9 +594,19 @@ class LayeredMemoryProvider(MemoryProvider):
         return self._initialized
 
     @property
+    def uses_neo4j(self) -> bool:
+        """Whether this provider is configured to use Neo4j backend (RECOMMENDED)."""
+        return self._config.neo4j_uri is not None
+
+    @property
     def uses_qdrant(self) -> bool:
-        """Whether this provider is configured to use Qdrant backend."""
-        return self._config.qdrant_url is not None
+        """Whether this provider is configured to use Qdrant backend (DEPRECATED)."""
+        return self._config.qdrant_url is not None and not self._config.neo4j_uri
+
+    @property
+    def neo4j_provider(self):
+        """Get the Neo4j provider if using Neo4j backend."""
+        return self._neo4j_provider
 
     @property
     def promotion(self) -> MemoryPromotion:
@@ -729,21 +817,38 @@ class LayeredMemoryProvider(MemoryProvider):
             source=source,
         )
 
-        # Route to appropriate layer and get the node_id
-        layer = LAYER_MAPPING.get(memory_type, "semantic")
+        # If using Neo4j, store via Neo4jMemoryProvider (with semantic decomposition)
+        if self._neo4j_provider:
+            neo4j_memory = await self._neo4j_provider.store(
+                content=content,
+                memory_type=memory_type,
+                scope=scope,
+                agent_id=agent_id,
+                user_id=user_id,
+                context_id=context_id,
+                importance=importance,
+                confidence=confidence,
+                entities=entities,
+                metadata=metadata,
+            )
+            memory.id = neo4j_memory.id
+            logger.debug(f"Stored memory {memory.id} via Neo4j with semantic decomposition")
+        else:
+            # Route to appropriate layer and get the node_id (Qdrant/in-memory path)
+            layer = LAYER_MAPPING.get(memory_type, "semantic")
 
-        if layer == "working":
-            node_id = await self._store_working(memory, metadata)
-        elif layer == "episodic":
-            node_id = await self._store_episodic(memory, metadata)
-        elif layer == "metacognitive":
-            node_id = await self._store_metacognitive(memory, metadata)
-        else:  # semantic is default
-            node_id = await self._store_semantic(memory, metadata)
+            if layer == "working":
+                node_id = await self._store_working(memory, metadata)
+            elif layer == "episodic":
+                node_id = await self._store_episodic(memory, metadata)
+            elif layer == "metacognitive":
+                node_id = await self._store_metacognitive(memory, metadata)
+            else:  # semantic is default
+                node_id = await self._store_semantic(memory, metadata)
 
-        # Update memory ID with actual graph node ID
-        if node_id:
-            memory.id = node_id
+            # Update memory ID with actual graph node ID
+            if node_id:
+                memory.id = node_id
 
         return memory
 
@@ -898,6 +1003,20 @@ class LayeredMemoryProvider(MemoryProvider):
         results: list[SearchResult] = []
         min_relevance = min_score or 0.0
 
+        # If using Neo4j, search via Neo4jMemoryProvider
+        if self._neo4j_provider:
+            return await self._neo4j_provider.search(
+                query=query,
+                agent_id=agent_id,
+                user_id=user_id,
+                context_id=context_id,
+                memory_types=memory_types,
+                scopes=scopes,
+                limit=limit,
+                min_score=min_score,
+            )
+
+        # Fallback to layer-based search (Qdrant/in-memory path)
         # Determine which layers to search based on memory_types
         search_working = memory_types is None or any(
             t in (MemoryType.EPISODIC, MemoryType.OBSERVATION) for t in memory_types
@@ -1092,7 +1211,12 @@ class LayeredMemoryProvider(MemoryProvider):
             The Memory if found, None otherwise.
         """
         self._ensure_initialized()
-        # Try to find in graph
+
+        # If using Neo4j, get from Neo4jMemoryProvider
+        if self._neo4j_provider:
+            return await self._neo4j_provider.get(memory_id)
+
+        # Fallback to graph lookup
         node = await self._graph.get_node(memory_id)
         if node is None:
             return None
@@ -1127,6 +1251,18 @@ class LayeredMemoryProvider(MemoryProvider):
             Updated Memory if found, None otherwise.
         """
         self._ensure_initialized()
+
+        # If using Neo4j, update via Neo4jMemoryProvider
+        if self._neo4j_provider:
+            return await self._neo4j_provider.update(
+                memory_id,
+                content=content,
+                importance=importance,
+                confidence=confidence,
+                metadata=metadata,
+            )
+
+        # Fallback to graph update
         node = await self._graph.get_node(memory_id)
         if node is None:
             return None
@@ -1160,7 +1296,12 @@ class LayeredMemoryProvider(MemoryProvider):
             True if deleted, False if not found.
         """
         self._ensure_initialized()
-        # Delete from graph
+
+        # If using Neo4j, delete via Neo4jMemoryProvider
+        if self._neo4j_provider:
+            return await self._neo4j_provider.delete(memory_id)
+
+        # Fallback to graph delete
         try:
             return await self._graph.delete_node(memory_id)
         except Exception:

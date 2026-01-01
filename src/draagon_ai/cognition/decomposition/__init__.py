@@ -123,6 +123,24 @@ from .content_analyzer import (
     extract_natural_language,
 )
 
+# Phase 0: Content-Aware WSD
+from .content_aware_wsd import (
+    ContentAwareWSD,
+    ContentAwareWSDResult,
+    process_content_for_wsd,
+    disambiguate_in_context,
+)
+
+# Phase 0: Text Chunking
+from .text_chunking import (
+    TextChunker,
+    TextChunk,
+    ChunkingConfig,
+    segment_sentences,
+    get_context_for_wsd,
+    chunk_large_text,
+)
+
 # Phase 0: Evolving Synset Database
 from .evolving_synsets import (
     EvolvingSynsetDatabase,
@@ -223,6 +241,22 @@ __all__ = [
     "StructuralKnowledge",
     "analyze_content",
     "extract_natural_language",
+    # ==========================================================================
+    # Phase 0: Content-Aware WSD
+    # ==========================================================================
+    "ContentAwareWSD",
+    "ContentAwareWSDResult",
+    "process_content_for_wsd",
+    "disambiguate_in_context",
+    # ==========================================================================
+    # Phase 0: Text Chunking
+    # ==========================================================================
+    "TextChunker",
+    "TextChunk",
+    "ChunkingConfig",
+    "segment_sentences",
+    "get_context_for_wsd",
+    "chunk_large_text",
     # ==========================================================================
     # Phase 0: Evolving Synset Database
     # ==========================================================================

@@ -38,7 +38,22 @@ from .protocols import LLMMessage, LLMProvider, MemoryProvider
 from .decision import DecisionContext, DecisionEngine, DecisionResult
 from .execution import ActionExecutor, ActionResult
 
+# Lazy import to avoid circular dependencies
+SemanticContextService = None
+
 logger = logging.getLogger(__name__)
+
+
+def _get_semantic_context_service():
+    """Lazy import of SemanticContextService to avoid circular imports."""
+    global SemanticContextService
+    if SemanticContextService is None:
+        try:
+            from .semantic_context import SemanticContextService as SCS
+            SemanticContextService = SCS
+        except ImportError:
+            pass
+    return SemanticContextService
 
 
 # Require Python 3.11+ for asyncio.timeout and asyncio.Barrier
@@ -109,6 +124,23 @@ class AgentLoopConfig:
 
     # Debug settings
     log_thought_traces: bool = True
+
+    # ==========================================================================
+    # Semantic Context Integration (Phase 2)
+    # ==========================================================================
+    # Enable semantic context enrichment via ReasoningLoop
+    use_semantic_context: bool = False  # Off by default until stable
+
+    # Neo4j connection for semantic graph (required if use_semantic_context=True)
+    neo4j_uri: str | None = None
+    neo4j_user: str = "neo4j"
+    neo4j_password: str = "neo4j"
+    semantic_instance_id: str = "default"
+
+    # Context retrieval settings
+    max_semantic_facts: int = 10
+    max_semantic_memories: int = 5
+    semantic_context_depth: int = 2
 
     # Complexity keywords that suggest multi-step reasoning
     complexity_keywords: list[str] = field(
@@ -316,6 +348,54 @@ class AgentLoop:
         self.decision_engine = decision_engine or DecisionEngine(llm)
         self.action_executor = action_executor
         self.config = config or AgentLoopConfig()
+
+        # Semantic context service (lazy-initialized)
+        self._semantic_context_service = None
+        self._semantic_context_initialized = False
+
+    @property
+    def semantic_context_service(self):
+        """Get or create the semantic context service (lazy init).
+
+        Returns:
+            SemanticContextService instance or None if not configured
+        """
+        if not self._semantic_context_initialized:
+            self._semantic_context_initialized = True
+
+            if not self.config.use_semantic_context:
+                return None
+
+            SCS = _get_semantic_context_service()
+            if SCS is None:
+                logger.warning("SemanticContextService not available")
+                return None
+
+            try:
+                from .semantic_context import SemanticContextConfig
+
+                scs_config = SemanticContextConfig(
+                    neo4j_uri=self.config.neo4j_uri,
+                    neo4j_user=self.config.neo4j_user,
+                    neo4j_password=self.config.neo4j_password,
+                    instance_id=self.config.semantic_instance_id,
+                    max_facts=self.config.max_semantic_facts,
+                    max_memories=self.config.max_semantic_memories,
+                    context_depth=self.config.semantic_context_depth,
+                )
+
+                self._semantic_context_service = SCS(
+                    llm=self.llm,
+                    memory_provider=self.memory,
+                    config=scs_config,
+                )
+                logger.info("SemanticContextService initialized for AgentLoop")
+
+            except Exception as e:
+                logger.warning(f"Failed to initialize SemanticContextService: {e}")
+                self._semantic_context_service = None
+
+        return self._semantic_context_service
 
     async def process(
         self,
@@ -539,6 +619,9 @@ class AgentLoop:
     ) -> tuple[str, int]:
         """Gather context (memories, knowledge) for the query.
 
+        Uses semantic context enrichment if configured, otherwise falls back
+        to basic memory search.
+
         Args:
             query: User's query
             context: Agent context
@@ -547,15 +630,53 @@ class AgentLoop:
             Tuple of (formatted context string, memory count)
         """
         context_parts = []
+        total_items = 0
 
         # Check for additional context from adapter (e.g., self-knowledge)
         additional_context = context.metadata.get("additional_context")
         if additional_context:
             context_parts.append(additional_context)
 
+        # ==========================================================================
+        # Phase 2: Semantic Context via ReasoningLoop
+        # ==========================================================================
+        # Try semantic context first if configured - this uses the knowledge graph
+        # to find relevant facts, entities, and relationships
+        if self.semantic_context_service is not None:
+            try:
+                semantic_ctx = await self.semantic_context_service.enrich(
+                    query=query,
+                    user_id=context.user_id,
+                )
+
+                if not semantic_ctx.is_empty():
+                    # Add semantic context to prompt
+                    prompt_context = semantic_ctx.to_prompt_context()
+                    if prompt_context:
+                        context_parts.append(prompt_context)
+                        total_items += semantic_ctx.context_nodes_found
+
+                    logger.debug(
+                        f"Semantic context enriched query with {semantic_ctx.context_nodes_found} nodes "
+                        f"in {semantic_ctx.retrieval_time_ms:.1f}ms"
+                    )
+
+                # If semantic context already searched memory, we're done
+                if semantic_ctx.used_memory_provider:
+                    if context_parts:
+                        return "\n\n".join(context_parts), total_items
+                    return "No relevant context found.", 0
+
+            except Exception as e:
+                logger.warning(f"Semantic context enrichment failed: {e}")
+                # Fall through to basic memory search
+
+        # ==========================================================================
+        # Fallback: Basic Memory Search
+        # ==========================================================================
         if not self.memory:
             if context_parts:
-                return "\n\n".join(context_parts), 0
+                return "\n\n".join(context_parts), total_items
             return "No context available.", 0
 
         # Contextualize query for better RAG search
@@ -573,15 +694,16 @@ class AgentLoop:
                 for r in results:
                     memory_lines.append(f"[{r.memory_type}] {r.content}")
                 context_parts.append("\n".join(memory_lines))
+                total_items += len(results)
 
             if not context_parts:
                 return "No relevant memories found.", 0
 
-            return "\n\n".join(context_parts), len(results) if results else 0
+            return "\n\n".join(context_parts), total_items
 
         except Exception as e:
             if context_parts:
-                return "\n\n".join(context_parts), 0
+                return "\n\n".join(context_parts), total_items
             return f"Error gathering context: {e}", 0
 
     def _format_history(self, history: list[dict]) -> str:
