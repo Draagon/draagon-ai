@@ -109,7 +109,8 @@ async def embedding_provider():
     Returns:
         Embedding provider instance
     """
-    provider = MockEmbeddingProvider(dimension=1536)
+    # Use 768 dimensions to match Neo4j default vector index configuration
+    provider = MockEmbeddingProvider(dimension=768)
     await provider.initialize()
     yield provider
     await provider.close()
@@ -226,12 +227,13 @@ async def memory_provider(clean_database, embedding_provider, real_llm):
     # Create memory config
     # Note: semantic decomposition disabled for basic fixture tests
     # (requires nltk/wordnet). Enable for specific decomposition tests.
+    # Use 768 dimensions to match Neo4j default vector index configuration
     config = Neo4jMemoryConfig(
         uri=db_config["uri"],
         username=db_config["username"],
         password=db_config["password"],
         database=db_config.get("database", "neo4j"),
-        embedding_dimension=1536,
+        embedding_dimension=768,
         enable_semantic_decomposition=False,
     )
 

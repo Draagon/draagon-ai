@@ -595,19 +595,19 @@ class Neo4jMemoryProvider(MemoryProvider):
         limit: int,
     ) -> list[SearchResult]:
         """Fallback search using text matching when vector index unavailable."""
-        # Use basic text containment
-        params["query"] = f"*{query.lower()}*"
-        params["limit"] = limit
+        # Use basic text containment - search_query to avoid conflict with 'query' param
+        search_query = query.lower()
+        search_limit = limit
 
         with self.graph_store.driver.session(database=self.config.database) as session:
             result = session.run("""
                 MATCH (m:Memory)
-                WHERE toLower(m.content) CONTAINS $query
+                WHERE toLower(m.content) CONTAINS $search_query
                   AND (m.memory_expires_at IS NULL OR m.memory_expires_at > $now)
                 RETURN m, 0.5 AS score
                 ORDER BY m.importance DESC
-                LIMIT $limit
-            """, **params)
+                LIMIT $search_limit
+            """, search_query=search_query, search_limit=search_limit, now=params.get("now", ""))
 
             search_results = []
             for record in result:
