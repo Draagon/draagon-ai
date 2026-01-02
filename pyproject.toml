@@ -42,6 +42,9 @@ nlp = [
     "spacy>=3.7",
     "nltk>=3.8",
 ]
+embeddings = [
+    "sentence-transformers>=2.2",
+]
 all = [
     "qdrant-client>=1.7",
     "groq>=0.4",
@@ -51,6 +54,7 @@ all = [
     "mcp>=1.0",
     "spacy>=3.7",
     "nltk>=3.8",
+    "sentence-transformers>=2.2",
 ]
 dev = [
     "pytest>=7.0",
@@ -87,6 +91,11 @@ markers = [
     "slow: slow tests that take more than a few seconds",
     "mcp: MCP server/client tests",
     "adapter: adapter contract tests",
+    "react_integration: ReAct mode integration tests",
+    "search_integration: Web search integration tests",
+    "memory_integration: Memory provider integration tests",
+    "learning_integration: Learning capability integration tests",
+    "multi_agent_integration: Multi-agent orchestration tests",
 ]
 
 [tool.ruff]
