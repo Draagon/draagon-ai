@@ -398,7 +398,7 @@ class GraphBuilder:
 
             if classification:
                 properties["classification_method"] = classification.method
-                properties["classification_evidence"] = classification.evidence
+                properties["classification_evidence"] = classification.reasoning
 
             # Store synset_id in properties for reference, but don't set on node
             # The synset_id on nodes is reserved for CLASS nodes (synset nodes)
