@@ -409,6 +409,88 @@ await result.record_outcome(provider, "failure")
 
 ---
 
+## 🔍 Retrieval Pipeline
+
+The retrieval pipeline provides multiple strategies for finding relevant information from memory and documents.
+
+### Retrieval Approaches
+
+| Approach | Strengths | Best For |
+|----------|-----------|----------|
+| **Raw Context** | Full document access, no loss | Simple lookups, EXPERT queries |
+| **Vector/RAG** | Semantic similarity, fast | HARD queries, gameplay mechanics |
+| **Semantic Graph** | Entity relationships, multi-hop | Architecture, cross-reference |
+| **Hybrid** | Cross-approach consensus | MEDIUM difficulty, architecture |
+
+### Embedding Providers
+
+```python
+from draagon_ai.memory.embedding import (
+    OllamaEmbeddingProvider,
+    SentenceTransformerEmbeddingProvider,
+)
+
+# Remote Ollama with high-quality embeddings
+embedder = OllamaEmbeddingProvider(
+    base_url="http://localhost:11434",
+    model="mxbai-embed-large",  # MTEB 64.68, 1024-dim
+    dimension=1024,
+)
+
+# Local embedding (no API required)
+embedder = SentenceTransformerEmbeddingProvider(
+    model_name="all-MiniLM-L6-v2",  # Fast, 384-dim
+)
+
+vector = await embedder.embed("User's favorite color is blue")
+```
+
+### Hybrid Pipeline with Shared Working Memory
+
+The Hybrid approach runs all retrieval strategies in parallel and aggregates evidence through `SharedWorkingMemory`:
+
+```
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│ Raw Context │    │ Vector/RAG  │    │Semantic Graph│
+└──────┬──────┘    └──────┬──────┘    └──────┬───────┘
+       │                  │                   │
+       ▼                  ▼                   ▼
+       ╔══════════════════════════════════════╗
+       ║     SharedWorkingMemory              ║
+       ║  - attention_weight per observation  ║
+       ║  - source_agent_id for tracking      ║
+       ║  - multi-source boosting (+0.2)      ║
+       ╚══════════════════════════════════════╝
+                         │
+                         ▼
+              ┌──────────────────┐
+              │   Synthesizer    │
+              │   (LLM Answer)   │
+              └──────────────────┘
+```
+
+**Multi-Source Boosting**: Documents found by 2+ approaches get a +0.2 attention bonus per additional source, prioritizing consensus picks.
+
+### Benchmark Results
+
+Tested on 37 real project documents across 12 queries:
+
+| Difficulty | Best Approach | Avg Recall |
+|------------|---------------|------------|
+| EASY | Vector/RAG, Semantic Graph | 66.7% |
+| MEDIUM | Hybrid | 60.0% |
+| HARD | Vector/RAG | 75.0% |
+| EXPERT | Raw Context | 58.3% |
+
+### Running Benchmarks
+
+```bash
+# Real-world retrieval benchmark
+GROQ_API_KEY=your_key python3.11 tests/integration/agents/benchmark_real_world_retrieval.py
+```
+
+---
+
 ## 🧠 Cognitive Architecture
 
 ### Belief System
@@ -640,6 +722,29 @@ Include novel test cases, randomized testing, out-of-domain examples, adversaria
 ### 5. Benchmark Against Industry Standards
 
 Compare to published benchmarks (BioScope, CoNLL, TempEval, ATOMIC, etc.).
+
+### 6. Use Real Systems in Integration Tests (ABSOLUTE RULE)
+
+**Integration tests must use REAL providers, not mocks that bypass the system.**
+
+| ❌ FORBIDDEN | ✅ REQUIRED |
+|--------------|-------------|
+| Mock embedding providers with hash-based vectors | Real embedding models (e.g., `all-MiniLM-L6-v2`) |
+| Fake LLM responses in integration tests | Real LLM inference (Groq, Ollama, etc.) |
+| Rigging test data so mocks "happen" to work | Proper test data that validates semantics |
+| In-memory databases that skip production behavior | Real database connections |
+
+**Why this matters:**
+- Semantic search REQUIRES semantic embeddings to work
+- Mock embeddings break the fundamental assumption of vector similarity
+- Tests that pass with mocks give false confidence
+- If it works with mocks but fails with real systems, the test is LYING
+
+**Acceptable uses of mocks:**
+- Unit tests for isolated logic (not semantic behavior)
+- Testing error handling paths
+- Simulating network failures
+- Speed optimization for non-semantic tests
 
 ---
 
