@@ -104,16 +104,29 @@ class MockLLMProvider:
         return json.loads(result["content"])
 
     async def embed(self, text: str | list[str]) -> list[list[float]]:
-        """Mock embedding - returns deterministic fake embeddings."""
-        if isinstance(text, str):
-            text = [text]
-        # Generate deterministic embeddings based on text hash
-        embeddings = []
-        for t in text:
-            # 768-dim embedding based on hash
-            seed = hash(t) % 10000
-            embeddings.append([float((seed + i) % 1000) / 1000 for i in range(768)])
-        return embeddings
+        """Mock embedding - DEPRECATED, raises error.
+
+        Per CONSTITUTION.md Section 1.7: Integration tests MUST use REAL providers.
+        Mock embeddings that generate hash-based vectors are FORBIDDEN because:
+        - Semantic search REQUIRES semantic embeddings to work
+        - Mock embeddings break the fundamental assumption of vector similarity
+        - Tests that pass with mocks give false confidence
+
+        For integration tests, use the real embedding_provider fixture from
+        tests/integration/agents/conftest.py which uses Ollama.
+
+        This method now raises NotImplementedError to catch accidental usage.
+        If you need mock embeddings for unit tests (testing non-semantic behavior),
+        create a specific mock in your test file with a clear comment explaining why.
+        """
+        raise NotImplementedError(
+            "MockLLMProvider.embed() is deprecated. "
+            "Per CONSTITUTION.md, integration tests MUST use real embedding providers. "
+            "Use the embedding_provider fixture from tests/integration/agents/conftest.py "
+            "which provides real Ollama embeddings. "
+            "If you need mock embeddings for unit tests testing non-semantic behavior, "
+            "create a specific mock in your test file."
+        )
 
     def reset(self) -> None:
         """Reset call tracking."""

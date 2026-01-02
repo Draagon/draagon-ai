@@ -276,7 +276,9 @@ class GraphBuilder:
         Returns:
             GraphBuildResult with the built graph and metadata
         """
-        graph = existing_graph or SemanticGraph()
+        # Note: Don't use `existing_graph or SemanticGraph()` because empty graphs
+        # are falsy (they have __len__ returning 0). Use explicit None check.
+        graph = existing_graph if existing_graph is not None else SemanticGraph()
         source_id = result.decomposition.source_id
 
         build_result = GraphBuildResult(
@@ -326,7 +328,9 @@ class GraphBuilder:
         Returns:
             GraphBuildResult with the built graph
         """
-        graph = existing_graph or SemanticGraph()
+        # Note: Don't use `existing_graph or SemanticGraph()` because empty graphs
+        # are falsy (they have __len__ returning 0). Use explicit None check.
+        graph = existing_graph if existing_graph is not None else SemanticGraph()
         source_id = decomposition.source_id
 
         build_result = GraphBuildResult(
