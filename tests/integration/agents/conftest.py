@@ -47,73 +47,48 @@ from draagon_ai.testing.evaluation import AgentEvaluator
 # ============================================================================
 
 
-class MockEmbeddingProvider:
-    """Mock embedding provider for testing.
-
-    Generates deterministic embeddings based on text hash.
-    Avoids external API dependencies while maintaining semantic similarity.
-    """
-
-    def __init__(self, dimension: int = 1536):
-        """Initialize mock embedding provider.
-
-        Args:
-            dimension: Embedding vector dimension (default 1536 for OpenAI compatibility)
-        """
-        self.dimension = dimension
-
-    async def embed(self, text: str) -> list[float]:
-        """Generate mock embedding for text.
-
-        Args:
-            text: Input text to embed
-
-        Returns:
-            Deterministic embedding vector
-        """
-        import hashlib
-
-        # Generate deterministic hash-based embedding
-        hash_val = int(hashlib.md5(text.encode()).hexdigest()[:8], 16)
-
-        # Create embedding with slight variation based on text length
-        base_value = (hash_val % 1000) / 1000.0
-        length_factor = min(len(text) / 100.0, 1.0)
-
-        # Generate vector with some structure
-        embedding = []
-        for i in range(self.dimension):
-            # Add variation based on position and text
-            variation = ((hash_val >> (i % 16)) % 100) / 100.0
-            value = (base_value + variation * length_factor) / 2
-            embedding.append(value)
-
-        return embedding
-
-    async def initialize(self):
-        """Initialize provider (no-op for mock)."""
-        pass
-
-    async def close(self):
-        """Close provider (no-op for mock)."""
-        pass
-
-
 @pytest.fixture
 async def embedding_provider():
-    """Embedding provider for vector operations.
+    """Real embedding provider using Ollama.
 
-    Provides mock embeddings that are deterministic and don't require external APIs.
-    For production testing with real embeddings, configure actual provider.
+    Per CONSTITUTION.md Section 1.7: Integration tests must use REAL providers.
+    Mock embeddings that generate hash-based vectors are FORBIDDEN because:
+    - Semantic search REQUIRES semantic embeddings to work
+    - Mock embeddings break the fundamental assumption of vector similarity
+    - Tests that pass with mocks give false confidence
+
+    This fixture uses Ollama nomic-embed-text (768 dimensions):
+    - Real semantic embeddings
+    - Runs on local Ollama server
+    - No external API costs
+
+    Environment variables:
+    - OLLAMA_BASE_URL: Ollama server URL (default: http://192.168.168.200:11434)
 
     Returns:
-        Embedding provider instance
+        OllamaEmbeddingProvider instance
     """
-    # Use 768 dimensions to match Neo4j default vector index configuration
-    provider = MockEmbeddingProvider(dimension=768)
-    await provider.initialize()
+    from draagon_ai.memory.embedding import OllamaEmbeddingProvider
+
+    # Use Ollama server (defaults to local network server)
+    base_url = os.getenv("OLLAMA_BASE_URL", "http://192.168.168.200:11434")
+
+    provider = OllamaEmbeddingProvider(
+        base_url=base_url,
+        model="nomic-embed-text",
+        dimension=768,
+    )
+
+    # Verify Ollama is accessible
+    try:
+        # Test embedding to verify connection
+        test_embedding = await provider.embed("test")
+        if len(test_embedding) != 768:
+            pytest.skip(f"Unexpected embedding dimension: {len(test_embedding)}")
+    except Exception as e:
+        pytest.skip(f"Ollama not available at {base_url}: {e}")
+
     yield provider
-    await provider.close()
 
 
 # ============================================================================
@@ -205,17 +180,19 @@ async def clean_database(test_database):
 
 @pytest.fixture
 async def memory_provider(clean_database, embedding_provider, real_llm):
-    """Real Neo4jMemoryProvider with semantic decomposition.
+    """Real Neo4jMemoryProvider with real Ollama embeddings.
 
     Creates a fully configured memory provider with:
     - Real Neo4j backend
-    - Mock embedding provider (deterministic)
+    - Real Ollama embedding provider (768-dim nomic-embed-text)
     - Real LLM for semantic decomposition
     - Clean state per test
 
+    Per CONSTITUTION.md Section 1.7: Integration tests must use REAL providers.
+
     Args:
         clean_database: Clean database instance
-        embedding_provider: Embedding provider
+        embedding_provider: Real OllamaEmbeddingProvider
         real_llm: Real LLM provider
 
     Returns:
@@ -227,13 +204,13 @@ async def memory_provider(clean_database, embedding_provider, real_llm):
     # Create memory config
     # Note: semantic decomposition disabled for basic fixture tests
     # (requires nltk/wordnet). Enable for specific decomposition tests.
-    # Use 768 dimensions to match Neo4j default vector index configuration
+    # Use 768 dimensions to match Ollama nomic-embed-text model
     config = Neo4jMemoryConfig(
         uri=db_config["uri"],
         username=db_config["username"],
         password=db_config["password"],
         database=db_config.get("database", "neo4j"),
-        embedding_dimension=768,
+        embedding_dimension=embedding_provider.dimension,  # 768 for nomic-embed-text
         enable_semantic_decomposition=False,
     )
 
