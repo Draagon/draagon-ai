@@ -1,10 +1,11 @@
 """Unit tests for GraphBuilder class.
 
 Tests for building semantic graphs from Phase 0/1 decomposition output.
+
+Uses REAL classes from the codebase - no mocks per CONSTITUTION.md.
 """
 
 import uuid
-from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
 import pytest
@@ -40,66 +41,18 @@ from draagon_ai.cognition.decomposition.extractors.models import (
     ModalType,
     Polarity,
 )
-
-
-# =============================================================================
-# Mock Objects for Phase 0 Output
-# =============================================================================
-
-
-@dataclass
-class MockDisambiguationResult:
-    """Mock WSD result for testing."""
-
-    synset_id: str
-    confidence: float = 0.9
-    method: str = "llm"
-    alternatives: list[str] = field(default_factory=list)
-    definition: str = ""
-
-
-@dataclass
-class MockClassificationResult:
-    """Mock entity classification result for testing."""
-
-    entity_type: EntityType
-    confidence: float = 0.9
-    method: str = "llm"
-    evidence: str = ""
-
-
-@dataclass
-class MockContentAnalysis:
-    """Mock content analysis result for testing."""
-
-    content_type: str = "prose"
-
-
-@dataclass
-class MockPhase0Result:
-    """Mock Phase 0 result for testing."""
-
-    content_analysis: MockContentAnalysis = field(default_factory=MockContentAnalysis)
-    disambiguation_results: dict[str, MockDisambiguationResult] = field(default_factory=dict)
-    entity_identifiers: dict[str, UniversalSemanticIdentifier] = field(default_factory=dict)
-    entity_classifications: dict[str, MockClassificationResult] = field(default_factory=dict)
-    structural_knowledge: list[dict] = field(default_factory=list)
-    processed_text: str = ""
-    skipped_wsd: bool = False
-    skip_reason: str = ""
-
-
-@dataclass
-class MockIntegratedResult:
-    """Mock integrated pipeline result for testing."""
-
-    source_text: str
-    content_type: str = "prose"
-    phase0: MockPhase0Result = field(default_factory=MockPhase0Result)
-    decomposition: DecomposedKnowledge = field(default_factory=lambda: DecomposedKnowledge(source_text=""))
-    chunks_processed: int = 1
-    total_duration_ms: float = 0.0
-    processing_timestamp: datetime = field(default_factory=datetime.now)
+# Use REAL classes - not mocks
+from draagon_ai.cognition.decomposition.wsd import DisambiguationResult
+from draagon_ai.cognition.decomposition.entity_classifier import ClassificationResult
+from draagon_ai.cognition.decomposition.content_analyzer import (
+    ContentAnalysis,
+    ContentType,
+    ProcessingStrategy,
+)
+from draagon_ai.cognition.decomposition.extractors.integrated_pipeline import (
+    Phase0Result,
+    IntegratedResult,
+)
 
 
 # =============================================================================
@@ -120,9 +73,21 @@ def config_no_presuppositions() -> GraphBuilderConfig:
 
 
 @pytest.fixture
-def simple_phase0() -> MockPhase0Result:
-    """Create a simple Phase 0 result with Doug and a meeting."""
-    phase0 = MockPhase0Result()
+def simple_phase0() -> Phase0Result:
+    """Create a simple Phase 0 result with Doug and a meeting.
+
+    Uses REAL Phase0Result from integrated_pipeline.py.
+    """
+    # Create real ContentAnalysis
+    content_analysis = ContentAnalysis(
+        content_type=ContentType.PROSE,
+        processing_recommendation=ProcessingStrategy.FULL_WSD,
+        raw_content="Doug forgot the meeting again",
+        analysis_confidence=0.95,
+    )
+
+    # Create real Phase0Result
+    phase0 = Phase0Result(content_analysis=content_analysis)
     phase0.processed_text = "Doug forgot the meeting again"
 
     # Entity identifiers
@@ -139,34 +104,51 @@ def simple_phase0() -> MockPhase0Result:
         ),
     }
 
-    # Entity classifications
+    # Entity classifications - use REAL ClassificationResult
     phase0.entity_classifications = {
-        "Doug": MockClassificationResult(
+        "Doug": ClassificationResult(
+            text="Doug",
+            context="Doug forgot the meeting again",
             entity_type=EntityType.INSTANCE,
             confidence=0.95,
             method="llm",
-            evidence="Capitalized proper noun",
+            reasoning="Capitalized proper noun referring to a specific person",
         ),
-        "meeting": MockClassificationResult(
+        "meeting": ClassificationResult(
+            text="meeting",
+            context="Doug forgot the meeting again",
             entity_type=EntityType.CLASS,
             confidence=0.85,
             method="llm",
-            evidence="Common noun with definite article",
+            reasoning="Common noun with definite article referring to a type of event",
         ),
     }
 
-    # WSD results
+    # WSD results - use REAL DisambiguationResult
     phase0.disambiguation_results = {
-        "forgot": MockDisambiguationResult(
+        "forgot": DisambiguationResult(
+            word="forgot",
+            lemma="forget",
+            pos="v",
             synset_id="forget.v.01",
+            definition="dismiss from the mind; stop remembering",
             confidence=0.9,
             method="llm",
             alternatives=["forget.v.02", "forget.v.03"],
+            llm_used=True,
+            reasoning="Context indicates failure to remember an event",
         ),
-        "meeting": MockDisambiguationResult(
+        "meeting": DisambiguationResult(
+            word="meeting",
+            lemma="meeting",
+            pos="n",
             synset_id="meeting.n.01",
+            definition="a formally arranged gathering",
             confidence=0.85,
             method="lesk",
+            alternatives=[],
+            llm_used=False,
+            reasoning="",
         ),
     }
 
@@ -247,10 +229,14 @@ def simple_decomposition() -> DecomposedKnowledge:
 
 
 @pytest.fixture
-def integrated_result(simple_phase0, simple_decomposition) -> MockIntegratedResult:
-    """Create an integrated result combining Phase 0 and Phase 1."""
-    return MockIntegratedResult(
+def integrated_result(simple_phase0, simple_decomposition) -> IntegratedResult:
+    """Create an integrated result combining Phase 0 and Phase 1.
+
+    Uses REAL IntegratedResult from integrated_pipeline.py.
+    """
+    return IntegratedResult(
         source_text="Doug forgot the meeting again",
+        content_type=ContentType.PROSE,
         phase0=simple_phase0,
         decomposition=simple_decomposition,
     )
@@ -663,6 +649,90 @@ class TestExistingGraphMerge:
 # =============================================================================
 
 
+def _make_phase0(
+    text: str,
+    wsd_results: dict[str, tuple[str, float]],  # word -> (synset_id, confidence)
+    entities: dict[str, tuple[EntityType, float, str | None]],  # entity -> (type, confidence, synset)
+) -> Phase0Result:
+    """Helper to create Phase0Result with real classes.
+
+    Args:
+        text: The source text
+        wsd_results: Dict mapping word to (synset_id, confidence)
+        entities: Dict mapping entity text to (entity_type, confidence, optional_synset)
+    """
+    content_analysis = ContentAnalysis(
+        content_type=ContentType.PROSE,
+        processing_recommendation=ProcessingStrategy.FULL_WSD,
+        raw_content=text,
+        analysis_confidence=0.95,
+    )
+
+    phase0 = Phase0Result(content_analysis=content_analysis)
+    phase0.processed_text = text
+
+    # Build real DisambiguationResult objects
+    phase0.disambiguation_results = {
+        word: DisambiguationResult(
+            word=word,
+            lemma=word,  # Simplified for tests
+            pos="n" if synset_id.endswith(".n.01") else "v",
+            synset_id=synset_id,
+            definition=f"Definition for {synset_id}",
+            confidence=confidence,
+            method="lesk",
+            alternatives=[],
+            llm_used=False,
+            reasoning="",
+        )
+        for word, (synset_id, confidence) in wsd_results.items()
+    }
+
+    # Build real entity identifiers
+    phase0.entity_identifiers = {}
+    phase0.entity_classifications = {}
+    for entity_text, (entity_type, confidence, synset) in entities.items():
+        if synset:
+            phase0.entity_identifiers[entity_text] = UniversalSemanticIdentifier(
+                entity_type=entity_type,
+                wordnet_synset=synset,
+                confidence=confidence,
+            )
+        else:
+            phase0.entity_identifiers[entity_text] = UniversalSemanticIdentifier(
+                entity_type=entity_type,
+                canonical_name=entity_text,
+                confidence=confidence,
+            )
+
+        phase0.entity_classifications[entity_text] = ClassificationResult(
+            text=entity_text,
+            context=text,
+            entity_type=entity_type,
+            confidence=confidence,
+            method="llm",
+            reasoning=f"Classified {entity_text} as {entity_type.value}",
+        )
+
+    return phase0
+
+
+def _make_integrated(
+    text: str,
+    wsd_results: dict[str, tuple[str, float]],
+    entities: dict[str, tuple[EntityType, float, str | None]],
+) -> IntegratedResult:
+    """Helper to create IntegratedResult with real classes."""
+    phase0 = _make_phase0(text, wsd_results, entities)
+    decomp = DecomposedKnowledge(source_text=text)
+    return IntegratedResult(
+        source_text=text,
+        content_type=ContentType.PROSE,
+        phase0=phase0,
+        decomposition=decomp,
+    )
+
+
 class TestSynsetDeduplication:
     """Tests for WordNet synset deduplication."""
 
@@ -671,29 +741,16 @@ class TestSynsetDeduplication:
         builder = GraphBuilder()
 
         # Create Phase 0 with two words mapping to same synset
-        phase0 = MockPhase0Result()
-        phase0.disambiguation_results = {
-            "cat": MockDisambiguationResult(synset_id="cat.n.01", confidence=0.9),
-            "feline": MockDisambiguationResult(synset_id="cat.n.01", confidence=0.85),
-        }
-        phase0.entity_identifiers = {
-            "cat": UniversalSemanticIdentifier(
-                entity_type=EntityType.CLASS,
-                wordnet_synset="cat.n.01",
-                confidence=0.9,
-            ),
-            "feline": UniversalSemanticIdentifier(
-                entity_type=EntityType.CLASS,
-                wordnet_synset="cat.n.01",
-                confidence=0.85,
-            ),
-        }
-
-        decomp = DecomposedKnowledge(source_text="cat and feline")
-        integrated = MockIntegratedResult(
-            source_text="cat and feline",
-            phase0=phase0,
-            decomposition=decomp,
+        integrated = _make_integrated(
+            text="cat and feline",
+            wsd_results={
+                "cat": ("cat.n.01", 0.9),
+                "feline": ("cat.n.01", 0.85),
+            },
+            entities={
+                "cat": (EntityType.CLASS, 0.9, "cat.n.01"),
+                "feline": (EntityType.CLASS, 0.85, "cat.n.01"),
+            },
         )
 
         result = builder.build_from_integrated(integrated)
@@ -713,28 +770,15 @@ class TestSynsetDeduplication:
         builder = GraphBuilder()
 
         # First build: "Doug has a cat"
-        phase0_1 = MockPhase0Result()
-        phase0_1.disambiguation_results = {
-            "cat": MockDisambiguationResult(synset_id="cat.n.01", confidence=0.9),
-        }
-        phase0_1.entity_identifiers = {
-            "Doug": UniversalSemanticIdentifier(
-                entity_type=EntityType.INSTANCE,
-                canonical_name="Doug",
-                confidence=0.95,
-            ),
-            "cat": UniversalSemanticIdentifier(
-                entity_type=EntityType.CLASS,
-                wordnet_synset="cat.n.01",
-                confidence=0.9,
-            ),
-        }
-
-        decomp1 = DecomposedKnowledge(source_text="Doug has a cat")
-        integrated1 = MockIntegratedResult(
-            source_text="Doug has a cat",
-            phase0=phase0_1,
-            decomposition=decomp1,
+        integrated1 = _make_integrated(
+            text="Doug has a cat",
+            wsd_results={
+                "cat": ("cat.n.01", 0.9),
+            },
+            entities={
+                "Doug": (EntityType.INSTANCE, 0.95, None),
+                "cat": (EntityType.CLASS, 0.9, "cat.n.01"),
+            },
         )
 
         result1 = builder.build_from_integrated(integrated1)
@@ -746,28 +790,15 @@ class TestSynsetDeduplication:
         original_node_id = synset_nodes_before[0].node_id
 
         # Second build: "Sarah also has a cat" - into same graph
-        phase0_2 = MockPhase0Result()
-        phase0_2.disambiguation_results = {
-            "cat": MockDisambiguationResult(synset_id="cat.n.01", confidence=0.88),
-        }
-        phase0_2.entity_identifiers = {
-            "Sarah": UniversalSemanticIdentifier(
-                entity_type=EntityType.INSTANCE,
-                canonical_name="Sarah",
-                confidence=0.92,
-            ),
-            "cat": UniversalSemanticIdentifier(
-                entity_type=EntityType.CLASS,
-                wordnet_synset="cat.n.01",
-                confidence=0.88,
-            ),
-        }
-
-        decomp2 = DecomposedKnowledge(source_text="Sarah also has a cat")
-        integrated2 = MockIntegratedResult(
-            source_text="Sarah also has a cat",
-            phase0=phase0_2,
-            decomposition=decomp2,
+        integrated2 = _make_integrated(
+            text="Sarah also has a cat",
+            wsd_results={
+                "cat": ("cat.n.01", 0.88),
+            },
+            entities={
+                "Sarah": (EntityType.INSTANCE, 0.92, None),
+                "cat": (EntityType.CLASS, 0.88, "cat.n.01"),
+            },
         )
 
         result2 = builder.build_from_integrated(integrated2, existing_graph=graph)
@@ -785,29 +816,16 @@ class TestSynsetDeduplication:
         """Test that different synsets are NOT merged."""
         builder = GraphBuilder()
 
-        phase0 = MockPhase0Result()
-        phase0.disambiguation_results = {
-            "cat": MockDisambiguationResult(synset_id="cat.n.01", confidence=0.9),
-            "dog": MockDisambiguationResult(synset_id="dog.n.01", confidence=0.9),
-        }
-        phase0.entity_identifiers = {
-            "cat": UniversalSemanticIdentifier(
-                entity_type=EntityType.CLASS,
-                wordnet_synset="cat.n.01",
-                confidence=0.9,
-            ),
-            "dog": UniversalSemanticIdentifier(
-                entity_type=EntityType.CLASS,
-                wordnet_synset="dog.n.01",
-                confidence=0.9,
-            ),
-        }
-
-        decomp = DecomposedKnowledge(source_text="cat and dog")
-        integrated = MockIntegratedResult(
-            source_text="cat and dog",
-            phase0=phase0,
-            decomposition=decomp,
+        integrated = _make_integrated(
+            text="cat and dog",
+            wsd_results={
+                "cat": ("cat.n.01", 0.9),
+                "dog": ("dog.n.01", 0.9),
+            },
+            entities={
+                "cat": (EntityType.CLASS, 0.9, "cat.n.01"),
+                "dog": (EntityType.CLASS, 0.9, "dog.n.01"),
+            },
         )
 
         result = builder.build_from_integrated(integrated)
