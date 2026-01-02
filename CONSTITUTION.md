@@ -121,6 +121,55 @@ For every NLP/AI component:
 4. Document gaps from state-of-the-art
 5. Never claim "state of the art" without evidence
 
+### 1.7 Use Real Systems in Integration Tests (ABSOLUTE RULE)
+
+**Integration tests must use REAL providers, not mocks that bypass the system.**
+
+When testing components that rely on external systems (embeddings, LLMs, databases):
+- Use **REAL providers** that exercise the actual production code paths
+- Mock providers are ONLY acceptable for unit tests that test isolated logic
+- If a test passes with mocks but would fail with real systems, the test is LYING
+
+**FORBIDDEN in integration tests:**
+- Mock embedding providers that return random/hash-based vectors
+- Fake LLM responses that don't exercise real inference
+- In-memory databases that don't match production behavior
+- Rigging test data so mock systems "happen" to return correct results
+
+**Required for integration tests:**
+- Real embedding models (even small/fast ones like `all-MiniLM-L6-v2`)
+- Real LLM inference (Groq, OpenAI, or local Ollama)
+- Real database connections (Neo4j, PostgreSQL, etc.)
+- Real API calls (with appropriate test accounts/keys)
+
+**Example:**
+```python
+# ❌ FORBIDDEN: Mock embeddings that produce meaningless vectors
+class MockEmbedding:
+    def embed(self, text):
+        return [hash(text) % 1000 / 1000] * 768  # NOT semantic!
+
+# ✅ REQUIRED: Real embedding model
+class RealEmbedding:
+    def __init__(self):
+        self.model = SentenceTransformer('all-MiniLM-L6-v2')
+
+    def embed(self, text):
+        return self.model.encode(text).tolist()  # ACTUAL semantics!
+```
+
+**Why this matters:**
+- Semantic search REQUIRES semantic embeddings to work
+- Mock embeddings break the fundamental assumption of vector similarity
+- Tests that pass with mocks give false confidence
+- Bugs discovered in production should have been caught in integration tests
+
+**Cost/Performance concerns:**
+- Use small, fast models for testing (MiniLM runs locally, no API costs)
+- Cache embeddings where appropriate
+- Run expensive integration tests in CI, not on every commit
+- Mark slow tests with `@pytest.mark.slow` for selective execution
+
 ---
 
 ## 2. LLM-First Architecture
