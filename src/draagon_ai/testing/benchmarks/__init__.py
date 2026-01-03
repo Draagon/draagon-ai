@@ -13,7 +13,15 @@ from .corpus import (
     DocumentCorpus,
     CorpusMetadata,
 )
-from .downloaders import LocalDocumentScanner
+from .downloaders import (
+    LocalDocumentScanner,
+    OnlineDocumentFetcher,
+    OnlineSource,
+    FetchResult,
+    TECHNICAL_SOURCES,
+    NARRATIVE_SOURCES,
+    ACADEMIC_SOURCES,
+)
 
 __all__ = [
     "BenchmarkDocument",
@@ -22,4 +30,10 @@ __all__ = [
     "DocumentCorpus",
     "CorpusMetadata",
     "LocalDocumentScanner",
+    "OnlineDocumentFetcher",
+    "OnlineSource",
+    "FetchResult",
+    "TECHNICAL_SOURCES",
+    "NARRATIVE_SOURCES",
+    "ACADEMIC_SOURCES",
 ]

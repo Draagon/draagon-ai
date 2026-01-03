@@ -2,12 +2,26 @@
 
 Provides tools for collecting documents from various sources:
 - LocalDocumentScanner: Scan local filesystem
-- OnlineDocumentationFetcher: Fetch from web (future)
+- OnlineDocumentFetcher: Fetch from web documentation
 - DistractorGenerator: Generate synthetic distractors (future)
 """
 
 from .local_scanner import LocalDocumentScanner
+from .online_fetcher import (
+    OnlineDocumentFetcher,
+    OnlineSource,
+    FetchResult,
+    TECHNICAL_SOURCES,
+    NARRATIVE_SOURCES,
+    ACADEMIC_SOURCES,
+)
 
 __all__ = [
     "LocalDocumentScanner",
+    "OnlineDocumentFetcher",
+    "OnlineSource",
+    "FetchResult",
+    "TECHNICAL_SOURCES",
+    "NARRATIVE_SOURCES",
+    "ACADEMIC_SOURCES",
 ]
