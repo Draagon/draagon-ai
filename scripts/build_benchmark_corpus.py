@@ -220,13 +220,22 @@ async def build_corpus(
 
     # Default local paths
     if local_paths is None:
+        local_paths = []
+
+        # Add Development folder
         dev_path = Path.home() / "Development"
         if dev_path.exists():
-            local_paths = [dev_path]
+            local_paths.append(dev_path)
             logger.info(f"Scanning local path: {dev_path}")
-        else:
-            local_paths = []
-            logger.warning("No ~/Development directory found, skipping local scan")
+
+        # Add Books folder for diverse document categories
+        books_path = Path.home() / "Family" / "Shared" / "Books_2"
+        if books_path.exists():
+            local_paths.append(books_path)
+            logger.info(f"Scanning books path: {books_path}")
+
+        if not local_paths:
+            logger.warning("No local paths found to scan")
 
     # Default cache directory
     if cache_dir is None:
@@ -238,7 +247,7 @@ async def build_corpus(
     config = CorpusBuilderConfig(
         min_documents=min_documents,
         distractor_ratio=distractor_ratio,
-        local=SourceConfig(enabled=bool(local_paths), max_docs=200),
+        local=SourceConfig(enabled=bool(local_paths), max_docs=300),  # Room for multiple paths
         online=SourceConfig(enabled=True, max_docs=200),
         legal=SourceConfig(enabled=True, max_docs=50),
         distractors=SourceConfig(enabled=True),

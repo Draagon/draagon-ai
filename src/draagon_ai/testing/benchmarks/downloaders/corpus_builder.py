@@ -174,8 +174,16 @@ class CorpusBuilder:
             try:
                 scanner = LocalDocumentScanner(
                     root_path=path,
-                    patterns=["**/*.md", "**/*.py", "**/*.ts", "**/*.tsx", "**/*.rst"],
-                    size_range=(500, 100_000),  # 500 bytes to 100KB
+                    patterns=[
+                        "**/*.md",
+                        "**/*.py",
+                        "**/*.ts",
+                        "**/*.tsx",
+                        "**/*.rst",
+                        "**/*.pdf",  # PDF support
+                        "**/*.txt",
+                    ],
+                    size_range=(500, 500_000),  # 500 bytes to 500KB (PDFs can be larger)
                 )
                 self._local_scanners.append(scanner)
             except ValueError as e:
@@ -282,18 +290,31 @@ class CorpusBuilder:
         return corpus
 
     async def _collect_local_documents(self) -> list[BenchmarkDocument]:
-        """Collect documents from local filesystem sources."""
+        """Collect documents from local filesystem sources.
+
+        Distributes the max_docs limit evenly across all scanners to ensure
+        each path contributes to the corpus.
+        """
         documents: list[BenchmarkDocument] = []
         max_docs = self.config.local.max_docs
+        num_scanners = len(self._local_scanners)
+
+        # Distribute max_docs evenly across scanners
+        per_scanner_limit = None
+        if max_docs is not None and num_scanners > 0:
+            per_scanner_limit = max_docs // num_scanners
 
         for scanner in self._local_scanners:
-            remaining = None
+            limit = per_scanner_limit
+            # Last scanner can take any remaining capacity
             if max_docs is not None:
                 remaining = max_docs - len(documents)
                 if remaining <= 0:
                     break
+                if limit is None or limit > remaining:
+                    limit = remaining
 
-            docs = scanner.scan(max_docs=remaining)
+            docs = scanner.scan(max_docs=limit)
             documents.extend(docs)
 
         return documents

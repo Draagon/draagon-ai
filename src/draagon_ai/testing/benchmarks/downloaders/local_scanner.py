@@ -2,6 +2,8 @@
 
 Scans local directories with configurable glob patterns, size filtering,
 and exclusion patterns to collect documents for benchmark corpus.
+
+Supports text files (.md, .py, .txt, etc.) and PDF files with text extraction.
 """
 
 from __future__ import annotations
@@ -14,7 +16,46 @@ from typing import Callable
 
 from ..corpus import BenchmarkDocument, DocumentCategory, DocumentSource
 
+# Optional PDF support
+try:
+    from pypdf import PdfReader
+
+    PDF_SUPPORT = True
+except ImportError:
+    PDF_SUPPORT = False
+
 logger = logging.getLogger(__name__)
+
+
+def extract_pdf_text(file_path: Path) -> str | None:
+    """Extract text content from a PDF file.
+
+    Args:
+        file_path: Path to PDF file
+
+    Returns:
+        Extracted text or None if extraction fails
+    """
+    if not PDF_SUPPORT:
+        logger.warning("PDF support not available (install pypdf)")
+        return None
+
+    try:
+        reader = PdfReader(file_path)
+        text_parts = []
+        for page in reader.pages:
+            page_text = page.extract_text()
+            if page_text:
+                text_parts.append(page_text)
+
+        if not text_parts:
+            logger.debug(f"No text extracted from PDF: {file_path}")
+            return None
+
+        return "\n\n".join(text_parts)
+    except Exception as e:
+        logger.warning(f"Failed to extract text from PDF {file_path}: {e}")
+        return None
 
 
 # Default exclusion patterns for common build/dependency directories
@@ -158,9 +199,15 @@ class LocalDocumentScanner:
                     files_skipped_size += 1
                     continue
 
-                # Read content
+                # Read content (handle PDFs differently)
                 try:
-                    content = file_path.read_text(encoding="utf-8")
+                    if file_path.suffix.lower() == ".pdf":
+                        content = extract_pdf_text(file_path)
+                        if content is None:
+                            files_skipped_error += 1
+                            continue
+                    else:
+                        content = file_path.read_text(encoding="utf-8")
                 except UnicodeDecodeError as e:
                     logger.warning(f"Unicode decode error in {file_path}: {e}")
                     files_skipped_error += 1
