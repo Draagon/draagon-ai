@@ -183,7 +183,7 @@ class CorpusBuilder:
                         "**/*.pdf",  # PDF support
                         "**/*.txt",
                     ],
-                    size_range=(500, 500_000),  # 500 bytes to 500KB (PDFs can be larger)
+                    size_range=(500, 50_000_000),  # 500 bytes to 50MB (for large PDFs)
                 )
                 self._local_scanners.append(scanner)
             except ValueError as e:

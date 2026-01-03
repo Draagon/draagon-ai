@@ -228,11 +228,12 @@ async def build_corpus(
             local_paths.append(dev_path)
             logger.info(f"Scanning local path: {dev_path}")
 
-        # Add Books folder for diverse document categories
-        books_path = Path.home() / "Family" / "Shared" / "Books_2"
-        if books_path.exists():
-            local_paths.append(books_path)
-            logger.info(f"Scanning books path: {books_path}")
+        # Add Books folders for diverse document categories
+        for books_folder in ["Books_1", "Books_2"]:
+            books_path = Path.home() / "Family" / "Shared" / books_folder
+            if books_path.exists():
+                local_paths.append(books_path)
+                logger.info(f"Scanning books path: {books_path}")
 
         if not local_paths:
             logger.warning("No local paths found to scan")

@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-01-02T20:52:40.266483",
+  "generated_at": "2026-01-02T20:59:21.286648",
   "corpus_version": "1.0.0",
-  "total_documents": 280,
+  "total_documents": 240,
   "sources": {
     "documentation": {
       "count": 2,
@@ -27,7 +27,7 @@
       ]
     },
     "game_fiction": {
-      "count": 54,
+      "count": 21,
       "source_types": [
         "local"
       ],
@@ -37,6 +37,19 @@
         "/home/doug/Development/party-lore/ARC-GENERATION-REALM-DRIFT-FIX.md",
         "/home/doug/Development/party-lore/TASK-408-REVISION-NOTES.md",
         "/home/doug/Development/party-lore/AI_NARRATIVE_QUALITY_ISSUES.md"
+      ]
+    },
+    "unknown": {
+      "count": 15,
+      "source_types": [
+        "local"
+      ],
+      "sample_paths": [
+        "/home/doug/Family/Shared/Books_1/Timothy_Ferriss_-The_4-Hour_Workweek.pdf",
+        "/home/doug/Family/Shared/Books_1/Eric Westman MD/Keto Clarity_ Your Definitive Guide (1)/Keto Clarity_ Your Definitive G - Eric Westman MD.pdf",
+        "/home/doug/Family/Shared/Books_1/Terry Wahls M.D_/The Wahls Protocol_ How I Beat Progr (2)/The Wahls Protocol_ How I Beat - Terry Wahls M.D_.pdf",
+        "/home/doug/Family/Shared/Books_2/Articles/Outsell_Company_Analysis_23sep2015_Adaptive_Learning.pdf",
+        "/home/doug/Family/Shared/Books_2/Articles/Truth In the Age of Social Media.pdf"
       ]
     },
     "python": {
@@ -128,7 +141,7 @@
       ]
     },
     "synthetic_knowledge_base": {
-      "count": 27,
+      "count": 26,
       "source_types": [
         "synthetic"
       ],
@@ -137,24 +150,24 @@
         "synthetic://distractor/distractor_0002",
         "synthetic://distractor/distractor_0008",
         "synthetic://distractor/distractor_0009",
-        "synthetic://distractor/distractor_0011"
+        "synthetic://distractor/distractor_0012"
       ]
     },
     "synthetic_legal": {
-      "count": 38,
+      "count": 27,
       "source_types": [
         "synthetic"
       ],
       "sample_paths": [
         "synthetic://distractor/distractor_0001",
+        "synthetic://distractor/distractor_0011",
+        "synthetic://distractor/distractor_0015",
         "synthetic://distractor/distractor_0018",
-        "synthetic://distractor/distractor_0021",
-        "synthetic://distractor/distractor_0023",
-        "synthetic://distractor/distractor_0026"
+        "synthetic://distractor/distractor_0019"
       ]
     },
-    "synthetic_technical": {
-      "count": 38,
+    "synthetic_conversational": {
+      "count": 28,
       "source_types": [
         "synthetic"
       ],
@@ -166,7 +179,7 @@
         "synthetic://distractor/distractor_0010"
       ]
     },
-    "synthetic_conversational": {
+    "synthetic_technical": {
       "count": 27,
       "source_types": [
         "synthetic"
@@ -174,9 +187,9 @@
       "sample_paths": [
         "synthetic://distractor/distractor_0005",
         "synthetic://distractor/distractor_0013",
-        "synthetic://distractor/distractor_0015",
-        "synthetic://distractor/distractor_0020",
-        "synthetic://distractor/distractor_0031"
+        "synthetic://distractor/distractor_0017",
+        "synthetic://distractor/distractor_0024",
+        "synthetic://distractor/distractor_0027"
       ]
     }
   },
@@ -189,7 +202,7 @@
       "file_path": "/home/doug/Development/TRANSFER-INSTRUCTIONS.md",
       "content_hash": "7cb546ae45760d4c",
       "size_bytes": 4094,
-      "created_at": "2026-01-02T20:52:27.726692",
+      "created_at": "2026-01-02T20:58:23.835860",
       "semantic_tags": [
         "md"
       ],
@@ -207,7 +220,7 @@
       "file_path": "/home/doug/Development/SPEC-KIT-PACKAGE-README.md",
       "content_hash": "c59d60d799355ca0",
       "size_bytes": 6795,
-      "created_at": "2026-01-02T20:52:27.726767",
+      "created_at": "2026-01-02T20:58:23.835934",
       "semantic_tags": [
         "install",
         "md",
@@ -227,7 +240,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/README.md",
       "content_hash": "2e1c591040c115a9",
       "size_bytes": 10696,
-      "created_at": "2026-01-02T20:52:27.726880",
+      "created_at": "2026-01-02T20:58:23.836048",
       "semantic_tags": [
         "md",
         "readme"
@@ -246,7 +259,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/WARP.md",
       "content_hash": "3476cc82f47cba22",
       "size_bytes": 15057,
-      "created_at": "2026-01-02T20:52:27.727101",
+      "created_at": "2026-01-02T20:58:23.836274",
       "semantic_tags": [
         "md"
       ],
@@ -264,7 +277,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/POST_RELEASE_COMMUNICATIONS.md",
       "content_hash": "54cad79f077a85e0",
       "size_bytes": 4813,
-      "created_at": "2026-01-02T20:52:27.727178",
+      "created_at": "2026-01-02T20:58:23.836351",
       "semantic_tags": [
         "http",
         "md"
@@ -283,7 +296,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/MIGRATION.md",
       "content_hash": "795a5452292fcfc0",
       "size_bytes": 7886,
-      "created_at": "2026-01-02T20:52:27.727248",
+      "created_at": "2026-01-02T20:58:23.836427",
       "semantic_tags": [
         "md"
       ],
@@ -301,7 +314,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/METAOBJECTS_ARCHETYPE_DESIGN.md",
       "content_hash": "46e4608901b45837",
       "size_bytes": 15190,
-      "created_at": "2026-01-02T20:52:27.727339",
+      "created_at": "2026-01-02T20:58:23.836527",
       "semantic_tags": [
         "config",
         "md"
@@ -320,7 +333,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/core/src/main/resources/META-INF/metaobjects/METAOBJECTS_APPLICATION_GUIDE.md",
       "content_hash": "250877dd054d3089",
       "size_bytes": 39113,
-      "created_at": "2026-01-02T20:52:27.728805",
+      "created_at": "2026-01-02T20:58:23.838084",
       "semantic_tags": [
         "database",
         "md"
@@ -339,7 +352,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/core-spring/README.md",
       "content_hash": "f2ce68adb263aaf6",
       "size_bytes": 11516,
-      "created_at": "2026-01-02T20:52:27.729571",
+      "created_at": "2026-01-02T20:58:23.838856",
       "semantic_tags": [
         "config",
         "md",
@@ -359,7 +372,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/docs/README.md",
       "content_hash": "9927a44ab92cfc53",
       "size_bytes": 7430,
-      "created_at": "2026-01-02T20:52:27.729913",
+      "created_at": "2026-01-02T20:58:23.839197",
       "semantic_tags": [
         "md",
         "readme"
@@ -378,7 +391,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/docs/DOCUMENTATION_PLAN.md",
       "content_hash": "abd24a2779d3db99",
       "size_bytes": 17792,
-      "created_at": "2026-01-02T20:52:27.729991",
+      "created_at": "2026-01-02T20:58:23.839275",
       "semantic_tags": [
         "md"
       ],
@@ -396,7 +409,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/docs/DEPLOYMENT.md",
       "content_hash": "5a887fb0608b0cb5",
       "size_bytes": 8765,
-      "created_at": "2026-01-02T20:52:27.730065",
+      "created_at": "2026-01-02T20:58:23.839348",
       "semantic_tags": [
         "md"
       ],
@@ -414,7 +427,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/docs/src/site/documentation/docs/index.md",
       "content_hash": "36a5535a1a16f09b",
       "size_bytes": 8146,
-      "created_at": "2026-01-02T20:52:27.730156",
+      "created_at": "2026-01-02T20:58:23.839447",
       "semantic_tags": [
         "class",
         "md"
@@ -433,7 +446,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/docs/src/site/documentation/docs/user-guide/core/loader-system.md",
       "content_hash": "ee554a44dce71c2b",
       "size_bytes": 21599,
-      "created_at": "2026-01-02T20:52:27.730243",
+      "created_at": "2026-01-02T20:58:23.839537",
       "semantic_tags": [
         "class",
         "md"
@@ -452,7 +465,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/docs/src/site/documentation/docs/user-guide/persistence/objectmanager.md",
       "content_hash": "c38741fe7a581a5c",
       "size_bytes": 4849,
-      "created_at": "2026-01-02T20:52:27.730325",
+      "created_at": "2026-01-02T20:58:23.839620",
       "semantic_tags": [
         "config",
         "http",
@@ -472,7 +485,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/docs/src/site/documentation/docs/getting-started/quick-start.md",
       "content_hash": "a8431b8988b86d35",
       "size_bytes": 12237,
-      "created_at": "2026-01-02T20:52:27.731062",
+      "created_at": "2026-01-02T20:58:23.840362",
       "semantic_tags": [
         "config",
         "def",
@@ -492,7 +505,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/metadata/API_USAGE_PATTERNS.md",
       "content_hash": "9223d0645848f89d",
       "size_bytes": 13917,
-      "created_at": "2026-01-02T20:52:27.731214",
+      "created_at": "2026-01-02T20:58:23.840577",
       "semantic_tags": [
         "api",
         "example",
@@ -513,7 +526,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/metadata/src/test/resources/relationship-examples/README.md",
       "content_hash": "1bc7bae9e0812778",
       "size_bytes": 5727,
-      "created_at": "2026-01-02T20:52:27.732562",
+      "created_at": "2026-01-02T20:58:23.841954",
       "semantic_tags": [
         "database",
         "example",
@@ -534,7 +547,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/metadata/src/main/java/com/metaobjects/constraint/ENHANCED_PLACEMENT_CONSTRAINT_USAGE.md",
       "content_hash": "a11ca5cd71ba4d50",
       "size_bytes": 6937,
-      "created_at": "2026-01-02T20:52:27.732780",
+      "created_at": "2026-01-02T20:58:23.842172",
       "semantic_tags": [
         "api",
         "class",
@@ -554,7 +567,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/archetype/src/main/resources/archetype-resources/README.md",
       "content_hash": "69565e0378d4ec8c",
       "size_bytes": 7937,
-      "created_at": "2026-01-02T20:52:27.733912",
+      "created_at": "2026-01-02T20:58:23.843298",
       "semantic_tags": [
         "database",
         "http",
@@ -576,7 +589,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/archetype/src/main/resources/archetype-resources/.claude/CLAUDE.md",
       "content_hash": "0c0cb6ec12cb727d",
       "size_bytes": 21998,
-      "created_at": "2026-01-02T20:52:27.734023",
+      "created_at": "2026-01-02T20:58:23.843409",
       "semantic_tags": [
         "claude",
         "database",
@@ -596,7 +609,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/README.md",
       "content_hash": "58bbfda4c32b7566",
       "size_bytes": 7381,
-      "created_at": "2026-01-02T20:52:27.734172",
+      "created_at": "2026-01-02T20:58:23.843570",
       "semantic_tags": [
         "md",
         "readme"
@@ -615,7 +628,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/CONTEXT.md",
       "content_hash": "9f1fa8d67c0d6338",
       "size_bytes": 8039,
-      "created_at": "2026-01-02T20:52:27.734237",
+      "created_at": "2026-01-02T20:58:23.843635",
       "semantic_tags": [
         "md",
         "test"
@@ -634,7 +647,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/KNOWN-ISSUES.md",
       "content_hash": "c06f04e751f2bd7f",
       "size_bytes": 11821,
-      "created_at": "2026-01-02T20:52:27.734319",
+      "created_at": "2026-01-02T20:58:23.843716",
       "semantic_tags": [
         "md"
       ],
@@ -652,7 +665,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/ARCHITECTURE.md",
       "content_hash": "9fa79a1a0d05dd78",
       "size_bytes": 28147,
-      "created_at": "2026-01-02T20:52:27.734405",
+      "created_at": "2026-01-02T20:58:23.843802",
       "semantic_tags": [
         "class",
         "md",
@@ -672,7 +685,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/SETUP.md",
       "content_hash": "8e8173e18078d618",
       "size_bytes": 12552,
-      "created_at": "2026-01-02T20:52:27.734506",
+      "created_at": "2026-01-02T20:58:23.843934",
       "semantic_tags": [
         "md",
         "test"
@@ -691,7 +704,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/archive/outdated-planning-docs/IMPLEMENTATION_PROMPT.md",
       "content_hash": "66af2f35ee9131d7",
       "size_bytes": 22177,
-      "created_at": "2026-01-02T20:52:27.734628",
+      "created_at": "2026-01-02T20:58:23.844112",
       "semantic_tags": [
         "class",
         "def",
@@ -711,7 +724,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/archive/outdated-planning-docs/README.md",
       "content_hash": "7a08d8b624560db8",
       "size_bytes": 2041,
-      "created_at": "2026-01-02T20:52:27.734694",
+      "created_at": "2026-01-02T20:58:23.844209",
       "semantic_tags": [
         "md",
         "readme"
@@ -730,7 +743,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/archive/outdated-planning-docs/CONTINUE_ID_ANNOTATION_FIX.md",
       "content_hash": "41f1d43b5f09ab53",
       "size_bytes": 6009,
-      "created_at": "2026-01-02T20:52:27.734759",
+      "created_at": "2026-01-02T20:58:23.844306",
       "semantic_tags": [
         "example",
         "md",
@@ -750,7 +763,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/archive/outdated-planning-docs/UNIFIED_REGISTRY_ARCHITECTURE_PLAN.md",
       "content_hash": "a06f5d7967954931",
       "size_bytes": 16780,
-      "created_at": "2026-01-02T20:52:27.734847",
+      "created_at": "2026-01-02T20:58:23.844442",
       "semantic_tags": [
         "md"
       ],
@@ -768,7 +781,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/archive/architectural-analysis/original-comprehensive-guide.md",
       "content_hash": "b777a97ace0c0d1b",
       "size_bytes": 28576,
-      "created_at": "2026-01-02T20:52:27.735188",
+      "created_at": "2026-01-02T20:58:23.844838",
       "semantic_tags": [
         "function",
         "md"
@@ -787,7 +800,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/archive/completed-2025-09-21-refactoring/README.md",
       "content_hash": "a302fe0409241bfd",
       "size_bytes": 2584,
-      "created_at": "2026-01-02T20:52:27.735669",
+      "created_at": "2026-01-02T20:58:23.845316",
       "semantic_tags": [
         "md",
         "readme"
@@ -806,7 +819,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/archive/completed-2025-09-21-refactoring/react-metaview-system.md",
       "content_hash": "5c80c432694aa426",
       "size_bytes": 11335,
-      "created_at": "2026-01-02T20:52:27.735730",
+      "created_at": "2026-01-02T20:58:23.845376",
       "semantic_tags": [
         "md"
       ],
@@ -824,7 +837,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/archive/completed-2025-09-21-refactoring/CONTINUE_CLEAN_IMPLEMENTATION.md",
       "content_hash": "f21e52bf61a65163",
       "size_bytes": 6777,
-      "created_at": "2026-01-02T20:52:27.735803",
+      "created_at": "2026-01-02T20:58:23.845454",
       "semantic_tags": [
         "md"
       ],
@@ -842,7 +855,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/archive/completed-2025-09-21-refactoring/unified-registry-csharp-design.md",
       "content_hash": "ee1636951aa8947a",
       "size_bytes": 9641,
-      "created_at": "2026-01-02T20:52:27.735873",
+      "created_at": "2026-01-02T20:58:23.845523",
       "semantic_tags": [
         "class",
         "md"
@@ -861,7 +874,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/archive/completed-2025-09-21-refactoring/unified-registry-typescript-design.md",
       "content_hash": "7e9191323d3336a8",
       "size_bytes": 15369,
-      "created_at": "2026-01-02T20:52:27.735949",
+      "created_at": "2026-01-02T20:58:23.845603",
       "semantic_tags": [
         "def",
         "md"
@@ -880,7 +893,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/archive/implementation-summaries/GENERATOR_ENHANCEMENT_SUMMARY.md",
       "content_hash": "f7bd73bce3581a8f",
       "size_bytes": 7960,
-      "created_at": "2026-01-02T20:52:27.736030",
+      "created_at": "2026-01-02T20:58:23.845685",
       "semantic_tags": [
         "config",
         "md"
@@ -899,7 +912,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/archive/implementation-summaries/ENHANCEMENTS_SUMMARY.md",
       "content_hash": "719c729fe93db86c",
       "size_bytes": 11155,
-      "created_at": "2026-01-02T20:52:27.736094",
+      "created_at": "2026-01-02T20:58:23.845746",
       "semantic_tags": [
         "md"
       ],
@@ -917,7 +930,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/archive/template-system/MUSTACHE_TEMPLATE_EXAMPLES.md",
       "content_hash": "7fca6c638fb90705",
       "size_bytes": 25079,
-      "created_at": "2026-01-02T20:52:27.736163",
+      "created_at": "2026-01-02T20:58:23.845816",
       "semantic_tags": [
         "def",
         "example",
@@ -938,7 +951,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/archive/template-system/TEMPLATE_SYSTEM_ARCHITECTURE.md",
       "content_hash": "606baf3518e2a0e4",
       "size_bytes": 9516,
-      "created_at": "2026-01-02T20:52:27.736231",
+      "created_at": "2026-01-02T20:58:23.845882",
       "semantic_tags": [
         "def",
         "md"
@@ -957,7 +970,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/archive/template-system/CROSS_LANGUAGE_INTEGRATION.md",
       "content_hash": "a18cab1ca5b2c7f2",
       "size_bytes": 24958,
-      "created_at": "2026-01-02T20:52:27.736309",
+      "created_at": "2026-01-02T20:58:23.845960",
       "semantic_tags": [
         "md"
       ],
@@ -975,7 +988,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/archive/template-system/TEMPLATE_DESIGN.md",
       "content_hash": "7d2b9baf062c2207",
       "size_bytes": 2883,
-      "created_at": "2026-01-02T20:52:27.736372",
+      "created_at": "2026-01-02T20:58:23.846021",
       "semantic_tags": [
         "class",
         "def",
@@ -995,7 +1008,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/docs/ENHANCEMENTS.md",
       "content_hash": "c85d95ffd9149e8f",
       "size_bytes": 22130,
-      "created_at": "2026-01-02T20:52:27.736531",
+      "created_at": "2026-01-02T20:58:23.846171",
       "semantic_tags": [
         "md",
         "test"
@@ -1014,7 +1027,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/docs/persistence.md",
       "content_hash": "a19fed15ef8f6b80",
       "size_bytes": 10306,
-      "created_at": "2026-01-02T20:52:27.736792",
+      "created_at": "2026-01-02T20:58:23.846440",
       "semantic_tags": [
         "database",
         "def",
@@ -1035,7 +1048,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/docs/ARCHITECTURAL_REFACTORING_PLAN.md",
       "content_hash": "d91e14a4abf87f36",
       "size_bytes": 46162,
-      "created_at": "2026-01-02T20:52:27.736899",
+      "created_at": "2026-01-02T20:58:23.846547",
       "semantic_tags": [
         "example",
         "md"
@@ -1054,7 +1067,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/docs/react-integration.md",
       "content_hash": "13b3b08a27eebb17",
       "size_bytes": 8191,
-      "created_at": "2026-01-02T20:52:27.737137",
+      "created_at": "2026-01-02T20:58:23.846795",
       "semantic_tags": [
         "def",
         "md"
@@ -1073,7 +1086,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/docs/CLAUDE_COMMANDS.md",
       "content_hash": "e13900a8caddfae2",
       "size_bytes": 4106,
-      "created_at": "2026-01-02T20:52:27.737189",
+      "created_at": "2026-01-02T20:58:23.846848",
       "semantic_tags": [
         "class",
         "claude",
@@ -1095,7 +1108,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/docs/CLAUDE_VERSION_MANAGEMENT.md",
       "content_hash": "11d2d7b8db97ae58",
       "size_bytes": 5421,
-      "created_at": "2026-01-02T20:52:27.737229",
+      "created_at": "2026-01-02T20:58:23.846886",
       "semantic_tags": [
         "claude",
         "md"
@@ -1114,7 +1127,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/docs/AI_OPTIMIZED_TYPE_SYSTEM_REFACTORING.md",
       "content_hash": "c6a32d48b45aff10",
       "size_bytes": 17452,
-      "created_at": "2026-01-02T20:52:27.737314",
+      "created_at": "2026-01-02T20:58:23.846971",
       "semantic_tags": [
         "md"
       ],
@@ -1132,7 +1145,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/docs/type-system.md",
       "content_hash": "721e91f5c9ef0ac1",
       "size_bytes": 8123,
-      "created_at": "2026-01-02T20:52:27.737392",
+      "created_at": "2026-01-02T20:58:23.847050",
       "semantic_tags": [
         "md",
         "usage"
@@ -1151,7 +1164,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/docs/testing.md",
       "content_hash": "c233596b05bbc349",
       "size_bytes": 7980,
-      "created_at": "2026-01-02T20:52:27.737462",
+      "created_at": "2026-01-02T20:58:23.847116",
       "semantic_tags": [
         "class",
         "md",
@@ -1171,7 +1184,7 @@
       "file_path": "/home/doug/Development/metaobjects-core/.claude/docs/constraints.md",
       "content_hash": "ac3ed0404397943d",
       "size_bytes": 12166,
-      "created_at": "2026-01-02T20:52:27.737535",
+      "created_at": "2026-01-02T20:58:23.847191",
       "semantic_tags": [
         "md"
       ],
@@ -1189,7 +1202,7 @@
       "file_path": "/home/doug/Development/party-lore/ARC-BEAT-SCENE-ANALYSIS.md",
       "content_hash": "ac651721abb5fc5e",
       "size_bytes": 16496,
-      "created_at": "2026-01-02T20:52:27.738495",
+      "created_at": "2026-01-02T20:58:23.848026",
       "semantic_tags": [
         "md"
       ],
@@ -1207,7 +1220,7 @@
       "file_path": "/home/doug/Development/party-lore/TEST-FIXES-P0-CRITICAL.md",
       "content_hash": "de4555d862d062fc",
       "size_bytes": 27122,
-      "created_at": "2026-01-02T20:52:27.738581",
+      "created_at": "2026-01-02T20:58:23.848104",
       "semantic_tags": [
         "md",
         "test"
@@ -1226,7 +1239,7 @@
       "file_path": "/home/doug/Development/party-lore/ARC-GENERATION-REALM-DRIFT-FIX.md",
       "content_hash": "6e16771df3e45838",
       "size_bytes": 5995,
-      "created_at": "2026-01-02T20:52:27.738642",
+      "created_at": "2026-01-02T20:58:23.848166",
       "semantic_tags": [
         "llm",
         "md",
@@ -1246,7 +1259,7 @@
       "file_path": "/home/doug/Development/party-lore/TASK-408-REVISION-NOTES.md",
       "content_hash": "55ce85e52a16f137",
       "size_bytes": 7329,
-      "created_at": "2026-01-02T20:52:27.738785",
+      "created_at": "2026-01-02T20:58:23.848310",
       "semantic_tags": [
         "md"
       ],
@@ -1264,7 +1277,7 @@
       "file_path": "/home/doug/Development/party-lore/AI_NARRATIVE_QUALITY_ISSUES.md",
       "content_hash": "e68b6cbe3a28777f",
       "size_bytes": 16784,
-      "created_at": "2026-01-02T20:52:27.738843",
+      "created_at": "2026-01-02T20:58:23.848370",
       "semantic_tags": [
         "function",
         "md",
@@ -1284,7 +1297,7 @@
       "file_path": "/home/doug/Development/party-lore/REQUIREMENTS-ASSESSMENT.md",
       "content_hash": "0f238def8ee47d03",
       "size_bytes": 12397,
-      "created_at": "2026-01-02T20:52:27.739029",
+      "created_at": "2026-01-02T20:58:23.848623",
       "semantic_tags": [
         "md",
         "test"
@@ -1303,7 +1316,7 @@
       "file_path": "/home/doug/Development/party-lore/MUCA-VOTING-AI-COMPATIBILITY-ANALYSIS.md",
       "content_hash": "e39eff3810d5f0bf",
       "size_bytes": 14678,
-      "created_at": "2026-01-02T20:52:27.739089",
+      "created_at": "2026-01-02T20:58:23.848689",
       "semantic_tags": [
         "md"
       ],
@@ -1321,7 +1334,7 @@
       "file_path": "/home/doug/Development/party-lore/GAME-STUCK-DIAGNOSIS.md",
       "content_hash": "5a49b417b178a54c",
       "size_bytes": 12994,
-      "created_at": "2026-01-02T20:52:27.739167",
+      "created_at": "2026-01-02T20:58:23.848774",
       "semantic_tags": [
         "md"
       ],
@@ -1339,7 +1352,7 @@
       "file_path": "/home/doug/Development/party-lore/OPTION-2-IMPLEMENTATION-PLAN.md",
       "content_hash": "a28e50d3f88d366c",
       "size_bytes": 7390,
-      "created_at": "2026-01-02T20:52:27.739218",
+      "created_at": "2026-01-02T20:58:23.848827",
       "semantic_tags": [
         "md",
         "test"
@@ -1358,7 +1371,7 @@
       "file_path": "/home/doug/Development/party-lore/NARRATIVE-ISSUES-ANALYSIS-20251207.md",
       "content_hash": "3ef54003d6df4ea4",
       "size_bytes": 12623,
-      "created_at": "2026-01-02T20:52:27.739266",
+      "created_at": "2026-01-02T20:58:23.848876",
       "semantic_tags": [
         "llm",
         "md",
@@ -1378,7 +1391,7 @@
       "file_path": "/home/doug/Development/party-lore/OLLAMA-PRODUCTION-DEPLOYMENT.md",
       "content_hash": "63bf408f870d3871",
       "size_bytes": 5282,
-      "created_at": "2026-01-02T20:52:27.739475",
+      "created_at": "2026-01-02T20:58:23.849055",
       "semantic_tags": [
         "http",
         "md"
@@ -1397,7 +1410,7 @@
       "file_path": "/home/doug/Development/party-lore/CORE-TEST-ANALYSIS-20251207.md",
       "content_hash": "94b6619cd166b242",
       "size_bytes": 10290,
-      "created_at": "2026-01-02T20:52:27.739517",
+      "created_at": "2026-01-02T20:58:23.849094",
       "semantic_tags": [
         "md",
         "test"
@@ -1416,7 +1429,7 @@
       "file_path": "/home/doug/Development/party-lore/SESSION-2025-01-15-PROMPT-FIXES.md",
       "content_hash": "ee5a706450321680",
       "size_bytes": 6787,
-      "created_at": "2026-01-02T20:52:27.739559",
+      "created_at": "2026-01-02T20:58:23.849135",
       "semantic_tags": [
         "md",
         "test"
@@ -1435,7 +1448,7 @@
       "file_path": "/home/doug/Development/party-lore/ARC-GENERATION-TIMEOUT-FIX.md",
       "content_hash": "9808c86e2e999760",
       "size_bytes": 6772,
-      "created_at": "2026-01-02T20:52:27.739667",
+      "created_at": "2026-01-02T20:58:23.849240",
       "semantic_tags": [
         "api",
         "md"
@@ -1454,7 +1467,7 @@
       "file_path": "/home/doug/Development/party-lore/Party_Lore_Web_App_Requirements.md",
       "content_hash": "6434657899c08c6c",
       "size_bytes": 21724,
-      "created_at": "2026-01-02T20:52:27.739820",
+      "created_at": "2026-01-02T20:58:23.849391",
       "semantic_tags": [
         "def",
         "md"
@@ -1473,7 +1486,7 @@
       "file_path": "/home/doug/Development/party-lore/CRITICAL-BUG-batch-timeout-race-condition.md",
       "content_hash": "1d38acd5e162bd18",
       "size_bytes": 5911,
-      "created_at": "2026-01-02T20:52:27.739876",
+      "created_at": "2026-01-02T20:58:23.849451",
       "semantic_tags": [
         "def",
         "md"
@@ -1492,7 +1505,7 @@
       "file_path": "/home/doug/Development/party-lore/CORE-TEST-ANALYSIS.md",
       "content_hash": "07eec16e40d647a0",
       "size_bytes": 17575,
-      "created_at": "2026-01-02T20:52:27.739931",
+      "created_at": "2026-01-02T20:58:23.849508",
       "semantic_tags": [
         "llm",
         "md",
@@ -1512,7 +1525,7 @@
       "file_path": "/home/doug/Development/party-lore/CRITICAL-BUGS-AND-SOLUTIONS.md",
       "content_hash": "cabd3da5d3166aa5",
       "size_bytes": 20042,
-      "created_at": "2026-01-02T20:52:27.740140",
+      "created_at": "2026-01-02T20:58:23.849700",
       "semantic_tags": [
         "agent",
         "md",
@@ -1532,7 +1545,7 @@
       "file_path": "/home/doug/Development/party-lore/COMBAT-SYSTEM-FAILURE-ANALYSIS.md",
       "content_hash": "80f2ddce187d1ccf",
       "size_bytes": 17926,
-      "created_at": "2026-01-02T20:52:27.740260",
+      "created_at": "2026-01-02T20:58:23.849764",
       "semantic_tags": [
         "example",
         "function",
@@ -1552,7 +1565,7 @@
       "file_path": "/home/doug/Development/party-lore/TIER1-POST-PROCESSING-RECOMMENDATIONS.md",
       "content_hash": "902f1b03dccda4a4",
       "size_bytes": 15754,
-      "created_at": "2026-01-02T20:52:27.740495",
+      "created_at": "2026-01-02T20:58:23.849907",
       "semantic_tags": [
         "example",
         "md"
@@ -1571,7 +1584,7 @@
       "file_path": "/home/doug/Development/party-lore/FIXES-SUMMARY.md",
       "content_hash": "d02b053b41855898",
       "size_bytes": 6460,
-      "created_at": "2026-01-02T20:52:27.740551",
+      "created_at": "2026-01-02T20:58:23.849958",
       "semantic_tags": [
         "md",
         "test"
@@ -1583,636 +1596,276 @@
       }
     },
     {
-      "doc_id": "local_party-lore_SIMULTANEOUS-ACTION-FIX-SUMMARY",
+      "doc_id": "local_Timothy_Ferriss_-The_4-Hour_Workweek",
       "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/SIMULTANEOUS-ACTION-FIX-SUMMARY.md",
-      "content_hash": "5b14eea4d3cb8f53",
-      "size_bytes": 8812,
-      "created_at": "2026-01-02T20:52:27.740603",
+      "category": "technical",
+      "domain": "unknown",
+      "file_path": "/home/doug/Family/Shared/Books_1/Timothy_Ferriss_-The_4-Hour_Workweek.pdf",
+      "content_hash": "8876a3eb5c37c313",
+      "size_bytes": 395,
+      "created_at": "2026-01-02T20:58:28.312863",
       "semantic_tags": [
-        "example",
-        "md"
+        "pdf"
       ],
       "is_distractor": false,
       "metadata": {
-        "relative_path": "party-lore/SIMULTANEOUS-ACTION-FIX-SUMMARY.md",
-        "extension": ".md"
+        "relative_path": "Timothy_Ferriss_-The_4-Hour_Workweek.pdf",
+        "extension": ".pdf"
       }
     },
     {
-      "doc_id": "local_party-lore_LOCATION-ARCHITECTURE-CRISIS-ANALYSIS",
+      "doc_id": "local_Eric_Westman_MD_Keto_Clarity__Your_Definitive_Guide__1__Keto_Clarity__Your_Definitive_G_-_Eric_Westman_MD",
       "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/LOCATION-ARCHITECTURE-CRISIS-ANALYSIS.md",
-      "content_hash": "652e6839be2a3843",
-      "size_bytes": 11816,
-      "created_at": "2026-01-02T20:52:27.740777",
+      "category": "legal",
+      "domain": "unknown",
+      "file_path": "/home/doug/Family/Shared/Books_1/Eric Westman MD/Keto Clarity_ Your Definitive Guide (1)/Keto Clarity_ Your Definitive G - Eric Westman MD.pdf",
+      "content_hash": "0d3a933f1ec2b564",
+      "size_bytes": 594049,
+      "created_at": "2026-01-02T20:58:37.722966",
       "semantic_tags": [
         "database",
-        "md"
+        "pdf",
+        "retrieval"
       ],
       "is_distractor": false,
       "metadata": {
-        "relative_path": "party-lore/LOCATION-ARCHITECTURE-CRISIS-ANALYSIS.md",
-        "extension": ".md"
+        "relative_path": "Eric Westman MD/Keto Clarity_ Your Definitive Guide (1)/Keto Clarity_ Your Definitive G - Eric Westman MD.pdf",
+        "extension": ".pdf"
       }
     },
     {
-      "doc_id": "local_party-lore_PROMPT_OPTIMIZATION",
+      "doc_id": "local_Terry_Wahls_M_D__The_Wahls_Protocol__How_I_Beat_Progr__2__The_Wahls_Protocol__How_I_Beat_-_Terry_Wahls_M_D_",
       "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/PROMPT_OPTIMIZATION.md",
-      "content_hash": "605b8c05edaac238",
-      "size_bytes": 9056,
-      "created_at": "2026-01-02T20:52:27.740827",
+      "category": "technical",
+      "domain": "unknown",
+      "file_path": "/home/doug/Family/Shared/Books_1/Terry Wahls M.D_/The Wahls Protocol_ How I Beat Progr (2)/The Wahls Protocol_ How I Beat - Terry Wahls M.D_.pdf",
+      "content_hash": "0f21133121f10005",
+      "size_bytes": 789116,
+      "created_at": "2026-01-02T20:58:46.015161",
       "semantic_tags": [
-        "md",
-        "test"
+        "pdf"
       ],
       "is_distractor": false,
       "metadata": {
-        "relative_path": "party-lore/PROMPT_OPTIMIZATION.md",
-        "extension": ".md"
+        "relative_path": "Terry Wahls M.D_/The Wahls Protocol_ How I Beat Progr (2)/The Wahls Protocol_ How I Beat - Terry Wahls M.D_.pdf",
+        "extension": ".pdf"
       }
     },
     {
-      "doc_id": "local_party-lore_CORE-TEST-ANALYSIS-COMPARISON",
+      "doc_id": "local_Articles_Outsell_Company_Analysis_23sep2015_Adaptive_Learning",
       "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/CORE-TEST-ANALYSIS-COMPARISON.md",
-      "content_hash": "c8d4782291a4af83",
-      "size_bytes": 18241,
-      "created_at": "2026-01-02T20:52:27.740878",
+      "category": "conversational",
+      "domain": "unknown",
+      "file_path": "/home/doug/Family/Shared/Books_2/Articles/Outsell_Company_Analysis_23sep2015_Adaptive_Learning.pdf",
+      "content_hash": "2b2077e5c3581948",
+      "size_bytes": 63339,
+      "created_at": "2026-01-02T20:58:48.385673",
       "semantic_tags": [
-        "llm",
-        "md",
-        "test"
+        "pdf"
       ],
       "is_distractor": false,
       "metadata": {
-        "relative_path": "party-lore/CORE-TEST-ANALYSIS-COMPARISON.md",
-        "extension": ".md"
+        "relative_path": "Articles/Outsell_Company_Analysis_23sep2015_Adaptive_Learning.pdf",
+        "extension": ".pdf"
       }
     },
     {
-      "doc_id": "local_party-lore_LOCATION-REFACTORING-REQUIREMENTS",
+      "doc_id": "local_Articles_Truth_In_the_Age_of_Social_Media",
       "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/LOCATION-REFACTORING-REQUIREMENTS.md",
-      "content_hash": "1a37e0761df7057b",
-      "size_bytes": 28161,
-      "created_at": "2026-01-02T20:52:27.741007",
+      "category": "technical",
+      "domain": "unknown",
+      "file_path": "/home/doug/Family/Shared/Books_2/Articles/Truth In the Age of Social Media.pdf",
+      "content_hash": "d24321e875bf77b2",
+      "size_bytes": 464438,
+      "created_at": "2026-01-02T20:58:51.601604",
       "semantic_tags": [
-        "async",
-        "md"
+        "pdf"
       ],
       "is_distractor": false,
       "metadata": {
-        "relative_path": "party-lore/LOCATION-REFACTORING-REQUIREMENTS.md",
-        "extension": ".md"
+        "relative_path": "Articles/Truth In the Age of Social Media.pdf",
+        "extension": ".pdf"
       }
     },
     {
-      "doc_id": "local_party-lore_REALM-MECHANICS-AUDIT",
+      "doc_id": "local_Health___Diet_Paleo_02-12_PM",
       "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/REALM-MECHANICS-AUDIT.md",
-      "content_hash": "dd6ae5e20f0aeb81",
-      "size_bytes": 23659,
-      "created_at": "2026-01-02T20:52:27.741095",
+      "category": "conversational",
+      "domain": "unknown",
+      "file_path": "/home/doug/Family/Shared/Books_2/Health & Diet/Paleo/02-12 PM.pdf",
+      "content_hash": "c6d361145144b062",
+      "size_bytes": 167447,
+      "created_at": "2026-01-02T20:58:53.387797",
       "semantic_tags": [
-        "database",
-        "llm",
-        "md"
+        "pdf"
       ],
       "is_distractor": false,
       "metadata": {
-        "relative_path": "party-lore/REALM-MECHANICS-AUDIT.md",
-        "extension": ".md"
+        "relative_path": "Health & Diet/Paleo/02-12 PM.pdf",
+        "extension": ".pdf"
       }
     },
     {
-      "doc_id": "local_party-lore__githooks_README",
+      "doc_id": "local_Health___Diet_Paleo_04-12_PM",
       "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/.githooks/README.md",
-      "content_hash": "8af2504c5ad6b56f",
-      "size_bytes": 2575,
-      "created_at": "2026-01-02T20:52:27.742807",
+      "category": "conversational",
+      "domain": "unknown",
+      "file_path": "/home/doug/Family/Shared/Books_2/Health & Diet/Paleo/04-12 PM.pdf",
+      "content_hash": "c0237959b5c18e4e",
+      "size_bytes": 156172,
+      "created_at": "2026-01-02T20:58:54.555940",
       "semantic_tags": [
-        "config",
-        "install",
-        "md",
-        "readme"
+        "pdf"
       ],
       "is_distractor": false,
       "metadata": {
-        "relative_path": "party-lore/.githooks/README.md",
-        "extension": ".md"
+        "relative_path": "Health & Diet/Paleo/04-12 PM.pdf",
+        "extension": ".pdf"
       }
     },
     {
-      "doc_id": "local_party-lore_docs_COMPETITIVE-ANALYSIS",
+      "doc_id": "local_Health___Diet_Paleo_05-11_PM",
       "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/docs/COMPETITIVE-ANALYSIS.md",
-      "content_hash": "5204647f0304a63d",
-      "size_bytes": 16980,
-      "created_at": "2026-01-02T20:52:27.743031",
+      "category": "technical",
+      "domain": "unknown",
+      "file_path": "/home/doug/Family/Shared/Books_2/Health & Diet/Paleo/05-11 PM.pdf",
+      "content_hash": "49f889b2a043b210",
+      "size_bytes": 130214,
+      "created_at": "2026-01-02T20:58:55.339797",
       "semantic_tags": [
-        "md"
+        "pdf"
       ],
       "is_distractor": false,
       "metadata": {
-        "relative_path": "party-lore/docs/COMPETITIVE-ANALYSIS.md",
-        "extension": ".md"
+        "relative_path": "Health & Diet/Paleo/05-11 PM.pdf",
+        "extension": ".pdf"
       }
     },
     {
-      "doc_id": "local_party-lore_docs_IDENTITY-VIOLATION-DETECTION",
+      "doc_id": "local_Health___Diet_Paleo_06-12_PM",
       "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/docs/IDENTITY-VIOLATION-DETECTION.md",
-      "content_hash": "37a45eea38471923",
-      "size_bytes": 16222,
-      "created_at": "2026-01-02T20:52:27.743104",
+      "category": "conversational",
+      "domain": "unknown",
+      "file_path": "/home/doug/Family/Shared/Books_2/Health & Diet/Paleo/06-12 PM.pdf",
+      "content_hash": "1bfca4d20e9b4aee",
+      "size_bytes": 153146,
+      "created_at": "2026-01-02T20:58:58.048979",
       "semantic_tags": [
-        "md",
-        "test"
+        "pdf"
       ],
       "is_distractor": false,
       "metadata": {
-        "relative_path": "party-lore/docs/IDENTITY-VIOLATION-DETECTION.md",
-        "extension": ".md"
+        "relative_path": "Health & Diet/Paleo/06-12 PM.pdf",
+        "extension": ".pdf"
       }
     },
     {
-      "doc_id": "local_party-lore_docs_ONBOARDING_UX_ANALYSIS",
+      "doc_id": "local_Health___Diet_Paleo_07-11_PM",
       "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/docs/ONBOARDING_UX_ANALYSIS.md",
-      "content_hash": "bab3cfabb53c5dde",
-      "size_bytes": 16254,
-      "created_at": "2026-01-02T20:52:27.743245",
+      "category": "knowledge_base",
+      "domain": "unknown",
+      "file_path": "/home/doug/Family/Shared/Books_2/Health & Diet/Paleo/07-11 PM.pdf",
+      "content_hash": "5a3689350df384b2",
+      "size_bytes": 118035,
+      "created_at": "2026-01-02T20:58:59.436940",
       "semantic_tags": [
-        "md"
+        "pdf"
       ],
       "is_distractor": false,
       "metadata": {
-        "relative_path": "party-lore/docs/ONBOARDING_UX_ANALYSIS.md",
-        "extension": ".md"
+        "relative_path": "Health & Diet/Paleo/07-11 PM.pdf",
+        "extension": ".pdf"
       }
     },
     {
-      "doc_id": "local_party-lore_docs_MULTI_CHANNEL_IMPLEMENTATION",
+      "doc_id": "local_Health___Diet_Paleo_08-12_PM",
       "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/docs/MULTI_CHANNEL_IMPLEMENTATION.md",
-      "content_hash": "da5ad044d1fae8fb",
-      "size_bytes": 12061,
-      "created_at": "2026-01-02T20:52:27.743313",
+      "category": "knowledge_base",
+      "domain": "unknown",
+      "file_path": "/home/doug/Family/Shared/Books_2/Health & Diet/Paleo/08-12 PM.pdf",
+      "content_hash": "7c4f3b1bf3423e7a",
+      "size_bytes": 171684,
+      "created_at": "2026-01-02T20:59:02.181326",
       "semantic_tags": [
-        "md",
-        "test"
+        "pdf"
       ],
       "is_distractor": false,
       "metadata": {
-        "relative_path": "party-lore/docs/MULTI_CHANNEL_IMPLEMENTATION.md",
-        "extension": ".md"
+        "relative_path": "Health & Diet/Paleo/08-12 PM.pdf",
+        "extension": ".pdf"
       }
     },
     {
-      "doc_id": "local_party-lore_docs_cutting-edge-AI-capabilities",
+      "doc_id": "local_Health___Diet_Paleo_09-11_PM",
       "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/docs/cutting-edge-AI-capabilities.md",
-      "content_hash": "8211d8c1a2a63e48",
-      "size_bytes": 5710,
-      "created_at": "2026-01-02T20:52:27.743427",
+      "category": "technical",
+      "domain": "unknown",
+      "file_path": "/home/doug/Family/Shared/Books_2/Health & Diet/Paleo/09-11 PM.pdf",
+      "content_hash": "9554427084fa018b",
+      "size_bytes": 148218,
+      "created_at": "2026-01-02T20:59:04.767241",
       "semantic_tags": [
-        "async",
-        "md"
+        "pdf"
       ],
       "is_distractor": false,
       "metadata": {
-        "relative_path": "party-lore/docs/cutting-edge-AI-capabilities.md",
-        "extension": ".md"
+        "relative_path": "Health & Diet/Paleo/09-11 PM.pdf",
+        "extension": ".pdf"
       }
     },
     {
-      "doc_id": "local_party-lore_docs_REALM_DATA_ASSESSMENT",
+      "doc_id": "local_Health___Diet_Paleo_10-12_PM",
       "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/docs/REALM_DATA_ASSESSMENT.md",
-      "content_hash": "6c3d6a1a0a9c8a13",
-      "size_bytes": 13219,
-      "created_at": "2026-01-02T20:52:27.743522",
+      "category": "conversational",
+      "domain": "unknown",
+      "file_path": "/home/doug/Family/Shared/Books_2/Health & Diet/Paleo/10-12_PM.pdf",
+      "content_hash": "bd6de789eb05e25d",
+      "size_bytes": 162710,
+      "created_at": "2026-01-02T20:59:05.948025",
       "semantic_tags": [
-        "class",
-        "md"
+        "pdf"
       ],
       "is_distractor": false,
       "metadata": {
-        "relative_path": "party-lore/docs/REALM_DATA_ASSESSMENT.md",
-        "extension": ".md"
+        "relative_path": "Health & Diet/Paleo/10-12_PM.pdf",
+        "extension": ".pdf"
       }
     },
     {
-      "doc_id": "local_party-lore_docs_troubleshooting",
+      "doc_id": "local_Health___Diet_Paleo_11-11_PM",
       "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/docs/troubleshooting.md",
-      "content_hash": "f9969eefeb82320b",
-      "size_bytes": 8654,
-      "created_at": "2026-01-02T20:52:27.743564",
+      "category": "conversational",
+      "domain": "unknown",
+      "file_path": "/home/doug/Family/Shared/Books_2/Health & Diet/Paleo/11-11 PM.pdf",
+      "content_hash": "a78735151368403c",
+      "size_bytes": 122151,
+      "created_at": "2026-01-02T20:59:07.248603",
       "semantic_tags": [
-        "md"
-      ],
-      "is_distractor": false,
-      "metadata": {
-        "relative_path": "party-lore/docs/troubleshooting.md",
-        "extension": ".md"
-      }
-    },
-    {
-      "doc_id": "local_party-lore_docs_development-setup",
-      "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/docs/development-setup.md",
-      "content_hash": "ffb5e3357ba2d119",
-      "size_bytes": 17439,
-      "created_at": "2026-01-02T20:52:27.743677",
-      "semantic_tags": [
-        "md"
-      ],
-      "is_distractor": false,
-      "metadata": {
-        "relative_path": "party-lore/docs/development-setup.md",
-        "extension": ".md"
-      }
-    },
-    {
-      "doc_id": "local_party-lore_docs_FEATURE-ROADMAP",
-      "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/docs/FEATURE-ROADMAP.md",
-      "content_hash": "84577d2634cecbc7",
-      "size_bytes": 10342,
-      "created_at": "2026-01-02T20:52:27.743735",
-      "semantic_tags": [
-        "md"
-      ],
-      "is_distractor": false,
-      "metadata": {
-        "relative_path": "party-lore/docs/FEATURE-ROADMAP.md",
-        "extension": ".md"
-      }
-    },
-    {
-      "doc_id": "local_party-lore_docs_database-migrations",
-      "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/docs/database-migrations.md",
-      "content_hash": "adf41f8835420e0f",
-      "size_bytes": 21307,
-      "created_at": "2026-01-02T20:52:27.743799",
-      "semantic_tags": [
-        "database",
-        "def",
-        "md"
-      ],
-      "is_distractor": false,
-      "metadata": {
-        "relative_path": "party-lore/docs/database-migrations.md",
-        "extension": ".md"
-      }
-    },
-    {
-      "doc_id": "local_party-lore_docs_REALM_IMPROVEMENTS_SUMMARY",
-      "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/docs/REALM_IMPROVEMENTS_SUMMARY.md",
-      "content_hash": "49651b6177f4e1e9",
-      "size_bytes": 7237,
-      "created_at": "2026-01-02T20:52:27.743924",
-      "semantic_tags": [
-        "class",
-        "md"
-      ],
-      "is_distractor": false,
-      "metadata": {
-        "relative_path": "party-lore/docs/REALM_IMPROVEMENTS_SUMMARY.md",
-        "extension": ".md"
-      }
-    },
-    {
-      "doc_id": "local_party-lore_docs_README_REALM_WORK",
-      "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/docs/README_REALM_WORK.md",
-      "content_hash": "ca5300f1a364a83f",
-      "size_bytes": 3568,
-      "created_at": "2026-01-02T20:52:27.744034",
-      "semantic_tags": [
-        "class",
-        "md",
-        "readme"
-      ],
-      "is_distractor": false,
-      "metadata": {
-        "relative_path": "party-lore/docs/README_REALM_WORK.md",
-        "extension": ".md"
-      }
-    },
-    {
-      "doc_id": "local_party-lore_docs_migration-review-checklist",
-      "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/docs/migration-review-checklist.md",
-      "content_hash": "4fff63bbc0bd61bf",
-      "size_bytes": 5658,
-      "created_at": "2026-01-02T20:52:27.744067",
-      "semantic_tags": [
-        "database",
-        "md"
-      ],
-      "is_distractor": false,
-      "metadata": {
-        "relative_path": "party-lore/docs/migration-review-checklist.md",
-        "extension": ".md"
-      }
-    },
-    {
-      "doc_id": "local_party-lore_docs_LLM-TESTING-GUIDE",
-      "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/docs/LLM-TESTING-GUIDE.md",
-      "content_hash": "c937e38b6549953f",
-      "size_bytes": 7896,
-      "created_at": "2026-01-02T20:52:27.744227",
-      "semantic_tags": [
-        "llm",
-        "md",
-        "test"
-      ],
-      "is_distractor": false,
-      "metadata": {
-        "relative_path": "party-lore/docs/LLM-TESTING-GUIDE.md",
-        "extension": ".md"
-      }
-    },
-    {
-      "doc_id": "local_party-lore_docs_STEP_1_FINDINGS",
-      "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/docs/STEP_1_FINDINGS.md",
-      "content_hash": "0fd7aaf6a0a9f503",
-      "size_bytes": 4846,
-      "created_at": "2026-01-02T20:52:27.744261",
-      "semantic_tags": [
-        "function",
-        "md",
-        "test"
-      ],
-      "is_distractor": false,
-      "metadata": {
-        "relative_path": "party-lore/docs/STEP_1_FINDINGS.md",
-        "extension": ".md"
-      }
-    },
-    {
-      "doc_id": "local_party-lore_docs_MESSAGING_ARCHITECTURE",
-      "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/docs/MESSAGING_ARCHITECTURE.md",
-      "content_hash": "db59a4789fda0a2a",
-      "size_bytes": 14453,
-      "created_at": "2026-01-02T20:52:27.744309",
-      "semantic_tags": [
-        "md"
-      ],
-      "is_distractor": false,
-      "metadata": {
-        "relative_path": "party-lore/docs/MESSAGING_ARCHITECTURE.md",
-        "extension": ".md"
-      }
-    },
-    {
-      "doc_id": "local_party-lore_docs_FR-202-PRECEDENT-RESEARCH",
-      "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/docs/FR-202-PRECEDENT-RESEARCH.md",
-      "content_hash": "b829c6abc78c563f",
-      "size_bytes": 11194,
-      "created_at": "2026-01-02T20:52:27.744362",
-      "semantic_tags": [
-        "md",
-        "test",
+        "pdf",
         "usage"
       ],
       "is_distractor": false,
       "metadata": {
-        "relative_path": "party-lore/docs/FR-202-PRECEDENT-RESEARCH.md",
-        "extension": ".md"
+        "relative_path": "Health & Diet/Paleo/11-11 PM.pdf",
+        "extension": ".pdf"
       }
     },
     {
-      "doc_id": "local_party-lore_docs_TIER-0_5-DESIGN-ANALYSIS",
+      "doc_id": "local_Health___Diet_Paleo_12-12_PM",
       "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/docs/TIER-0.5-DESIGN-ANALYSIS.md",
-      "content_hash": "f214552176c19fc3",
-      "size_bytes": 7358,
-      "created_at": "2026-01-02T20:52:27.744404",
+      "category": "conversational",
+      "domain": "unknown",
+      "file_path": "/home/doug/Family/Shared/Books_2/Health & Diet/Paleo/12-12_PM.pdf",
+      "content_hash": "a58cb731ba880123",
+      "size_bytes": 164514,
+      "created_at": "2026-01-02T20:59:09.343861",
       "semantic_tags": [
-        "example",
-        "llm",
-        "md"
+        "pdf"
       ],
       "is_distractor": false,
       "metadata": {
-        "relative_path": "party-lore/docs/TIER-0.5-DESIGN-ANALYSIS.md",
-        "extension": ".md"
-      }
-    },
-    {
-      "doc_id": "local_party-lore_docs_archive_ARCHITECTURE-REFACTORING-PLAN",
-      "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/docs/archive/ARCHITECTURE-REFACTORING-PLAN.md",
-      "content_hash": "600bb2d6df2024be",
-      "size_bytes": 20186,
-      "created_at": "2026-01-02T20:52:27.744635",
-      "semantic_tags": [
-        "class",
-        "md",
-        "test"
-      ],
-      "is_distractor": false,
-      "metadata": {
-        "relative_path": "party-lore/docs/archive/ARCHITECTURE-REFACTORING-PLAN.md",
-        "extension": ".md"
-      }
-    },
-    {
-      "doc_id": "local_party-lore_docs_archive_QUEUE_INTEGRATION",
-      "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/docs/archive/QUEUE_INTEGRATION.md",
-      "content_hash": "68d89dbb40e94bbb",
-      "size_bytes": 6096,
-      "created_at": "2026-01-02T20:52:27.744694",
-      "semantic_tags": [
-        "md"
-      ],
-      "is_distractor": false,
-      "metadata": {
-        "relative_path": "party-lore/docs/archive/QUEUE_INTEGRATION.md",
-        "extension": ".md"
-      }
-    },
-    {
-      "doc_id": "local_party-lore_docs_archive_ACTION-BATCHING-TESTING",
-      "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/docs/archive/ACTION-BATCHING-TESTING.md",
-      "content_hash": "4aca99d9ea03fa13",
-      "size_bytes": 6067,
-      "created_at": "2026-01-02T20:52:27.744731",
-      "semantic_tags": [
-        "md",
-        "test"
-      ],
-      "is_distractor": false,
-      "metadata": {
-        "relative_path": "party-lore/docs/archive/ACTION-BATCHING-TESTING.md",
-        "extension": ".md"
-      }
-    },
-    {
-      "doc_id": "local_party-lore_docs_archive_TESTING",
-      "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/docs/archive/TESTING.md",
-      "content_hash": "1b3b8ee20c5a136f",
-      "size_bytes": 5792,
-      "created_at": "2026-01-02T20:52:27.744762",
-      "semantic_tags": [
-        "agent",
-        "database",
-        "md",
-        "test"
-      ],
-      "is_distractor": false,
-      "metadata": {
-        "relative_path": "party-lore/docs/archive/TESTING.md",
-        "extension": ".md"
-      }
-    },
-    {
-      "doc_id": "local_party-lore_docs_archive_GAME-DESIGN-CRISIS-ANALYSIS",
-      "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/docs/archive/GAME-DESIGN-CRISIS-ANALYSIS.md",
-      "content_hash": "34cf1982ad8d7f34",
-      "size_bytes": 15431,
-      "created_at": "2026-01-02T20:52:27.744872",
-      "semantic_tags": [
-        "md"
-      ],
-      "is_distractor": false,
-      "metadata": {
-        "relative_path": "party-lore/docs/archive/GAME-DESIGN-CRISIS-ANALYSIS.md",
-        "extension": ".md"
-      }
-    },
-    {
-      "doc_id": "local_party-lore_docs_archive_E2E_TEST_FIXES_SUMMARY",
-      "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/docs/archive/E2E_TEST_FIXES_SUMMARY.md",
-      "content_hash": "9b9227177e9bb5fe",
-      "size_bytes": 5741,
-      "created_at": "2026-01-02T20:52:27.744915",
-      "semantic_tags": [
-        "md",
-        "test"
-      ],
-      "is_distractor": false,
-      "metadata": {
-        "relative_path": "party-lore/docs/archive/E2E_TEST_FIXES_SUMMARY.md",
-        "extension": ".md"
-      }
-    },
-    {
-      "doc_id": "local_party-lore_docs_archive_FINAL-REFACTORING-SUMMARY",
-      "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/docs/archive/FINAL-REFACTORING-SUMMARY.md",
-      "content_hash": "9eaf37f9f4f3a26f",
-      "size_bytes": 6624,
-      "created_at": "2026-01-02T20:52:27.745074",
-      "semantic_tags": [
-        "api",
-        "md",
-        "test"
-      ],
-      "is_distractor": false,
-      "metadata": {
-        "relative_path": "party-lore/docs/archive/FINAL-REFACTORING-SUMMARY.md",
-        "extension": ".md"
-      }
-    },
-    {
-      "doc_id": "local_party-lore_docs_archive_GROUP_MESSAGING_TEST_ISSUES",
-      "source_type": "local",
-      "category": "narrative",
-      "domain": "game_fiction",
-      "file_path": "/home/doug/Development/party-lore/docs/archive/GROUP_MESSAGING_TEST_ISSUES.md",
-      "content_hash": "4117a0a14f4847b2",
-      "size_bytes": 9876,
-      "created_at": "2026-01-02T20:52:27.745217",
-      "semantic_tags": [
-        "md",
-        "test"
-      ],
-      "is_distractor": false,
-      "metadata": {
-        "relative_path": "party-lore/docs/archive/GROUP_MESSAGING_TEST_ISSUES.md",
-        "extension": ".md"
+        "relative_path": "Health & Diet/Paleo/12-12_PM.pdf",
+        "extension": ".pdf"
       }
     },
     {
@@ -2223,7 +1876,7 @@
       "file_path": "https://docs.python.org/3/tutorial/index.html",
       "content_hash": "181d2f81a0006533",
       "size_bytes": 7132,
-      "created_at": "2026-01-02T20:52:28.956100",
+      "created_at": "2026-01-02T20:59:09.736952",
       "semantic_tags": [
         "documentation",
         "python",
@@ -2243,7 +1896,7 @@
       "file_path": "https://docs.python.org/3/tutorial/controlflow.html",
       "content_hash": "371e5b89486673a6",
       "size_bytes": 38835,
-      "created_at": "2026-01-02T20:52:28.956285",
+      "created_at": "2026-01-02T20:59:09.737103",
       "semantic_tags": [
         "documentation",
         "function",
@@ -2263,7 +1916,7 @@
       "file_path": "https://docs.python.org/3/tutorial/datastructures.html",
       "content_hash": "ff7f650a8568d264",
       "size_bytes": 25860,
-      "created_at": "2026-01-02T20:52:28.956373",
+      "created_at": "2026-01-02T20:59:09.737187",
       "semantic_tags": [
         "documentation",
         "python"
@@ -2282,7 +1935,7 @@
       "file_path": "https://docs.python.org/3/library/functions.html",
       "content_hash": "d9855cd11af2c5e5",
       "size_bytes": 80747,
-      "created_at": "2026-01-02T20:52:28.956582",
+      "created_at": "2026-01-02T20:59:09.737362",
       "semantic_tags": [
         "documentation",
         "function",
@@ -2302,7 +1955,7 @@
       "file_path": "https://docs.python.org/3/library/collections.html",
       "content_hash": "68a3bc266c8a3c77",
       "size_bytes": 47237,
-      "created_at": "2026-01-02T20:52:28.957609",
+      "created_at": "2026-01-02T20:59:09.738070",
       "semantic_tags": [
         "documentation",
         "function",
@@ -2322,7 +1975,7 @@
       "file_path": "https://docs.python.org/3/library/itertools.html",
       "content_hash": "b8d6baa2a6ba1324",
       "size_bytes": 37656,
-      "created_at": "2026-01-02T20:52:28.957730",
+      "created_at": "2026-01-02T20:59:09.738177",
       "semantic_tags": [
         "documentation",
         "function",
@@ -2342,7 +1995,7 @@
       "file_path": "https://docs.python.org/3/library/asyncio.html",
       "content_hash": "cb17046a4dcf019b",
       "size_bytes": 3695,
-      "created_at": "2026-01-02T20:52:28.957795",
+      "created_at": "2026-01-02T20:59:09.738240",
       "semantic_tags": [
         "async",
         "documentation",
@@ -2362,7 +2015,7 @@
       "file_path": "https://fastapi.tiangolo.com/tutorial/first-steps/",
       "content_hash": "b075d678c6d9237f",
       "size_bytes": 16159,
-      "created_at": "2026-01-02T20:52:28.957915",
+      "created_at": "2026-01-02T20:59:09.738336",
       "semantic_tags": [
         "api",
         "fastapi"
@@ -2381,7 +2034,7 @@
       "file_path": "https://fastapi.tiangolo.com/tutorial/path-params/",
       "content_hash": "be2c4e9d1d506918",
       "size_bytes": 15509,
-      "created_at": "2026-01-02T20:52:28.957976",
+      "created_at": "2026-01-02T20:59:09.738398",
       "semantic_tags": [
         "api",
         "fastapi"
@@ -2400,7 +2053,7 @@
       "file_path": "https://fastapi.tiangolo.com/tutorial/query-params/",
       "content_hash": "e448456edcebc04b",
       "size_bytes": 11501,
-      "created_at": "2026-01-02T20:52:28.958029",
+      "created_at": "2026-01-02T20:59:09.738456",
       "semantic_tags": [
         "api",
         "fastapi"
@@ -2419,7 +2072,7 @@
       "file_path": "https://www.typescriptlang.org/docs/handbook/2/basic-types.html",
       "content_hash": "602bb55063c5c7ee",
       "size_bytes": 23582,
-      "created_at": "2026-01-02T20:52:28.958123",
+      "created_at": "2026-01-02T20:59:09.738547",
       "semantic_tags": [
         "documentation",
         "function",
@@ -2439,7 +2092,7 @@
       "file_path": "https://www.typescriptlang.org/docs/handbook/2/everyday-types.html",
       "content_hash": "3f5b2cecd45f8e00",
       "size_bytes": 31148,
-      "created_at": "2026-01-02T20:52:28.958208",
+      "created_at": "2026-01-02T20:59:09.738622",
       "semantic_tags": [
         "documentation",
         "function",
@@ -2459,7 +2112,7 @@
       "file_path": "https://www.typescriptlang.org/docs/handbook/2/functions.html",
       "content_hash": "f3c5c48c667d08a9",
       "size_bytes": 36603,
-      "created_at": "2026-01-02T20:52:28.958296",
+      "created_at": "2026-01-02T20:59:09.738703",
       "semantic_tags": [
         "documentation",
         "function",
@@ -2479,7 +2132,7 @@
       "file_path": "https://arxiv.org/abs/2301.00774",
       "content_hash": "db3f96298b7db016",
       "size_bytes": 4663,
-      "created_at": "2026-01-02T20:52:40.035851",
+      "created_at": "2026-01-02T20:59:20.814922",
       "semantic_tags": [
         "arxiv",
         "class"
@@ -2498,7 +2151,7 @@
       "file_path": "https://arxiv.org/abs/2303.08774",
       "content_hash": "be81d1994796af0c",
       "size_bytes": 9293,
-      "created_at": "2026-01-02T20:52:40.035903",
+      "created_at": "2026-01-02T20:59:20.814978",
       "semantic_tags": [
         "arxiv",
         "class"
@@ -2517,7 +2170,7 @@
       "file_path": "https://arxiv.org/abs/2302.13971",
       "content_hash": "0796083eee62ded5",
       "size_bytes": 4329,
-      "created_at": "2026-01-02T20:52:40.035942",
+      "created_at": "2026-01-02T20:59:20.815016",
       "semantic_tags": [
         "arxiv",
         "class"
@@ -2536,7 +2189,7 @@
       "file_path": "inline://license/MIT_inline",
       "content_hash": "a406579cd136771c",
       "size_bytes": 1068,
-      "created_at": "2026-01-02T20:52:40.035991",
+      "created_at": "2026-01-02T20:59:20.815069",
       "semantic_tags": [
         "legal",
         "liability",
@@ -2559,7 +2212,7 @@
       "file_path": "inline://license/Apache_2_inline",
       "content_hash": "e95fcd733d5a061f",
       "size_bytes": 3377,
-      "created_at": "2026-01-02T20:52:40.036004",
+      "created_at": "2026-01-02T20:59:20.815082",
       "semantic_tags": [
         "apache_2_inline",
         "legal",
@@ -2582,7 +2235,7 @@
       "file_path": "inline://license/BSD_3_inline",
       "content_hash": "66fcfb1ae17d9822",
       "size_bytes": 1498,
-      "created_at": "2026-01-02T20:52:40.036011",
+      "created_at": "2026-01-02T20:59:20.815090",
       "semantic_tags": [
         "bsd_3_inline",
         "legal",
@@ -2605,7 +2258,7 @@
       "file_path": "https://opensource.org/license/mit/",
       "content_hash": "ad711b3946a84639",
       "size_bytes": 3441,
-      "created_at": "2026-01-02T20:52:40.036069",
+      "created_at": "2026-01-02T20:59:20.815154",
       "semantic_tags": [
         "legal",
         "liability",
@@ -2628,7 +2281,7 @@
       "file_path": "https://www.apache.org/licenses/LICENSE-2.0.txt",
       "content_hash": "c7c5c81295bc9942",
       "size_bytes": 10421,
-      "created_at": "2026-01-02T20:52:40.036136",
+      "created_at": "2026-01-02T20:59:20.815220",
       "semantic_tags": [
         "apache-2.0",
         "governing_law",
@@ -2654,7 +2307,7 @@
       "file_path": "https://www.gnu.org/licenses/gpl-3.0.txt",
       "content_hash": "8c59d4ff7ac18759",
       "size_bytes": 34339,
-      "created_at": "2026-01-02T20:52:40.036235",
+      "created_at": "2026-01-02T20:59:20.815318",
       "semantic_tags": [
         "governing_law",
         "gpl-3.0",
@@ -2680,7 +2333,7 @@
       "file_path": "https://opensource.org/license/bsd-3-clause/",
       "content_hash": "2beef1336acef4c1",
       "size_bytes": 3993,
-      "created_at": "2026-01-02T20:52:40.036296",
+      "created_at": "2026-01-02T20:59:20.815381",
       "semantic_tags": [
         "bsd-3-clause",
         "legal",
@@ -2703,7 +2356,7 @@
       "file_path": "https://www.mozilla.org/en-US/MPL/2.0/",
       "content_hash": "55f38365811ac6cd",
       "size_bytes": 15231,
-      "created_at": "2026-01-02T20:52:40.036395",
+      "created_at": "2026-01-02T20:59:20.815485",
       "semantic_tags": [
         "governing_law",
         "indemnification",
@@ -2729,7 +2382,7 @@
       "file_path": "https://www.gnu.org/licenses/lgpl-3.0.txt",
       "content_hash": "099d0999b2ce055c",
       "size_bytes": 7412,
-      "created_at": "2026-01-02T20:52:40.036463",
+      "created_at": "2026-01-02T20:59:20.815545",
       "semantic_tags": [
         "legal",
         "lgpl-3.0",
@@ -2750,7 +2403,7 @@
       "file_path": "https://www.gnu.org/licenses/agpl-3.0.txt",
       "content_hash": "cf6d39b941431e44",
       "size_bytes": 33816,
-      "created_at": "2026-01-02T20:52:40.036553",
+      "created_at": "2026-01-02T20:59:20.815633",
       "semantic_tags": [
         "agpl-3.0",
         "governing_law",
@@ -2776,7 +2429,7 @@
       "file_path": "https://opensource.org/license/isc-license-txt/",
       "content_hash": "30c73a24d5b319d1",
       "size_bytes": 3079,
-      "created_at": "2026-01-02T20:52:40.036606",
+      "created_at": "2026-01-02T20:59:20.815687",
       "semantic_tags": [
         "isc",
         "legal",
@@ -2798,7 +2451,7 @@
       "file_path": "https://unlicense.org/",
       "content_hash": "f1799621345d08ec",
       "size_bytes": 13611,
-      "created_at": "2026-01-02T20:52:40.036711",
+      "created_at": "2026-01-02T20:59:20.815789",
       "semantic_tags": [
         "legal",
         "liability",
@@ -2821,7 +2474,7 @@
       "file_path": "template://tos/techcorp",
       "content_hash": "9225ca5b8531bca1",
       "size_bytes": 2625,
-      "created_at": "2026-01-02T20:52:40.036762",
+      "created_at": "2026-01-02T20:59:20.815840",
       "semantic_tags": [
         "governing_law",
         "indemnification",
@@ -2847,7 +2500,7 @@
       "file_path": "template://tos/cloudservice",
       "content_hash": "53b2ce1eab3b7cc8",
       "size_bytes": 2649,
-      "created_at": "2026-01-02T20:52:40.036772",
+      "created_at": "2026-01-02T20:59:20.815849",
       "semantic_tags": [
         "cloudservice_(template)",
         "governing_law",
@@ -2873,7 +2526,7 @@
       "file_path": "template://tos/devplatform",
       "content_hash": "88cb8c8d4f184355",
       "size_bytes": 2643,
-      "created_at": "2026-01-02T20:52:40.036780",
+      "created_at": "2026-01-02T20:59:20.815857",
       "semantic_tags": [
         "devplatform_(template)",
         "governing_law",
@@ -2899,7 +2552,7 @@
       "file_path": "https://docs.github.com/en/site-policy/github-terms/github-terms-of-service",
       "content_hash": "3c2b7d2962c8345e",
       "size_bytes": 42031,
-      "created_at": "2026-01-02T20:52:40.036939",
+      "created_at": "2026-01-02T20:59:20.816017",
       "semantic_tags": [
         "github",
         "governing_law",
@@ -2925,7 +2578,7 @@
       "file_path": "https://about.gitlab.com/terms/",
       "content_hash": "86848bdbb5a9724e",
       "size_bytes": 4764,
-      "created_at": "2026-01-02T20:52:40.037027",
+      "created_at": "2026-01-02T20:59:20.816105",
       "semantic_tags": [
         "gitlab",
         "legal",
@@ -2946,7 +2599,7 @@
       "file_path": "https://www.cloudflare.com/terms/",
       "content_hash": "ce13ba7b641ac4fa",
       "size_bytes": 41764,
-      "created_at": "2026-01-02T20:52:40.037198",
+      "created_at": "2026-01-02T20:59:20.816274",
       "semantic_tags": [
         "cloudflare",
         "governing_law",
@@ -2972,7 +2625,7 @@
       "file_path": "https://www.digitalocean.com/legal/terms-of-service-agreement",
       "content_hash": "eccb14c3a1edc0ae",
       "size_bytes": 65523,
-      "created_at": "2026-01-02T20:52:40.037465",
+      "created_at": "2026-01-02T20:59:20.816586",
       "semantic_tags": [
         "digitalocean",
         "governing_law",
@@ -2998,7 +2651,7 @@
       "file_path": "https://www.salesforce.com/company/legal/agreements/",
       "content_hash": "8f7fe22ff5b772f9",
       "size_bytes": 5152,
-      "created_at": "2026-01-02T20:52:40.037566",
+      "created_at": "2026-01-02T20:59:20.816704",
       "semantic_tags": [
         "heroku",
         "legal",
@@ -3019,7 +2672,7 @@
       "file_path": "https://vercel.com/legal/terms",
       "content_hash": "3ba64dc6f68536a1",
       "size_bytes": 41425,
-      "created_at": "2026-01-02T20:52:40.037707",
+      "created_at": "2026-01-02T20:59:20.816851",
       "semantic_tags": [
         "governing_law",
         "indemnification",
@@ -3045,7 +2698,7 @@
       "file_path": "https://www.netlify.com/legal/terms-of-use/",
       "content_hash": "14e91d4b058a9f5b",
       "size_bytes": 11114,
-      "created_at": "2026-01-02T20:52:40.037810",
+      "created_at": "2026-01-02T20:59:20.816953",
       "semantic_tags": [
         "governing_law",
         "indemnification",
@@ -3071,7 +2724,7 @@
       "file_path": "template://privacy/datacorp",
       "content_hash": "3b6c04529f915994",
       "size_bytes": 2523,
-      "created_at": "2026-01-02T20:52:40.037866",
+      "created_at": "2026-01-02T20:59:20.817000",
       "semantic_tags": [
         "datacorp_(template)",
         "legal",
@@ -3092,7 +2745,7 @@
       "file_path": "template://privacy/privacyfirst",
       "content_hash": "e070110e2bd3c6db",
       "size_bytes": 2531,
-      "created_at": "2026-01-02T20:52:40.037879",
+      "created_at": "2026-01-02T20:59:20.817009",
       "semantic_tags": [
         "legal",
         "privacy",
@@ -3113,7 +2766,7 @@
       "file_path": "template://privacy/securecloud",
       "content_hash": "a28c8276fd4ebaee",
       "size_bytes": 2529,
-      "created_at": "2026-01-02T20:52:40.037887",
+      "created_at": "2026-01-02T20:59:20.817016",
       "semantic_tags": [
         "legal",
         "privacy",
@@ -3134,7 +2787,7 @@
       "file_path": "https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement",
       "content_hash": "ed9b7ad2c44a1334",
       "size_bytes": 41666,
-      "created_at": "2026-01-02T20:52:40.038125",
+      "created_at": "2026-01-02T20:59:20.817224",
       "semantic_tags": [
         "github_privacy",
         "governing_law",
@@ -3157,7 +2810,7 @@
       "file_path": "https://www.cloudflare.com/privacypolicy/",
       "content_hash": "84524e6b2c251285",
       "size_bytes": 48247,
-      "created_at": "2026-01-02T20:52:40.038420",
+      "created_at": "2026-01-02T20:59:20.817526",
       "semantic_tags": [
         "cloudflare_privacy",
         "governing_law",
@@ -3179,7 +2832,7 @@
       "file_path": "https://www.mozilla.org/en-US/privacy/",
       "content_hash": "6ff0c0da9d3f8087",
       "size_bytes": 4846,
-      "created_at": "2026-01-02T20:52:40.038527",
+      "created_at": "2026-01-02T20:59:20.817623",
       "semantic_tags": [
         "governing_law",
         "legal",
@@ -3201,7 +2854,7 @@
       "file_path": "synthetic://distractor/distractor_0000",
       "content_hash": "092e0f5a96fd8265",
       "size_bytes": 1192,
-      "created_at": "2026-01-02T20:52:40.038664",
+      "created_at": "2026-01-02T20:59:20.817758",
       "semantic_tags": [
         "distractor",
         "very_different",
@@ -3209,7 +2862,7 @@
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038660",
+        "generated_at": "2026-01-02T20:59:20.817754",
         "similarity_level": "very_different",
         "base_category": "knowledge_base",
         "topic": "tutorial",
@@ -3224,7 +2877,7 @@
       "file_path": "synthetic://distractor/distractor_0001",
       "content_hash": "a64e275d6b54f122",
       "size_bytes": 1612,
-      "created_at": "2026-01-02T20:52:40.038681",
+      "created_at": "2026-01-02T20:59:20.817776",
       "semantic_tags": [
         "distractor",
         "very_different",
@@ -3232,7 +2885,7 @@
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038679",
+        "generated_at": "2026-01-02T20:59:20.817774",
         "similarity_level": "very_different",
         "base_category": "legal",
         "topic": "copyright",
@@ -3247,7 +2900,7 @@
       "file_path": "synthetic://distractor/distractor_0002",
       "content_hash": "c54639fe62c1e98c",
       "size_bytes": 1846,
-      "created_at": "2026-01-02T20:52:40.038695",
+      "created_at": "2026-01-02T20:59:20.817790",
       "semantic_tags": [
         "distractor",
         "very_different",
@@ -3255,7 +2908,7 @@
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038694",
+        "generated_at": "2026-01-02T20:59:20.817789",
         "similarity_level": "very_different",
         "base_category": "knowledge_base",
         "topic": "reference",
@@ -3266,57 +2919,11 @@
       "doc_id": "distractor_0003",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_technical",
-      "file_path": "synthetic://distractor/distractor_0003",
-      "content_hash": "851668f72bdf8801",
-      "size_bytes": 1199,
-      "created_at": "2026-01-02T20:52:40.038705",
-      "semantic_tags": [
-        "distractor",
-        "very_different",
-        "compiler"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038704",
-        "similarity_level": "very_different",
-        "base_category": "technical",
-        "topic": "compiler",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0004",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_technical",
-      "file_path": "synthetic://distractor/distractor_0004",
-      "content_hash": "2eb9af622ccd508d",
-      "size_bytes": 1854,
-      "created_at": "2026-01-02T20:52:40.038716",
-      "semantic_tags": [
-        "distractor",
-        "very_different",
-        "cloud"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038715",
-        "similarity_level": "very_different",
-        "base_category": "technical",
-        "topic": "cloud",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0005",
-      "source_type": "synthetic",
-      "category": "synthetic",
       "domain": "synthetic_conversational",
-      "file_path": "synthetic://distractor/distractor_0005",
-      "content_hash": "3cc8a4c356d3d677",
-      "size_bytes": 918,
-      "created_at": "2026-01-02T20:52:40.038724",
+      "file_path": "synthetic://distractor/distractor_0003",
+      "content_hash": "9836dfacc4c9329e",
+      "size_bytes": 1196,
+      "created_at": "2026-01-02T20:59:20.817801",
       "semantic_tags": [
         "distractor",
         "very_different",
@@ -3324,7 +2931,7 @@
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038724",
+        "generated_at": "2026-01-02T20:59:20.817800",
         "similarity_level": "very_different",
         "base_category": "conversational",
         "topic": "interview",
@@ -3332,14 +2939,37 @@
       }
     },
     {
-      "doc_id": "distractor_0006",
+      "doc_id": "distractor_0004",
+      "source_type": "synthetic",
+      "category": "synthetic",
+      "domain": "synthetic_conversational",
+      "file_path": "synthetic://distractor/distractor_0004",
+      "content_hash": "c87d4ca24e530da9",
+      "size_bytes": 1779,
+      "created_at": "2026-01-02T20:59:20.817813",
+      "semantic_tags": [
+        "distractor",
+        "very_different",
+        "forum"
+      ],
+      "is_distractor": true,
+      "metadata": {
+        "generated_at": "2026-01-02T20:59:20.817812",
+        "similarity_level": "very_different",
+        "base_category": "conversational",
+        "topic": "forum",
+        "generator": "template"
+      }
+    },
+    {
+      "doc_id": "distractor_0005",
       "source_type": "synthetic",
       "category": "synthetic",
       "domain": "synthetic_technical",
-      "file_path": "synthetic://distractor/distractor_0006",
-      "content_hash": "03653adb441928d4",
-      "size_bytes": 1516,
-      "created_at": "2026-01-02T20:52:40.038733",
+      "file_path": "synthetic://distractor/distractor_0005",
+      "content_hash": "b9ddcc2502a0ca0e",
+      "size_bytes": 914,
+      "created_at": "2026-01-02T20:59:20.817822",
       "semantic_tags": [
         "distractor",
         "very_different",
@@ -3347,7 +2977,7 @@
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038732",
+        "generated_at": "2026-01-02T20:59:20.817821",
         "similarity_level": "very_different",
         "base_category": "technical",
         "topic": "compiler",
@@ -3355,25 +2985,48 @@
       }
     },
     {
-      "doc_id": "distractor_0007",
+      "doc_id": "distractor_0006",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_technical",
-      "file_path": "synthetic://distractor/distractor_0007",
-      "content_hash": "8acd023b959249bf",
-      "size_bytes": 1538,
-      "created_at": "2026-01-02T20:52:40.038749",
+      "domain": "synthetic_conversational",
+      "file_path": "synthetic://distractor/distractor_0006",
+      "content_hash": "e53168e08a790cf2",
+      "size_bytes": 1521,
+      "created_at": "2026-01-02T20:59:20.817831",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "cloud"
+        "interview"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038744",
+        "generated_at": "2026-01-02T20:59:20.817830",
         "similarity_level": "very_different",
-        "base_category": "technical",
-        "topic": "cloud",
+        "base_category": "conversational",
+        "topic": "interview",
+        "generator": "template"
+      }
+    },
+    {
+      "doc_id": "distractor_0007",
+      "source_type": "synthetic",
+      "category": "synthetic",
+      "domain": "synthetic_conversational",
+      "file_path": "synthetic://distractor/distractor_0007",
+      "content_hash": "720e3486e31616e4",
+      "size_bytes": 1482,
+      "created_at": "2026-01-02T20:59:20.817843",
+      "semantic_tags": [
+        "distractor",
+        "very_different",
+        "forum"
+      ],
+      "is_distractor": true,
+      "metadata": {
+        "generated_at": "2026-01-02T20:59:20.817842",
+        "similarity_level": "very_different",
+        "base_category": "conversational",
+        "topic": "forum",
         "generator": "template"
       }
     },
@@ -3385,7 +3038,7 @@
       "file_path": "synthetic://distractor/distractor_0008",
       "content_hash": "1fb3e4f2ed235136",
       "size_bytes": 1195,
-      "created_at": "2026-01-02T20:52:40.038757",
+      "created_at": "2026-01-02T20:59:20.817852",
       "semantic_tags": [
         "distractor",
         "very_different",
@@ -3393,7 +3046,7 @@
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038756",
+        "generated_at": "2026-01-02T20:59:20.817851",
         "similarity_level": "very_different",
         "base_category": "knowledge_base",
         "topic": "tutorial",
@@ -3408,7 +3061,7 @@
       "file_path": "synthetic://distractor/distractor_0009",
       "content_hash": "4627f28b8670b0c0",
       "size_bytes": 1501,
-      "created_at": "2026-01-02T20:52:40.038765",
+      "created_at": "2026-01-02T20:59:20.817861",
       "semantic_tags": [
         "distractor",
         "very_different",
@@ -3416,7 +3069,7 @@
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038765",
+        "generated_at": "2026-01-02T20:59:20.817860",
         "similarity_level": "very_different",
         "base_category": "knowledge_base",
         "topic": "tutorial",
@@ -3427,22 +3080,22 @@
       "doc_id": "distractor_0010",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_technical",
+      "domain": "synthetic_conversational",
       "file_path": "synthetic://distractor/distractor_0010",
-      "content_hash": "24e5bbe6cced3022",
-      "size_bytes": 895,
-      "created_at": "2026-01-02T20:52:40.038773",
+      "content_hash": "f7703d8c0362d8ab",
+      "size_bytes": 897,
+      "created_at": "2026-01-02T20:59:20.817869",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "database"
+        "support"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038772",
+        "generated_at": "2026-01-02T20:59:20.817868",
         "similarity_level": "very_different",
-        "base_category": "technical",
-        "topic": "database",
+        "base_category": "conversational",
+        "topic": "support",
         "generator": "template"
       }
     },
@@ -3450,22 +3103,22 @@
       "doc_id": "distractor_0011",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_knowledge_base",
+      "domain": "synthetic_legal",
       "file_path": "synthetic://distractor/distractor_0011",
-      "content_hash": "6067f3d040784da7",
-      "size_bytes": 882,
-      "created_at": "2026-01-02T20:52:40.038780",
+      "content_hash": "5299e6353b48231f",
+      "size_bytes": 1839,
+      "created_at": "2026-01-02T20:59:20.817880",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "faq"
+        "contract"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038779",
+        "generated_at": "2026-01-02T20:59:20.817879",
         "similarity_level": "very_different",
-        "base_category": "knowledge_base",
-        "topic": "faq",
+        "base_category": "legal",
+        "topic": "contract",
         "generator": "template"
       }
     },
@@ -3475,20 +3128,20 @@
       "category": "synthetic",
       "domain": "synthetic_knowledge_base",
       "file_path": "synthetic://distractor/distractor_0012",
-      "content_hash": "f38a0ee064a4ba9c",
-      "size_bytes": 1519,
-      "created_at": "2026-01-02T20:52:40.038789",
+      "content_hash": "daf18868fb218a37",
+      "size_bytes": 892,
+      "created_at": "2026-01-02T20:59:20.817887",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "howto"
+        "faq"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038788",
+        "generated_at": "2026-01-02T20:59:20.817886",
         "similarity_level": "very_different",
         "base_category": "knowledge_base",
-        "topic": "howto",
+        "topic": "faq",
         "generator": "template"
       }
     },
@@ -3496,22 +3149,22 @@
       "doc_id": "distractor_0013",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_conversational",
+      "domain": "synthetic_technical",
       "file_path": "synthetic://distractor/distractor_0013",
-      "content_hash": "d83e45dfe0433506",
-      "size_bytes": 1127,
-      "created_at": "2026-01-02T20:52:40.038797",
+      "content_hash": "ae91ed0abc409778",
+      "size_bytes": 1793,
+      "created_at": "2026-01-02T20:59:20.817898",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "chat"
+        "networking"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038796",
+        "generated_at": "2026-01-02T20:59:20.817897",
         "similarity_level": "very_different",
-        "base_category": "conversational",
-        "topic": "chat",
+        "base_category": "technical",
+        "topic": "networking",
         "generator": "template"
       }
     },
@@ -3519,22 +3172,22 @@
       "doc_id": "distractor_0014",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_technical",
+      "domain": "synthetic_knowledge_base",
       "file_path": "synthetic://distractor/distractor_0014",
-      "content_hash": "b88b3cd2b3eb434d",
-      "size_bytes": 1294,
-      "created_at": "2026-01-02T20:52:40.038805",
+      "content_hash": "5cd1bd5992b743ba",
+      "size_bytes": 1502,
+      "created_at": "2026-01-02T20:59:20.817908",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "security"
+        "howto"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038804",
+        "generated_at": "2026-01-02T20:59:20.817907",
         "similarity_level": "very_different",
-        "base_category": "technical",
-        "topic": "security",
+        "base_category": "knowledge_base",
+        "topic": "howto",
         "generator": "template"
       }
     },
@@ -3542,22 +3195,22 @@
       "doc_id": "distractor_0015",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_conversational",
+      "domain": "synthetic_legal",
       "file_path": "synthetic://distractor/distractor_0015",
-      "content_hash": "53e737b2e761eb30",
-      "size_bytes": 1504,
-      "created_at": "2026-01-02T20:52:40.038814",
+      "content_hash": "570b0d7bb6653788",
+      "size_bytes": 933,
+      "created_at": "2026-01-02T20:59:20.817915",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "email"
+        "litigation"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038813",
+        "generated_at": "2026-01-02T20:59:20.817914",
         "similarity_level": "very_different",
-        "base_category": "conversational",
-        "topic": "email",
+        "base_category": "legal",
+        "topic": "litigation",
         "generator": "template"
       }
     },
@@ -3565,22 +3218,22 @@
       "doc_id": "distractor_0016",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_technical",
+      "domain": "synthetic_knowledge_base",
       "file_path": "synthetic://distractor/distractor_0016",
-      "content_hash": "7d58cabd617d1be9",
-      "size_bytes": 1537,
-      "created_at": "2026-01-02T20:52:40.038824",
+      "content_hash": "8b7c9ea85077acf8",
+      "size_bytes": 1290,
+      "created_at": "2026-01-02T20:59:20.817924",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "compiler"
+        "troubleshooting"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038823",
+        "generated_at": "2026-01-02T20:59:20.817922",
         "similarity_level": "very_different",
-        "base_category": "technical",
-        "topic": "compiler",
+        "base_category": "knowledge_base",
+        "topic": "troubleshooting",
         "generator": "template"
       }
     },
@@ -3590,20 +3243,20 @@
       "category": "synthetic",
       "domain": "synthetic_technical",
       "file_path": "synthetic://distractor/distractor_0017",
-      "content_hash": "fcf4f68574be86e0",
-      "size_bytes": 1248,
-      "created_at": "2026-01-02T20:52:40.038831",
+      "content_hash": "159dac7f2dcf613a",
+      "size_bytes": 1789,
+      "created_at": "2026-01-02T20:59:20.817935",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "security"
+        "networking"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038830",
+        "generated_at": "2026-01-02T20:59:20.817934",
         "similarity_level": "very_different",
         "base_category": "technical",
-        "topic": "security",
+        "topic": "networking",
         "generator": "template"
       }
     },
@@ -3613,9 +3266,9 @@
       "category": "synthetic",
       "domain": "synthetic_legal",
       "file_path": "synthetic://distractor/distractor_0018",
-      "content_hash": "ce186c25e3cc25fa",
-      "size_bytes": 932,
-      "created_at": "2026-01-02T20:52:40.038837",
+      "content_hash": "088729482d13ff8b",
+      "size_bytes": 1925,
+      "created_at": "2026-01-02T20:59:20.817945",
       "semantic_tags": [
         "distractor",
         "very_different",
@@ -3623,7 +3276,7 @@
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038836",
+        "generated_at": "2026-01-02T20:59:20.817944",
         "similarity_level": "very_different",
         "base_category": "legal",
         "topic": "employment",
@@ -3634,22 +3287,22 @@
       "doc_id": "distractor_0019",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_technical",
+      "domain": "synthetic_legal",
       "file_path": "synthetic://distractor/distractor_0019",
-      "content_hash": "dc3c329d4e7b5693",
-      "size_bytes": 900,
-      "created_at": "2026-01-02T20:52:40.038843",
+      "content_hash": "42b4de8412c889af",
+      "size_bytes": 1584,
+      "created_at": "2026-01-02T20:59:20.817955",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "compiler"
+        "employment"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038842",
+        "generated_at": "2026-01-02T20:59:20.817953",
         "similarity_level": "very_different",
-        "base_category": "technical",
-        "topic": "compiler",
+        "base_category": "legal",
+        "topic": "employment",
         "generator": "template"
       }
     },
@@ -3659,20 +3312,20 @@
       "category": "synthetic",
       "domain": "synthetic_conversational",
       "file_path": "synthetic://distractor/distractor_0020",
-      "content_hash": "faeee433465f66b3",
-      "size_bytes": 889,
-      "created_at": "2026-01-02T20:52:40.038850",
+      "content_hash": "56d77af7e7281494",
+      "size_bytes": 1215,
+      "created_at": "2026-01-02T20:59:20.817963",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "support"
+        "interview"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038849",
+        "generated_at": "2026-01-02T20:59:20.817962",
         "similarity_level": "very_different",
         "base_category": "conversational",
-        "topic": "support",
+        "topic": "interview",
         "generator": "template"
       }
     },
@@ -3682,55 +3335,9 @@
       "category": "synthetic",
       "domain": "synthetic_legal",
       "file_path": "synthetic://distractor/distractor_0021",
-      "content_hash": "42b4de8412c889af",
-      "size_bytes": 1584,
-      "created_at": "2026-01-02T20:52:40.038857",
-      "semantic_tags": [
-        "distractor",
-        "very_different",
-        "employment"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038856",
-        "similarity_level": "very_different",
-        "base_category": "legal",
-        "topic": "employment",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0022",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_technical",
-      "file_path": "synthetic://distractor/distractor_0022",
-      "content_hash": "9baabf7244bc84ef",
-      "size_bytes": 1220,
-      "created_at": "2026-01-02T20:52:40.038865",
-      "semantic_tags": [
-        "distractor",
-        "very_different",
-        "compiler"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038864",
-        "similarity_level": "very_different",
-        "base_category": "technical",
-        "topic": "compiler",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0023",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_legal",
-      "file_path": "synthetic://distractor/distractor_0023",
       "content_hash": "0bf8fdb23e35e678",
       "size_bytes": 1826,
-      "created_at": "2026-01-02T20:52:40.038876",
+      "created_at": "2026-01-02T20:59:20.817973",
       "semantic_tags": [
         "distractor",
         "very_different",
@@ -3738,10 +3345,56 @@
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038874",
+        "generated_at": "2026-01-02T20:59:20.817972",
         "similarity_level": "very_different",
         "base_category": "legal",
         "topic": "privacy",
+        "generator": "template"
+      }
+    },
+    {
+      "doc_id": "distractor_0022",
+      "source_type": "synthetic",
+      "category": "synthetic",
+      "domain": "synthetic_conversational",
+      "file_path": "synthetic://distractor/distractor_0022",
+      "content_hash": "28b7258ba7e58a0b",
+      "size_bytes": 1196,
+      "created_at": "2026-01-02T20:59:20.817982",
+      "semantic_tags": [
+        "distractor",
+        "very_different",
+        "email"
+      ],
+      "is_distractor": true,
+      "metadata": {
+        "generated_at": "2026-01-02T20:59:20.817981",
+        "similarity_level": "very_different",
+        "base_category": "conversational",
+        "topic": "email",
+        "generator": "template"
+      }
+    },
+    {
+      "doc_id": "distractor_0023",
+      "source_type": "synthetic",
+      "category": "synthetic",
+      "domain": "synthetic_conversational",
+      "file_path": "synthetic://distractor/distractor_0023",
+      "content_hash": "02a0bbb5b06401c5",
+      "size_bytes": 1755,
+      "created_at": "2026-01-02T20:59:20.817992",
+      "semantic_tags": [
+        "distractor",
+        "very_different",
+        "support"
+      ],
+      "is_distractor": true,
+      "metadata": {
+        "generated_at": "2026-01-02T20:59:20.817991",
+        "similarity_level": "very_different",
+        "base_category": "conversational",
+        "topic": "support",
         "generator": "template"
       }
     },
@@ -3751,20 +3404,20 @@
       "category": "synthetic",
       "domain": "synthetic_technical",
       "file_path": "synthetic://distractor/distractor_0024",
-      "content_hash": "3ed9ac5d263be92c",
-      "size_bytes": 1283,
-      "created_at": "2026-01-02T20:52:40.038883",
+      "content_hash": "6e96820dd9dca0e9",
+      "size_bytes": 1852,
+      "created_at": "2026-01-02T20:59:20.818004",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "security"
+        "cloud"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038883",
+        "generated_at": "2026-01-02T20:59:20.818003",
         "similarity_level": "very_different",
         "base_category": "technical",
-        "topic": "security",
+        "topic": "cloud",
         "generator": "template"
       }
     },
@@ -3772,22 +3425,22 @@
       "doc_id": "distractor_0025",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_technical",
+      "domain": "synthetic_knowledge_base",
       "file_path": "synthetic://distractor/distractor_0025",
-      "content_hash": "069bc77c18c64ca0",
-      "size_bytes": 1770,
-      "created_at": "2026-01-02T20:52:40.038894",
+      "content_hash": "b8d2e9ca626dd5c7",
+      "size_bytes": 971,
+      "created_at": "2026-01-02T20:59:20.818010",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "database"
+        "troubleshooting"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038893",
+        "generated_at": "2026-01-02T20:59:20.818009",
         "similarity_level": "very_different",
-        "base_category": "technical",
-        "topic": "database",
+        "base_category": "knowledge_base",
+        "topic": "troubleshooting",
         "generator": "template"
       }
     },
@@ -3795,22 +3448,22 @@
       "doc_id": "distractor_0026",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_legal",
+      "domain": "synthetic_conversational",
       "file_path": "synthetic://distractor/distractor_0026",
-      "content_hash": "2d5a27e5b8b6fcd3",
-      "size_bytes": 1943,
-      "created_at": "2026-01-02T20:52:40.038904",
+      "content_hash": "632d519adc0e1b8a",
+      "size_bytes": 1478,
+      "created_at": "2026-01-02T20:59:20.818019",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "copyright"
+        "forum"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038903",
+        "generated_at": "2026-01-02T20:59:20.818018",
         "similarity_level": "very_different",
-        "base_category": "legal",
-        "topic": "copyright",
+        "base_category": "conversational",
+        "topic": "forum",
         "generator": "template"
       }
     },
@@ -3818,22 +3471,22 @@
       "doc_id": "distractor_0027",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_legal",
+      "domain": "synthetic_technical",
       "file_path": "synthetic://distractor/distractor_0027",
-      "content_hash": "2ac26da5037b753e",
-      "size_bytes": 1545,
-      "created_at": "2026-01-02T20:52:40.038914",
+      "content_hash": "30b6a6a12605f379",
+      "size_bytes": 1499,
+      "created_at": "2026-01-02T20:59:20.818028",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "contract"
+        "compiler"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038913",
+        "generated_at": "2026-01-02T20:59:20.818027",
         "similarity_level": "very_different",
-        "base_category": "legal",
-        "topic": "contract",
+        "base_category": "technical",
+        "topic": "compiler",
         "generator": "template"
       }
     },
@@ -3841,22 +3494,22 @@
       "doc_id": "distractor_0028",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_knowledge_base",
+      "domain": "synthetic_technical",
       "file_path": "synthetic://distractor/distractor_0028",
-      "content_hash": "687156463ba6a178",
-      "size_bytes": 1500,
-      "created_at": "2026-01-02T20:52:40.038922",
+      "content_hash": "9f81ec306cf42afb",
+      "size_bytes": 1504,
+      "created_at": "2026-01-02T20:59:20.818038",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "howto"
+        "networking"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038922",
+        "generated_at": "2026-01-02T20:59:20.818037",
         "similarity_level": "very_different",
-        "base_category": "knowledge_base",
-        "topic": "howto",
+        "base_category": "technical",
+        "topic": "networking",
         "generator": "template"
       }
     },
@@ -3866,20 +3519,20 @@
       "category": "synthetic",
       "domain": "synthetic_legal",
       "file_path": "synthetic://distractor/distractor_0029",
-      "content_hash": "fb1db74422249579",
-      "size_bytes": 1505,
-      "created_at": "2026-01-02T20:52:40.038931",
+      "content_hash": "b512a2b7384caea3",
+      "size_bytes": 905,
+      "created_at": "2026-01-02T20:59:20.818045",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "contract"
+        "privacy"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038930",
+        "generated_at": "2026-01-02T20:59:20.818044",
         "similarity_level": "very_different",
         "base_category": "legal",
-        "topic": "contract",
+        "topic": "privacy",
         "generator": "template"
       }
     },
@@ -3889,20 +3542,20 @@
       "category": "synthetic",
       "domain": "synthetic_legal",
       "file_path": "synthetic://distractor/distractor_0030",
-      "content_hash": "3b84bf04123e0242",
-      "size_bytes": 1910,
-      "created_at": "2026-01-02T20:52:40.038940",
+      "content_hash": "1514f554e70b9ad3",
+      "size_bytes": 1554,
+      "created_at": "2026-01-02T20:59:20.818054",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "employment"
+        "litigation"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038939",
+        "generated_at": "2026-01-02T20:59:20.818053",
         "similarity_level": "very_different",
         "base_category": "legal",
-        "topic": "employment",
+        "topic": "litigation",
         "generator": "template"
       }
     },
@@ -3912,20 +3565,20 @@
       "category": "synthetic",
       "domain": "synthetic_conversational",
       "file_path": "synthetic://distractor/distractor_0031",
-      "content_hash": "a8f7569606c5cbbb",
-      "size_bytes": 1118,
-      "created_at": "2026-01-02T20:52:40.038947",
+      "content_hash": "a4b55a019d6a16cf",
+      "size_bytes": 1195,
+      "created_at": "2026-01-02T20:59:20.818062",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "chat"
+        "email"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038946",
+        "generated_at": "2026-01-02T20:59:20.818061",
         "similarity_level": "very_different",
         "base_category": "conversational",
-        "topic": "chat",
+        "topic": "email",
         "generator": "template"
       }
     },
@@ -3933,22 +3586,22 @@
       "doc_id": "distractor_0032",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_technical",
+      "domain": "synthetic_knowledge_base",
       "file_path": "synthetic://distractor/distractor_0032",
-      "content_hash": "381c3a0afc3a7131",
-      "size_bytes": 1303,
-      "created_at": "2026-01-02T20:52:40.038955",
+      "content_hash": "b34d92ad17e986a1",
+      "size_bytes": 949,
+      "created_at": "2026-01-02T20:59:20.818069",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "security"
+        "troubleshooting"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038954",
+        "generated_at": "2026-01-02T20:59:20.818068",
         "similarity_level": "very_different",
-        "base_category": "technical",
-        "topic": "security",
+        "base_category": "knowledge_base",
+        "topic": "troubleshooting",
         "generator": "template"
       }
     },
@@ -3956,22 +3609,22 @@
       "doc_id": "distractor_0033",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_conversational",
+      "domain": "synthetic_knowledge_base",
       "file_path": "synthetic://distractor/distractor_0033",
-      "content_hash": "d6ff11cf2313efc5",
-      "size_bytes": 1489,
-      "created_at": "2026-01-02T20:52:40.038964",
+      "content_hash": "3666544beed31a9e",
+      "size_bytes": 1188,
+      "created_at": "2026-01-02T20:59:20.818077",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "support"
+        "howto"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038963",
+        "generated_at": "2026-01-02T20:59:20.818076",
         "similarity_level": "very_different",
-        "base_category": "conversational",
-        "topic": "support",
+        "base_category": "knowledge_base",
+        "topic": "howto",
         "generator": "template"
       }
     },
@@ -3979,22 +3632,22 @@
       "doc_id": "distractor_0034",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_technical",
+      "domain": "synthetic_conversational",
       "file_path": "synthetic://distractor/distractor_0034",
-      "content_hash": "d39601af1414cfcd",
-      "size_bytes": 893,
-      "created_at": "2026-01-02T20:52:40.038970",
+      "content_hash": "8103578f3681fe93",
+      "size_bytes": 857,
+      "created_at": "2026-01-02T20:59:20.818083",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "networking"
+        "chat"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.038969",
+        "generated_at": "2026-01-02T20:59:20.818082",
         "similarity_level": "very_different",
-        "base_category": "technical",
-        "topic": "networking",
+        "base_category": "conversational",
+        "topic": "chat",
         "generator": "template"
       }
     },
@@ -4002,22 +3655,22 @@
       "doc_id": "distractor_0035",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_conversational",
+      "domain": "synthetic_legal",
       "file_path": "synthetic://distractor/distractor_0035",
-      "content_hash": "696c346c7934e9bc",
-      "size_bytes": 931,
-      "created_at": "2026-01-02T20:52:40.039067",
+      "content_hash": "7676c5cbcf452ebe",
+      "size_bytes": 1557,
+      "created_at": "2026-01-02T20:59:20.818092",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "interview"
+        "contract"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039066",
+        "generated_at": "2026-01-02T20:59:20.818091",
         "similarity_level": "very_different",
-        "base_category": "conversational",
-        "topic": "interview",
+        "base_category": "legal",
+        "topic": "contract",
         "generator": "template"
       }
     },
@@ -4025,22 +3678,22 @@
       "doc_id": "distractor_0036",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_technical",
+      "domain": "synthetic_legal",
       "file_path": "synthetic://distractor/distractor_0036",
-      "content_hash": "41273211e860d1ec",
-      "size_bytes": 1741,
-      "created_at": "2026-01-02T20:52:40.039077",
+      "content_hash": "cb534e7e133394fc",
+      "size_bytes": 1844,
+      "created_at": "2026-01-02T20:59:20.818102",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "database"
+        "contract"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039076",
+        "generated_at": "2026-01-02T20:59:20.818101",
         "similarity_level": "very_different",
-        "base_category": "technical",
-        "topic": "database",
+        "base_category": "legal",
+        "topic": "contract",
         "generator": "template"
       }
     },
@@ -4048,22 +3701,22 @@
       "doc_id": "distractor_0037",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_legal",
+      "domain": "synthetic_technical",
       "file_path": "synthetic://distractor/distractor_0037",
-      "content_hash": "9d7132f845cf98cd",
-      "size_bytes": 1910,
-      "created_at": "2026-01-02T20:52:40.039087",
+      "content_hash": "379618cf331776bc",
+      "size_bytes": 1490,
+      "created_at": "2026-01-02T20:59:20.818112",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "employment"
+        "database"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039086",
+        "generated_at": "2026-01-02T20:59:20.818111",
         "similarity_level": "very_different",
-        "base_category": "legal",
-        "topic": "employment",
+        "base_category": "technical",
+        "topic": "database",
         "generator": "template"
       }
     },
@@ -4073,9 +3726,9 @@
       "category": "synthetic",
       "domain": "synthetic_legal",
       "file_path": "synthetic://distractor/distractor_0038",
-      "content_hash": "a085813370423a3d",
-      "size_bytes": 1518,
-      "created_at": "2026-01-02T20:52:40.039096",
+      "content_hash": "ef51c4c63546610d",
+      "size_bytes": 1554,
+      "created_at": "2026-01-02T20:59:20.818120",
       "semantic_tags": [
         "distractor",
         "very_different",
@@ -4083,7 +3736,7 @@
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039095",
+        "generated_at": "2026-01-02T20:59:20.818119",
         "similarity_level": "very_different",
         "base_category": "legal",
         "topic": "contract",
@@ -4094,22 +3747,22 @@
       "doc_id": "distractor_0039",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_knowledge_base",
+      "domain": "synthetic_conversational",
       "file_path": "synthetic://distractor/distractor_0039",
-      "content_hash": "86e009ac24506723",
-      "size_bytes": 1784,
-      "created_at": "2026-01-02T20:52:40.039105",
+      "content_hash": "9005d140e9226fc0",
+      "size_bytes": 1485,
+      "created_at": "2026-01-02T20:59:20.818129",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "howto"
+        "forum"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039104",
+        "generated_at": "2026-01-02T20:59:20.818128",
         "similarity_level": "very_different",
-        "base_category": "knowledge_base",
-        "topic": "howto",
+        "base_category": "conversational",
+        "topic": "forum",
         "generator": "template"
       }
     },
@@ -4117,22 +3770,22 @@
       "doc_id": "distractor_0040",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_knowledge_base",
+      "domain": "synthetic_conversational",
       "file_path": "synthetic://distractor/distractor_0040",
-      "content_hash": "63bb6e07b5c6b045",
-      "size_bytes": 1471,
-      "created_at": "2026-01-02T20:52:40.039114",
+      "content_hash": "e5add3627e0fbf79",
+      "size_bytes": 1472,
+      "created_at": "2026-01-02T20:59:20.818137",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "faq"
+        "forum"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039113",
+        "generated_at": "2026-01-02T20:59:20.818137",
         "similarity_level": "very_different",
-        "base_category": "knowledge_base",
-        "topic": "faq",
+        "base_category": "conversational",
+        "topic": "forum",
         "generator": "template"
       }
     },
@@ -4140,22 +3793,22 @@
       "doc_id": "distractor_0041",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_legal",
+      "domain": "synthetic_technical",
       "file_path": "synthetic://distractor/distractor_0041",
-      "content_hash": "8de1efc613dd1d8f",
-      "size_bytes": 1901,
-      "created_at": "2026-01-02T20:52:40.039123",
+      "content_hash": "56234a3c9c59b5a5",
+      "size_bytes": 884,
+      "created_at": "2026-01-02T20:59:20.818144",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "copyright"
+        "database"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039123",
+        "generated_at": "2026-01-02T20:59:20.818143",
         "similarity_level": "very_different",
-        "base_category": "legal",
-        "topic": "copyright",
+        "base_category": "technical",
+        "topic": "database",
         "generator": "template"
       }
     },
@@ -4163,22 +3816,22 @@
       "doc_id": "distractor_0042",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_technical",
+      "domain": "synthetic_knowledge_base",
       "file_path": "synthetic://distractor/distractor_0042",
-      "content_hash": "e2081b2ac1244134",
-      "size_bytes": 892,
-      "created_at": "2026-01-02T20:52:40.039130",
+      "content_hash": "15a5308ebed4c220",
+      "size_bytes": 1531,
+      "created_at": "2026-01-02T20:59:20.818152",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "compiler"
+        "troubleshooting"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039129",
+        "generated_at": "2026-01-02T20:59:20.818151",
         "similarity_level": "very_different",
-        "base_category": "technical",
-        "topic": "compiler",
+        "base_category": "knowledge_base",
+        "topic": "troubleshooting",
         "generator": "template"
       }
     },
@@ -4186,22 +3839,22 @@
       "doc_id": "distractor_0043",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_conversational",
+      "domain": "synthetic_technical",
       "file_path": "synthetic://distractor/distractor_0043",
-      "content_hash": "5916836a3121b50e",
-      "size_bytes": 907,
-      "created_at": "2026-01-02T20:52:40.039136",
+      "content_hash": "13d2a7879defa91b",
+      "size_bytes": 1926,
+      "created_at": "2026-01-02T20:59:20.818271",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "interview"
+        "security"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039136",
+        "generated_at": "2026-01-02T20:59:20.818270",
         "similarity_level": "very_different",
-        "base_category": "conversational",
-        "topic": "interview",
+        "base_category": "technical",
+        "topic": "security",
         "generator": "template"
       }
     },
@@ -4211,20 +3864,20 @@
       "category": "synthetic",
       "domain": "synthetic_technical",
       "file_path": "synthetic://distractor/distractor_0044",
-      "content_hash": "0044d78470e167f9",
-      "size_bytes": 884,
-      "created_at": "2026-01-02T20:52:40.039142",
+      "content_hash": "b39b01415e77a9f1",
+      "size_bytes": 1783,
+      "created_at": "2026-01-02T20:59:20.818282",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "database"
+        "compiler"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039142",
+        "generated_at": "2026-01-02T20:59:20.818281",
         "similarity_level": "very_different",
         "base_category": "technical",
-        "topic": "database",
+        "topic": "compiler",
         "generator": "template"
       }
     },
@@ -4234,9 +3887,9 @@
       "category": "synthetic",
       "domain": "synthetic_technical",
       "file_path": "synthetic://distractor/distractor_0045",
-      "content_hash": "6dd8f69bf809677d",
-      "size_bytes": 1195,
-      "created_at": "2026-01-02T20:52:40.039150",
+      "content_hash": "b7649535b201a8c5",
+      "size_bytes": 910,
+      "created_at": "2026-01-02T20:59:20.818289",
       "semantic_tags": [
         "distractor",
         "very_different",
@@ -4244,7 +3897,7 @@
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039149",
+        "generated_at": "2026-01-02T20:59:20.818288",
         "similarity_level": "very_different",
         "base_category": "technical",
         "topic": "networking",
@@ -4255,22 +3908,22 @@
       "doc_id": "distractor_0046",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_knowledge_base",
+      "domain": "synthetic_conversational",
       "file_path": "synthetic://distractor/distractor_0046",
-      "content_hash": "98a47a4339db96fd",
-      "size_bytes": 1523,
-      "created_at": "2026-01-02T20:52:40.039158",
+      "content_hash": "52e6c11f74ef72a5",
+      "size_bytes": 1528,
+      "created_at": "2026-01-02T20:59:20.818298",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "reference"
+        "interview"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039157",
+        "generated_at": "2026-01-02T20:59:20.818297",
         "similarity_level": "very_different",
-        "base_category": "knowledge_base",
-        "topic": "reference",
+        "base_category": "conversational",
+        "topic": "interview",
         "generator": "template"
       }
     },
@@ -4278,22 +3931,22 @@
       "doc_id": "distractor_0047",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_legal",
+      "domain": "synthetic_technical",
       "file_path": "synthetic://distractor/distractor_0047",
-      "content_hash": "5b3f8c9d31b9cff7",
-      "size_bytes": 1614,
-      "created_at": "2026-01-02T20:52:40.039166",
+      "content_hash": "1856f009d4553f5b",
+      "size_bytes": 1508,
+      "created_at": "2026-01-02T20:59:20.818307",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "employment"
+        "compiler"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039166",
+        "generated_at": "2026-01-02T20:59:20.818306",
         "similarity_level": "very_different",
-        "base_category": "legal",
-        "topic": "employment",
+        "base_category": "technical",
+        "topic": "compiler",
         "generator": "template"
       }
     },
@@ -4301,22 +3954,22 @@
       "doc_id": "distractor_0048",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_legal",
+      "domain": "synthetic_conversational",
       "file_path": "synthetic://distractor/distractor_0048",
-      "content_hash": "fdc42d541259d09c",
-      "size_bytes": 1295,
-      "created_at": "2026-01-02T20:52:40.039174",
+      "content_hash": "defe2b0c5223ff15",
+      "size_bytes": 1446,
+      "created_at": "2026-01-02T20:59:20.818316",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "copyright"
+        "forum"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039173",
+        "generated_at": "2026-01-02T20:59:20.818315",
         "similarity_level": "very_different",
-        "base_category": "legal",
-        "topic": "copyright",
+        "base_category": "conversational",
+        "topic": "forum",
         "generator": "template"
       }
     },
@@ -4324,22 +3977,22 @@
       "doc_id": "distractor_0049",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_technical",
+      "domain": "synthetic_knowledge_base",
       "file_path": "synthetic://distractor/distractor_0049",
-      "content_hash": "04fdb023eaca6cd8",
-      "size_bytes": 905,
-      "created_at": "2026-01-02T20:52:40.039181",
+      "content_hash": "6b10d43b81738184",
+      "size_bytes": 1238,
+      "created_at": "2026-01-02T20:59:20.818323",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "cloud"
+        "reference"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039180",
+        "generated_at": "2026-01-02T20:59:20.818322",
         "similarity_level": "very_different",
-        "base_category": "technical",
-        "topic": "cloud",
+        "base_category": "knowledge_base",
+        "topic": "reference",
         "generator": "template"
       }
     },
@@ -4349,20 +4002,20 @@
       "category": "synthetic",
       "domain": "synthetic_conversational",
       "file_path": "synthetic://distractor/distractor_0050",
-      "content_hash": "5ae0b4a90994632e",
-      "size_bytes": 1798,
-      "created_at": "2026-01-02T20:52:40.039191",
+      "content_hash": "7e826a7f8415d7b5",
+      "size_bytes": 904,
+      "created_at": "2026-01-02T20:59:20.818329",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "support"
+        "email"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039190",
+        "generated_at": "2026-01-02T20:59:20.818328",
         "similarity_level": "very_different",
         "base_category": "conversational",
-        "topic": "support",
+        "topic": "email",
         "generator": "template"
       }
     },
@@ -4372,32 +4025,9 @@
       "category": "synthetic",
       "domain": "synthetic_technical",
       "file_path": "synthetic://distractor/distractor_0051",
-      "content_hash": "ee86658d264628af",
-      "size_bytes": 1852,
-      "created_at": "2026-01-02T20:52:40.039200",
-      "semantic_tags": [
-        "distractor",
-        "very_different",
-        "cloud"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039200",
-        "similarity_level": "very_different",
-        "base_category": "technical",
-        "topic": "cloud",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0052",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_technical",
-      "file_path": "synthetic://distractor/distractor_0052",
-      "content_hash": "d78a2b22286aaf5d",
-      "size_bytes": 925,
-      "created_at": "2026-01-02T20:52:40.039207",
+      "content_hash": "599c34b010e751fe",
+      "size_bytes": 913,
+      "created_at": "2026-01-02T20:59:20.818335",
       "semantic_tags": [
         "distractor",
         "very_different",
@@ -4405,7 +4035,7 @@
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039206",
+        "generated_at": "2026-01-02T20:59:20.818334",
         "similarity_level": "very_different",
         "base_category": "technical",
         "topic": "networking",
@@ -4413,25 +4043,48 @@
       }
     },
     {
-      "doc_id": "distractor_0053",
+      "doc_id": "distractor_0052",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_technical",
-      "file_path": "synthetic://distractor/distractor_0053",
-      "content_hash": "c0d9febb66eb5899",
-      "size_bytes": 1201,
-      "created_at": "2026-01-02T20:52:40.039214",
+      "domain": "synthetic_knowledge_base",
+      "file_path": "synthetic://distractor/distractor_0052",
+      "content_hash": "7487f663c6a574ed",
+      "size_bytes": 921,
+      "created_at": "2026-01-02T20:59:20.818341",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "database"
+        "reference"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039213",
+        "generated_at": "2026-01-02T20:59:20.818340",
         "similarity_level": "very_different",
-        "base_category": "technical",
-        "topic": "database",
+        "base_category": "knowledge_base",
+        "topic": "reference",
+        "generator": "template"
+      }
+    },
+    {
+      "doc_id": "distractor_0053",
+      "source_type": "synthetic",
+      "category": "synthetic",
+      "domain": "synthetic_knowledge_base",
+      "file_path": "synthetic://distractor/distractor_0053",
+      "content_hash": "6cc6968e1dfa7f66",
+      "size_bytes": 1192,
+      "created_at": "2026-01-02T20:59:20.818349",
+      "semantic_tags": [
+        "distractor",
+        "very_different",
+        "tutorial"
+      ],
+      "is_distractor": true,
+      "metadata": {
+        "generated_at": "2026-01-02T20:59:20.818348",
+        "similarity_level": "very_different",
+        "base_category": "knowledge_base",
+        "topic": "tutorial",
         "generator": "template"
       }
     },
@@ -4439,22 +4092,22 @@
       "doc_id": "distractor_0054",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_legal",
+      "domain": "synthetic_conversational",
       "file_path": "synthetic://distractor/distractor_0054",
-      "content_hash": "233e1868a76e6e2a",
-      "size_bytes": 922,
-      "created_at": "2026-01-02T20:52:40.039220",
+      "content_hash": "adf6260547ef064d",
+      "size_bytes": 1766,
+      "created_at": "2026-01-02T20:59:20.818358",
       "semantic_tags": [
         "distractor",
         "very_different",
-        "litigation"
+        "forum"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039219",
+        "generated_at": "2026-01-02T20:59:20.818357",
         "similarity_level": "very_different",
-        "base_category": "legal",
-        "topic": "litigation",
+        "base_category": "conversational",
+        "topic": "forum",
         "generator": "template"
       }
     },
@@ -4464,20 +4117,20 @@
       "category": "synthetic",
       "domain": "synthetic_knowledge_base",
       "file_path": "synthetic://distractor/distractor_0055",
-      "content_hash": "6cc6968e1dfa7f66",
-      "size_bytes": 1192,
-      "created_at": "2026-01-02T20:52:40.039227",
+      "content_hash": "8107517e07ae57a2",
+      "size_bytes": 1335,
+      "created_at": "2026-01-02T20:59:20.818370",
       "semantic_tags": [
         "distractor",
-        "very_different",
-        "tutorial"
+        "somewhat_similar",
+        "troubleshooting"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039227",
-        "similarity_level": "very_different",
+        "generated_at": "2026-01-02T20:59:20.818369",
+        "similarity_level": "somewhat_similar",
         "base_category": "knowledge_base",
-        "topic": "tutorial",
+        "topic": "troubleshooting",
         "generator": "template"
       }
     },
@@ -4487,20 +4140,20 @@
       "category": "synthetic",
       "domain": "synthetic_technical",
       "file_path": "synthetic://distractor/distractor_0056",
-      "content_hash": "5133e8d58f001b30",
-      "size_bytes": 1832,
-      "created_at": "2026-01-02T20:52:40.039237",
+      "content_hash": "e969cdab9a623354",
+      "size_bytes": 1119,
+      "created_at": "2026-01-02T20:59:20.818377",
       "semantic_tags": [
         "distractor",
-        "very_different",
-        "cloud"
+        "somewhat_similar",
+        "security"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039236",
-        "similarity_level": "very_different",
+        "generated_at": "2026-01-02T20:59:20.818376",
+        "similarity_level": "somewhat_similar",
         "base_category": "technical",
-        "topic": "cloud",
+        "topic": "security",
         "generator": "template"
       }
     },
@@ -4508,22 +4161,22 @@
       "doc_id": "distractor_0057",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_knowledge_base",
+      "domain": "synthetic_technical",
       "file_path": "synthetic://distractor/distractor_0057",
-      "content_hash": "325a6acb28a8a1f5",
-      "size_bytes": 1571,
-      "created_at": "2026-01-02T20:52:40.039246",
+      "content_hash": "37f0d794ad221ad3",
+      "size_bytes": 774,
+      "created_at": "2026-01-02T20:59:20.818384",
       "semantic_tags": [
         "distractor",
-        "very_different",
-        "troubleshooting"
+        "somewhat_similar",
+        "compiler"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039245",
-        "similarity_level": "very_different",
-        "base_category": "knowledge_base",
-        "topic": "troubleshooting",
+        "generated_at": "2026-01-02T20:59:20.818383",
+        "similarity_level": "somewhat_similar",
+        "base_category": "technical",
+        "topic": "compiler",
         "generator": "template"
       }
     },
@@ -4531,22 +4184,22 @@
       "doc_id": "distractor_0058",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_conversational",
+      "domain": "synthetic_legal",
       "file_path": "synthetic://distractor/distractor_0058",
-      "content_hash": "6686ec83b7397acf",
-      "size_bytes": 1213,
-      "created_at": "2026-01-02T20:52:40.039254",
+      "content_hash": "c514b8a1f2798770",
+      "size_bytes": 832,
+      "created_at": "2026-01-02T20:59:20.818390",
       "semantic_tags": [
         "distractor",
-        "very_different",
-        "email"
+        "somewhat_similar",
+        "employment"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039253",
-        "similarity_level": "very_different",
-        "base_category": "conversational",
-        "topic": "email",
+        "generated_at": "2026-01-02T20:59:20.818389",
+        "similarity_level": "somewhat_similar",
+        "base_category": "legal",
+        "topic": "employment",
         "generator": "template"
       }
     },
@@ -4554,22 +4207,22 @@
       "doc_id": "distractor_0059",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_conversational",
+      "domain": "synthetic_legal",
       "file_path": "synthetic://distractor/distractor_0059",
-      "content_hash": "4137363d760c2283",
-      "size_bytes": 916,
-      "created_at": "2026-01-02T20:52:40.039260",
+      "content_hash": "4d0c872b693be493",
+      "size_bytes": 802,
+      "created_at": "2026-01-02T20:59:20.818396",
       "semantic_tags": [
         "distractor",
-        "very_different",
-        "interview"
+        "somewhat_similar",
+        "litigation"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039259",
-        "similarity_level": "very_different",
-        "base_category": "conversational",
-        "topic": "interview",
+        "generated_at": "2026-01-02T20:59:20.818395",
+        "similarity_level": "somewhat_similar",
+        "base_category": "legal",
+        "topic": "litigation",
         "generator": "template"
       }
     },
@@ -4579,20 +4232,20 @@
       "category": "synthetic",
       "domain": "synthetic_legal",
       "file_path": "synthetic://distractor/distractor_0060",
-      "content_hash": "5e459a46297af255",
-      "size_bytes": 947,
-      "created_at": "2026-01-02T20:52:40.039265",
+      "content_hash": "29345893368fc97b",
+      "size_bytes": 1709,
+      "created_at": "2026-01-02T20:59:20.818406",
       "semantic_tags": [
         "distractor",
-        "very_different",
-        "employment"
+        "somewhat_similar",
+        "copyright"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039264",
-        "similarity_level": "very_different",
+        "generated_at": "2026-01-02T20:59:20.818405",
+        "similarity_level": "somewhat_similar",
         "base_category": "legal",
-        "topic": "employment",
+        "topic": "copyright",
         "generator": "template"
       }
     },
@@ -4602,20 +4255,20 @@
       "category": "synthetic",
       "domain": "synthetic_legal",
       "file_path": "synthetic://distractor/distractor_0061",
-      "content_hash": "2c004d90f33447c9",
-      "size_bytes": 941,
-      "created_at": "2026-01-02T20:52:40.039271",
+      "content_hash": "f56e7a9a1a4e6025",
+      "size_bytes": 1628,
+      "created_at": "2026-01-02T20:59:20.818415",
       "semantic_tags": [
         "distractor",
-        "very_different",
-        "litigation"
+        "somewhat_similar",
+        "employment"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039270",
-        "similarity_level": "very_different",
+        "generated_at": "2026-01-02T20:59:20.818414",
+        "similarity_level": "somewhat_similar",
         "base_category": "legal",
-        "topic": "litigation",
+        "topic": "employment",
         "generator": "template"
       }
     },
@@ -4623,22 +4276,22 @@
       "doc_id": "distractor_0062",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_legal",
+      "domain": "synthetic_technical",
       "file_path": "synthetic://distractor/distractor_0062",
-      "content_hash": "5da72b36b50876ca",
-      "size_bytes": 1957,
-      "created_at": "2026-01-02T20:52:40.039280",
+      "content_hash": "fcd12961c66e7ae1",
+      "size_bytes": 1023,
+      "created_at": "2026-01-02T20:59:20.818424",
       "semantic_tags": [
         "distractor",
-        "very_different",
-        "copyright"
+        "somewhat_similar",
+        "networking"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039279",
-        "similarity_level": "very_different",
-        "base_category": "legal",
-        "topic": "copyright",
+        "generated_at": "2026-01-02T20:59:20.818423",
+        "similarity_level": "somewhat_similar",
+        "base_category": "technical",
+        "topic": "networking",
         "generator": "template"
       }
     },
@@ -4646,22 +4299,22 @@
       "doc_id": "distractor_0063",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_legal",
+      "domain": "synthetic_technical",
       "file_path": "synthetic://distractor/distractor_0063",
-      "content_hash": "309f2c0786ac28a7",
-      "size_bytes": 1955,
-      "created_at": "2026-01-02T20:52:40.039289",
+      "content_hash": "913fb8d4bc440a59",
+      "size_bytes": 1315,
+      "created_at": "2026-01-02T20:59:20.818435",
       "semantic_tags": [
         "distractor",
-        "very_different",
-        "employment"
+        "somewhat_similar",
+        "compiler"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039288",
-        "similarity_level": "very_different",
-        "base_category": "legal",
-        "topic": "employment",
+        "generated_at": "2026-01-02T20:59:20.818434",
+        "similarity_level": "somewhat_similar",
+        "base_category": "technical",
+        "topic": "compiler",
         "generator": "template"
       }
     },
@@ -4669,57 +4322,11 @@
       "doc_id": "distractor_0064",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_conversational",
-      "file_path": "synthetic://distractor/distractor_0064",
-      "content_hash": "dde373a403be48bc",
-      "size_bytes": 1135,
-      "created_at": "2026-01-02T20:52:40.039297",
-      "semantic_tags": [
-        "distractor",
-        "very_different",
-        "chat"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039296",
-        "similarity_level": "very_different",
-        "base_category": "conversational",
-        "topic": "chat",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0065",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_conversational",
-      "file_path": "synthetic://distractor/distractor_0065",
-      "content_hash": "56417cc4abda7aa9",
-      "size_bytes": 1322,
-      "created_at": "2026-01-02T20:52:40.039309",
-      "semantic_tags": [
-        "distractor",
-        "somewhat_similar",
-        "interview"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039308",
-        "similarity_level": "somewhat_similar",
-        "base_category": "conversational",
-        "topic": "interview",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0066",
-      "source_type": "synthetic",
-      "category": "synthetic",
       "domain": "synthetic_knowledge_base",
-      "file_path": "synthetic://distractor/distractor_0066",
+      "file_path": "synthetic://distractor/distractor_0064",
       "content_hash": "f6b00e7fca1b6ad3",
       "size_bytes": 1338,
-      "created_at": "2026-01-02T20:52:40.039317",
+      "created_at": "2026-01-02T20:59:20.818443",
       "semantic_tags": [
         "distractor",
         "somewhat_similar",
@@ -4727,10 +4334,56 @@
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039316",
+        "generated_at": "2026-01-02T20:59:20.818442",
         "similarity_level": "somewhat_similar",
         "base_category": "knowledge_base",
         "topic": "reference",
+        "generator": "template"
+      }
+    },
+    {
+      "doc_id": "distractor_0065",
+      "source_type": "synthetic",
+      "category": "synthetic",
+      "domain": "synthetic_technical",
+      "file_path": "synthetic://distractor/distractor_0065",
+      "content_hash": "7bfd782439d94e24",
+      "size_bytes": 1399,
+      "created_at": "2026-01-02T20:59:20.818452",
+      "semantic_tags": [
+        "distractor",
+        "somewhat_similar",
+        "security"
+      ],
+      "is_distractor": true,
+      "metadata": {
+        "generated_at": "2026-01-02T20:59:20.818451",
+        "similarity_level": "somewhat_similar",
+        "base_category": "technical",
+        "topic": "security",
+        "generator": "template"
+      }
+    },
+    {
+      "doc_id": "distractor_0066",
+      "source_type": "synthetic",
+      "category": "synthetic",
+      "domain": "synthetic_conversational",
+      "file_path": "synthetic://distractor/distractor_0066",
+      "content_hash": "1cbac1677709cee9",
+      "size_bytes": 1036,
+      "created_at": "2026-01-02T20:59:20.818459",
+      "semantic_tags": [
+        "distractor",
+        "somewhat_similar",
+        "email"
+      ],
+      "is_distractor": true,
+      "metadata": {
+        "generated_at": "2026-01-02T20:59:20.818459",
+        "similarity_level": "somewhat_similar",
+        "base_category": "conversational",
+        "topic": "email",
         "generator": "template"
       }
     },
@@ -4740,20 +4393,20 @@
       "category": "synthetic",
       "domain": "synthetic_conversational",
       "file_path": "synthetic://distractor/distractor_0067",
-      "content_hash": "dc33bceae461a11e",
-      "size_bytes": 1303,
-      "created_at": "2026-01-02T20:52:40.039327",
+      "content_hash": "a478bbba3d9ce497",
+      "size_bytes": 1568,
+      "created_at": "2026-01-02T20:59:20.818469",
       "semantic_tags": [
         "distractor",
         "somewhat_similar",
-        "email"
+        "interview"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039326",
+        "generated_at": "2026-01-02T20:59:20.818469",
         "similarity_level": "somewhat_similar",
         "base_category": "conversational",
-        "topic": "email",
+        "topic": "interview",
         "generator": "template"
       }
     },
@@ -4761,22 +4414,22 @@
       "doc_id": "distractor_0068",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_technical",
+      "domain": "synthetic_conversational",
       "file_path": "synthetic://distractor/distractor_0068",
-      "content_hash": "172b04d458c6ea70",
-      "size_bytes": 1109,
-      "created_at": "2026-01-02T20:52:40.039335",
+      "content_hash": "dc64f29363ce5f0b",
+      "size_bytes": 1566,
+      "created_at": "2026-01-02T20:59:20.818479",
       "semantic_tags": [
         "distractor",
         "somewhat_similar",
-        "security"
+        "email"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039333",
+        "generated_at": "2026-01-02T20:59:20.818478",
         "similarity_level": "somewhat_similar",
-        "base_category": "technical",
-        "topic": "security",
+        "base_category": "conversational",
+        "topic": "email",
         "generator": "template"
       }
     },
@@ -4784,22 +4437,22 @@
       "doc_id": "distractor_0069",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_technical",
+      "domain": "synthetic_conversational",
       "file_path": "synthetic://distractor/distractor_0069",
-      "content_hash": "a6ed72f3479995f1",
-      "size_bytes": 1547,
-      "created_at": "2026-01-02T20:52:40.039345",
+      "content_hash": "b51955fd50bfc71e",
+      "size_bytes": 787,
+      "created_at": "2026-01-02T20:59:20.818485",
       "semantic_tags": [
         "distractor",
         "somewhat_similar",
-        "compiler"
+        "support"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039344",
+        "generated_at": "2026-01-02T20:59:20.818484",
         "similarity_level": "somewhat_similar",
-        "base_category": "technical",
-        "topic": "compiler",
+        "base_category": "conversational",
+        "topic": "support",
         "generator": "template"
       }
     },
@@ -4807,22 +4460,22 @@
       "doc_id": "distractor_0070",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_technical",
+      "domain": "synthetic_knowledge_base",
       "file_path": "synthetic://distractor/distractor_0070",
-      "content_hash": "807c1d6f093d5ce8",
-      "size_bytes": 1692,
-      "created_at": "2026-01-02T20:52:40.039355",
+      "content_hash": "240da7ff19934f7c",
+      "size_bytes": 1016,
+      "created_at": "2026-01-02T20:59:20.818492",
       "semantic_tags": [
         "distractor",
         "somewhat_similar",
-        "security"
+        "tutorial"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039354",
+        "generated_at": "2026-01-02T20:59:20.818491",
         "similarity_level": "somewhat_similar",
-        "base_category": "technical",
-        "topic": "security",
+        "base_category": "knowledge_base",
+        "topic": "tutorial",
         "generator": "template"
       }
     },
@@ -4830,22 +4483,22 @@
       "doc_id": "distractor_0071",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_technical",
+      "domain": "synthetic_legal",
       "file_path": "synthetic://distractor/distractor_0071",
-      "content_hash": "6a9575c94bf4daee",
-      "size_bytes": 766,
-      "created_at": "2026-01-02T20:52:40.039361",
+      "content_hash": "3970422dd1ffb66a",
+      "size_bytes": 1061,
+      "created_at": "2026-01-02T20:59:20.818499",
       "semantic_tags": [
         "distractor",
         "somewhat_similar",
-        "database"
+        "litigation"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039360",
+        "generated_at": "2026-01-02T20:59:20.818499",
         "similarity_level": "somewhat_similar",
-        "base_category": "technical",
-        "topic": "database",
+        "base_category": "legal",
+        "topic": "litigation",
         "generator": "template"
       }
     },
@@ -4855,20 +4508,20 @@
       "category": "synthetic",
       "domain": "synthetic_knowledge_base",
       "file_path": "synthetic://distractor/distractor_0072",
-      "content_hash": "240da7ff19934f7c",
-      "size_bytes": 1016,
-      "created_at": "2026-01-02T20:52:40.039368",
+      "content_hash": "eb2fe636beb6421f",
+      "size_bytes": 1332,
+      "created_at": "2026-01-02T20:59:20.818508",
       "semantic_tags": [
         "distractor",
         "somewhat_similar",
-        "tutorial"
+        "reference"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039367",
+        "generated_at": "2026-01-02T20:59:20.818507",
         "similarity_level": "somewhat_similar",
         "base_category": "knowledge_base",
-        "topic": "tutorial",
+        "topic": "reference",
         "generator": "template"
       }
     },
@@ -4878,55 +4531,9 @@
       "category": "synthetic",
       "domain": "synthetic_legal",
       "file_path": "synthetic://distractor/distractor_0073",
-      "content_hash": "3970422dd1ffb66a",
-      "size_bytes": 1061,
-      "created_at": "2026-01-02T20:52:40.039375",
-      "semantic_tags": [
-        "distractor",
-        "somewhat_similar",
-        "litigation"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039374",
-        "similarity_level": "somewhat_similar",
-        "base_category": "legal",
-        "topic": "litigation",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0074",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_knowledge_base",
-      "file_path": "synthetic://distractor/distractor_0074",
-      "content_hash": "eb2fe636beb6421f",
-      "size_bytes": 1332,
-      "created_at": "2026-01-02T20:52:40.039383",
-      "semantic_tags": [
-        "distractor",
-        "somewhat_similar",
-        "reference"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039383",
-        "similarity_level": "somewhat_similar",
-        "base_category": "knowledge_base",
-        "topic": "reference",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0075",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_legal",
-      "file_path": "synthetic://distractor/distractor_0075",
       "content_hash": "aa140d04f60d3007",
       "size_bytes": 1063,
-      "created_at": "2026-01-02T20:52:40.039390",
+      "created_at": "2026-01-02T20:59:20.818515",
       "semantic_tags": [
         "distractor",
         "somewhat_similar",
@@ -4934,10 +4541,56 @@
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039390",
+        "generated_at": "2026-01-02T20:59:20.818514",
         "similarity_level": "somewhat_similar",
         "base_category": "legal",
         "topic": "contract",
+        "generator": "template"
+      }
+    },
+    {
+      "doc_id": "distractor_0074",
+      "source_type": "synthetic",
+      "category": "synthetic",
+      "domain": "synthetic_technical",
+      "file_path": "synthetic://distractor/distractor_0074",
+      "content_hash": "fb24ea3f9f548611",
+      "size_bytes": 1547,
+      "created_at": "2026-01-02T20:59:20.818525",
+      "semantic_tags": [
+        "distractor",
+        "somewhat_similar",
+        "database"
+      ],
+      "is_distractor": true,
+      "metadata": {
+        "generated_at": "2026-01-02T20:59:20.818524",
+        "similarity_level": "somewhat_similar",
+        "base_category": "technical",
+        "topic": "database",
+        "generator": "template"
+      }
+    },
+    {
+      "doc_id": "distractor_0075",
+      "source_type": "synthetic",
+      "category": "synthetic",
+      "domain": "synthetic_technical",
+      "file_path": "synthetic://distractor/distractor_0075",
+      "content_hash": "f62b25fff573e206",
+      "size_bytes": 1350,
+      "created_at": "2026-01-02T20:59:20.818533",
+      "semantic_tags": [
+        "distractor",
+        "somewhat_similar",
+        "cloud"
+      ],
+      "is_distractor": true,
+      "metadata": {
+        "generated_at": "2026-01-02T20:59:20.818532",
+        "similarity_level": "somewhat_similar",
+        "base_category": "technical",
+        "topic": "cloud",
         "generator": "template"
       }
     },
@@ -4947,20 +4600,20 @@
       "category": "synthetic",
       "domain": "synthetic_conversational",
       "file_path": "synthetic://distractor/distractor_0076",
-      "content_hash": "d7773f0a5dc332e1",
-      "size_bytes": 1553,
-      "created_at": "2026-01-02T20:52:40.039399",
+      "content_hash": "6d78d2b5942cb497",
+      "size_bytes": 1282,
+      "created_at": "2026-01-02T20:59:20.818541",
       "semantic_tags": [
         "distractor",
         "somewhat_similar",
-        "support"
+        "forum"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039398",
+        "generated_at": "2026-01-02T20:59:20.818540",
         "similarity_level": "somewhat_similar",
         "base_category": "conversational",
-        "topic": "support",
+        "topic": "forum",
         "generator": "template"
       }
     },
@@ -4968,22 +4621,22 @@
       "doc_id": "distractor_0077",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_technical",
+      "domain": "synthetic_conversational",
       "file_path": "synthetic://distractor/distractor_0077",
-      "content_hash": "4316b99c629bde08",
-      "size_bytes": 1586,
-      "created_at": "2026-01-02T20:52:40.039410",
+      "content_hash": "9873418ad3322bde",
+      "size_bytes": 1537,
+      "created_at": "2026-01-02T20:59:20.818551",
       "semantic_tags": [
         "distractor",
         "somewhat_similar",
-        "cloud"
+        "interview"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039409",
+        "generated_at": "2026-01-02T20:59:20.818550",
         "similarity_level": "somewhat_similar",
-        "base_category": "technical",
-        "topic": "cloud",
+        "base_category": "conversational",
+        "topic": "interview",
         "generator": "template"
       }
     },
@@ -4991,22 +4644,22 @@
       "doc_id": "distractor_0078",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_conversational",
+      "domain": "synthetic_technical",
       "file_path": "synthetic://distractor/distractor_0078",
-      "content_hash": "952b4bfe493c27cf",
-      "size_bytes": 787,
-      "created_at": "2026-01-02T20:52:40.039415",
+      "content_hash": "32bb9814a4e177ba",
+      "size_bytes": 799,
+      "created_at": "2026-01-02T20:59:20.818557",
       "semantic_tags": [
         "distractor",
         "somewhat_similar",
-        "email"
+        "cloud"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039415",
+        "generated_at": "2026-01-02T20:59:20.818557",
         "similarity_level": "somewhat_similar",
-        "base_category": "conversational",
-        "topic": "email",
+        "base_category": "technical",
+        "topic": "cloud",
         "generator": "template"
       }
     },
@@ -5014,22 +4667,22 @@
       "doc_id": "distractor_0079",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_legal",
+      "domain": "synthetic_knowledge_base",
       "file_path": "synthetic://distractor/distractor_0079",
-      "content_hash": "578c91200f048210",
-      "size_bytes": 817,
-      "created_at": "2026-01-02T20:52:40.039422",
+      "content_hash": "13010b1f5fe7a54c",
+      "size_bytes": 1321,
+      "created_at": "2026-01-02T20:59:20.818566",
       "semantic_tags": [
         "distractor",
         "somewhat_similar",
-        "litigation"
+        "reference"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039421",
+        "generated_at": "2026-01-02T20:59:20.818565",
         "similarity_level": "somewhat_similar",
-        "base_category": "legal",
-        "topic": "litigation",
+        "base_category": "knowledge_base",
+        "topic": "reference",
         "generator": "template"
       }
     },
@@ -5037,22 +4690,22 @@
       "doc_id": "distractor_0080",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_legal",
+      "domain": "synthetic_conversational",
       "file_path": "synthetic://distractor/distractor_0080",
-      "content_hash": "b64afde4439e82ff",
-      "size_bytes": 860,
-      "created_at": "2026-01-02T20:52:40.039428",
+      "content_hash": "760195b0ac932609",
+      "size_bytes": 1017,
+      "created_at": "2026-01-02T20:59:20.818573",
       "semantic_tags": [
         "distractor",
         "somewhat_similar",
-        "copyright"
+        "email"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039427",
+        "generated_at": "2026-01-02T20:59:20.818572",
         "similarity_level": "somewhat_similar",
-        "base_category": "legal",
-        "topic": "copyright",
+        "base_category": "conversational",
+        "topic": "email",
         "generator": "template"
       }
     },
@@ -5060,80 +4713,11 @@
       "doc_id": "distractor_0081",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_conversational",
-      "file_path": "synthetic://distractor/distractor_0081",
-      "content_hash": "2d5a91c77d6526da",
-      "size_bytes": 779,
-      "created_at": "2026-01-02T20:52:40.039437",
-      "semantic_tags": [
-        "distractor",
-        "somewhat_similar",
-        "interview"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039436",
-        "similarity_level": "somewhat_similar",
-        "base_category": "conversational",
-        "topic": "interview",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0082",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_knowledge_base",
-      "file_path": "synthetic://distractor/distractor_0082",
-      "content_hash": "b7d7d37895ac78d0",
-      "size_bytes": 1531,
-      "created_at": "2026-01-02T20:52:40.039446",
-      "semantic_tags": [
-        "distractor",
-        "somewhat_similar",
-        "tutorial"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039445",
-        "similarity_level": "somewhat_similar",
-        "base_category": "knowledge_base",
-        "topic": "tutorial",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0083",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_knowledge_base",
-      "file_path": "synthetic://distractor/distractor_0083",
-      "content_hash": "e2665bdd5bf84d0e",
-      "size_bytes": 1301,
-      "created_at": "2026-01-02T20:52:40.039454",
-      "semantic_tags": [
-        "distractor",
-        "somewhat_similar",
-        "troubleshooting"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039454",
-        "similarity_level": "somewhat_similar",
-        "base_category": "knowledge_base",
-        "topic": "troubleshooting",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0084",
-      "source_type": "synthetic",
-      "category": "synthetic",
       "domain": "synthetic_legal",
-      "file_path": "synthetic://distractor/distractor_0084",
+      "file_path": "synthetic://distractor/distractor_0081",
       "content_hash": "173619c894aedb07",
       "size_bytes": 1351,
-      "created_at": "2026-01-02T20:52:40.039463",
+      "created_at": "2026-01-02T20:59:20.818582",
       "semantic_tags": [
         "distractor",
         "somewhat_similar",
@@ -5141,7 +4725,7 @@
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039462",
+        "generated_at": "2026-01-02T20:59:20.818581",
         "similarity_level": "somewhat_similar",
         "base_category": "legal",
         "topic": "litigation",
@@ -5149,25 +4733,94 @@
       }
     },
     {
-      "doc_id": "distractor_0085",
+      "doc_id": "distractor_0082",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_conversational",
-      "file_path": "synthetic://distractor/distractor_0085",
-      "content_hash": "3cbe8f384dc8a916",
-      "size_bytes": 1298,
-      "created_at": "2026-01-02T20:52:40.039471",
+      "domain": "synthetic_technical",
+      "file_path": "synthetic://distractor/distractor_0082",
+      "content_hash": "0e9193b880c76dd2",
+      "size_bytes": 1291,
+      "created_at": "2026-01-02T20:59:20.818590",
       "semantic_tags": [
         "distractor",
         "somewhat_similar",
-        "interview"
+        "compiler"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039470",
+        "generated_at": "2026-01-02T20:59:20.818589",
         "similarity_level": "somewhat_similar",
-        "base_category": "conversational",
-        "topic": "interview",
+        "base_category": "technical",
+        "topic": "compiler",
+        "generator": "template"
+      }
+    },
+    {
+      "doc_id": "distractor_0083",
+      "source_type": "synthetic",
+      "category": "synthetic",
+      "domain": "synthetic_legal",
+      "file_path": "synthetic://distractor/distractor_0083",
+      "content_hash": "9d2a4d8d7d924bde",
+      "size_bytes": 1614,
+      "created_at": "2026-01-02T20:59:20.818599",
+      "semantic_tags": [
+        "distractor",
+        "somewhat_similar",
+        "litigation"
+      ],
+      "is_distractor": true,
+      "metadata": {
+        "generated_at": "2026-01-02T20:59:20.818598",
+        "similarity_level": "somewhat_similar",
+        "base_category": "legal",
+        "topic": "litigation",
+        "generator": "template"
+      }
+    },
+    {
+      "doc_id": "distractor_0084",
+      "source_type": "synthetic",
+      "category": "synthetic",
+      "domain": "synthetic_knowledge_base",
+      "file_path": "synthetic://distractor/distractor_0084",
+      "content_hash": "70468ec5485a3bfa",
+      "size_bytes": 1065,
+      "created_at": "2026-01-02T20:59:20.818606",
+      "semantic_tags": [
+        "distractor",
+        "somewhat_similar",
+        "reference"
+      ],
+      "is_distractor": true,
+      "metadata": {
+        "generated_at": "2026-01-02T20:59:20.818605",
+        "similarity_level": "somewhat_similar",
+        "base_category": "knowledge_base",
+        "topic": "reference",
+        "generator": "template"
+      }
+    },
+    {
+      "doc_id": "distractor_0085",
+      "source_type": "synthetic",
+      "category": "synthetic",
+      "domain": "synthetic_technical",
+      "file_path": "synthetic://distractor/distractor_0085",
+      "content_hash": "87370c855eda7ffd",
+      "size_bytes": 1553,
+      "created_at": "2026-01-02T20:59:20.818616",
+      "semantic_tags": [
+        "distractor",
+        "somewhat_similar",
+        "networking"
+      ],
+      "is_distractor": true,
+      "metadata": {
+        "generated_at": "2026-01-02T20:59:20.818615",
+        "similarity_level": "somewhat_similar",
+        "base_category": "technical",
+        "topic": "networking",
         "generator": "template"
       }
     },
@@ -5177,9 +4830,9 @@
       "category": "synthetic",
       "domain": "synthetic_legal",
       "file_path": "synthetic://distractor/distractor_0086",
-      "content_hash": "9d2a4d8d7d924bde",
-      "size_bytes": 1614,
-      "created_at": "2026-01-02T20:52:40.039480",
+      "content_hash": "d290450e9baca781",
+      "size_bytes": 817,
+      "created_at": "2026-01-02T20:59:20.818623",
       "semantic_tags": [
         "distractor",
         "somewhat_similar",
@@ -5187,7 +4840,7 @@
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039479",
+        "generated_at": "2026-01-02T20:59:20.818622",
         "similarity_level": "somewhat_similar",
         "base_category": "legal",
         "topic": "litigation",
@@ -5200,20 +4853,20 @@
       "category": "synthetic",
       "domain": "synthetic_knowledge_base",
       "file_path": "synthetic://distractor/distractor_0087",
-      "content_hash": "70468ec5485a3bfa",
-      "size_bytes": 1065,
-      "created_at": "2026-01-02T20:52:40.039487",
+      "content_hash": "0e97479e5a0a6101",
+      "size_bytes": 990,
+      "created_at": "2026-01-02T20:59:20.818632",
       "semantic_tags": [
         "distractor",
-        "somewhat_similar",
-        "reference"
+        "very_similar",
+        "howto"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039486",
-        "similarity_level": "somewhat_similar",
+        "generated_at": "2026-01-02T20:59:20.818631",
+        "similarity_level": "very_similar",
         "base_category": "knowledge_base",
-        "topic": "reference",
+        "topic": "howto",
         "generator": "template"
       }
     },
@@ -5221,22 +4874,22 @@
       "doc_id": "distractor_0088",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_conversational",
+      "domain": "synthetic_legal",
       "file_path": "synthetic://distractor/distractor_0088",
-      "content_hash": "aca648bb670d3437",
-      "size_bytes": 1470,
-      "created_at": "2026-01-02T20:52:40.039498",
+      "content_hash": "f773080eec25b193",
+      "size_bytes": 1205,
+      "created_at": "2026-01-02T20:59:20.818640",
       "semantic_tags": [
         "distractor",
-        "somewhat_similar",
-        "chat"
+        "very_similar",
+        "litigation"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039497",
-        "similarity_level": "somewhat_similar",
-        "base_category": "conversational",
-        "topic": "chat",
+        "generated_at": "2026-01-02T20:59:20.818639",
+        "similarity_level": "very_similar",
+        "base_category": "legal",
+        "topic": "litigation",
         "generator": "template"
       }
     },
@@ -5244,22 +4897,22 @@
       "doc_id": "distractor_0089",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_knowledge_base",
+      "domain": "synthetic_technical",
       "file_path": "synthetic://distractor/distractor_0089",
-      "content_hash": "cd75e2d084877527",
-      "size_bytes": 817,
-      "created_at": "2026-01-02T20:52:40.039504",
+      "content_hash": "40343bce45f9bcb9",
+      "size_bytes": 1210,
+      "created_at": "2026-01-02T20:59:20.818649",
       "semantic_tags": [
         "distractor",
-        "somewhat_similar",
-        "reference"
+        "very_similar",
+        "compiler"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039503",
-        "similarity_level": "somewhat_similar",
-        "base_category": "knowledge_base",
-        "topic": "reference",
+        "generated_at": "2026-01-02T20:59:20.818648",
+        "similarity_level": "very_similar",
+        "base_category": "technical",
+        "topic": "compiler",
         "generator": "template"
       }
     },
@@ -5267,22 +4920,22 @@
       "doc_id": "distractor_0090",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_knowledge_base",
+      "domain": "synthetic_conversational",
       "file_path": "synthetic://distractor/distractor_0090",
-      "content_hash": "3da57575c90a3cec",
-      "size_bytes": 1031,
-      "created_at": "2026-01-02T20:52:40.039511",
+      "content_hash": "88c53227f3797386",
+      "size_bytes": 978,
+      "created_at": "2026-01-02T20:59:20.818656",
       "semantic_tags": [
         "distractor",
-        "somewhat_similar",
-        "howto"
+        "very_similar",
+        "support"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039510",
-        "similarity_level": "somewhat_similar",
-        "base_category": "knowledge_base",
-        "topic": "howto",
+        "generated_at": "2026-01-02T20:59:20.818655",
+        "similarity_level": "very_similar",
+        "base_category": "conversational",
+        "topic": "support",
         "generator": "template"
       }
     },
@@ -5292,20 +4945,20 @@
       "category": "synthetic",
       "domain": "synthetic_legal",
       "file_path": "synthetic://distractor/distractor_0091",
-      "content_hash": "899d65c3ae03b282",
-      "size_bytes": 1350,
-      "created_at": "2026-01-02T20:52:40.039519",
+      "content_hash": "99a1a62c4cb082da",
+      "size_bytes": 974,
+      "created_at": "2026-01-02T20:59:20.818664",
       "semantic_tags": [
         "distractor",
-        "somewhat_similar",
-        "litigation"
+        "very_similar",
+        "privacy"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039518",
-        "similarity_level": "somewhat_similar",
+        "generated_at": "2026-01-02T20:59:20.818663",
+        "similarity_level": "very_similar",
         "base_category": "legal",
-        "topic": "litigation",
+        "topic": "privacy",
         "generator": "template"
       }
     },
@@ -5313,22 +4966,22 @@
       "doc_id": "distractor_0092",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_conversational",
+      "domain": "synthetic_legal",
       "file_path": "synthetic://distractor/distractor_0092",
-      "content_hash": "6371fef8dbc890d0",
-      "size_bytes": 1304,
-      "created_at": "2026-01-02T20:52:40.039527",
+      "content_hash": "4dd585ce28885dcc",
+      "size_bytes": 774,
+      "created_at": "2026-01-02T20:59:20.818670",
       "semantic_tags": [
         "distractor",
-        "somewhat_similar",
-        "interview"
+        "very_similar",
+        "copyright"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039526",
-        "similarity_level": "somewhat_similar",
-        "base_category": "conversational",
-        "topic": "interview",
+        "generated_at": "2026-01-02T20:59:20.818669",
+        "similarity_level": "very_similar",
+        "base_category": "legal",
+        "topic": "copyright",
         "generator": "template"
       }
     },
@@ -5336,22 +4989,22 @@
       "doc_id": "distractor_0093",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_technical",
+      "domain": "synthetic_conversational",
       "file_path": "synthetic://distractor/distractor_0093",
-      "content_hash": "1756996ee1500450",
-      "size_bytes": 990,
-      "created_at": "2026-01-02T20:52:40.039536",
+      "content_hash": "71471e6ad53208ae",
+      "size_bytes": 1175,
+      "created_at": "2026-01-02T20:59:20.818679",
       "semantic_tags": [
         "distractor",
-        "somewhat_similar",
-        "database"
+        "very_similar",
+        "interview"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039535",
-        "similarity_level": "somewhat_similar",
-        "base_category": "technical",
-        "topic": "database",
+        "generated_at": "2026-01-02T20:59:20.818678",
+        "similarity_level": "very_similar",
+        "base_category": "conversational",
+        "topic": "interview",
         "generator": "template"
       }
     },
@@ -5359,22 +5012,22 @@
       "doc_id": "distractor_0094",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_legal",
+      "domain": "synthetic_knowledge_base",
       "file_path": "synthetic://distractor/distractor_0094",
-      "content_hash": "a9d44bebcadc0ec3",
-      "size_bytes": 1051,
-      "created_at": "2026-01-02T20:52:40.039543",
+      "content_hash": "106446c0c05b1713",
+      "size_bytes": 1473,
+      "created_at": "2026-01-02T20:59:20.818690",
       "semantic_tags": [
         "distractor",
-        "somewhat_similar",
-        "privacy"
+        "very_similar",
+        "faq"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039542",
-        "similarity_level": "somewhat_similar",
-        "base_category": "legal",
-        "topic": "privacy",
+        "generated_at": "2026-01-02T20:59:20.818689",
+        "similarity_level": "very_similar",
+        "base_category": "knowledge_base",
+        "topic": "faq",
         "generator": "template"
       }
     },
@@ -5382,22 +5035,22 @@
       "doc_id": "distractor_0095",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_legal",
+      "domain": "synthetic_technical",
       "file_path": "synthetic://distractor/distractor_0095",
-      "content_hash": "1a162cbf0383f8e7",
-      "size_bytes": 849,
-      "created_at": "2026-01-02T20:52:40.039549",
+      "content_hash": "58a7a053beea300c",
+      "size_bytes": 1060,
+      "created_at": "2026-01-02T20:59:20.818698",
       "semantic_tags": [
         "distractor",
-        "somewhat_similar",
-        "copyright"
+        "very_similar",
+        "security"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039548",
-        "similarity_level": "somewhat_similar",
-        "base_category": "legal",
-        "topic": "copyright",
+        "generated_at": "2026-01-02T20:59:20.818697",
+        "similarity_level": "very_similar",
+        "base_category": "technical",
+        "topic": "security",
         "generator": "template"
       }
     },
@@ -5407,20 +5060,20 @@
       "category": "synthetic",
       "domain": "synthetic_technical",
       "file_path": "synthetic://distractor/distractor_0096",
-      "content_hash": "5025de9de48053e2",
-      "size_bytes": 1328,
-      "created_at": "2026-01-02T20:52:40.039557",
+      "content_hash": "aeb5c9f29f91074f",
+      "size_bytes": 707,
+      "created_at": "2026-01-02T20:59:20.818704",
       "semantic_tags": [
         "distractor",
-        "somewhat_similar",
-        "compiler"
+        "very_similar",
+        "database"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039556",
-        "similarity_level": "somewhat_similar",
+        "generated_at": "2026-01-02T20:59:20.818704",
+        "similarity_level": "very_similar",
         "base_category": "technical",
-        "topic": "compiler",
+        "topic": "database",
         "generator": "template"
       }
     },
@@ -5430,20 +5083,20 @@
       "category": "synthetic",
       "domain": "synthetic_knowledge_base",
       "file_path": "synthetic://distractor/distractor_0097",
-      "content_hash": "5050bce2c30e5453",
-      "size_bytes": 1535,
-      "created_at": "2026-01-02T20:52:40.039567",
+      "content_hash": "bf9f26bcac6bd17d",
+      "size_bytes": 1457,
+      "created_at": "2026-01-02T20:59:20.818714",
       "semantic_tags": [
         "distractor",
-        "somewhat_similar",
-        "faq"
+        "very_similar",
+        "reference"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039566",
-        "similarity_level": "somewhat_similar",
+        "generated_at": "2026-01-02T20:59:20.818713",
+        "similarity_level": "very_similar",
         "base_category": "knowledge_base",
-        "topic": "faq",
+        "topic": "reference",
         "generator": "template"
       }
     },
@@ -5451,22 +5104,22 @@
       "doc_id": "distractor_0098",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_conversational",
+      "domain": "synthetic_legal",
       "file_path": "synthetic://distractor/distractor_0098",
-      "content_hash": "b9a297875b7ad421",
-      "size_bytes": 1034,
-      "created_at": "2026-01-02T20:52:40.039575",
+      "content_hash": "0bc4cfed8c897d3e",
+      "size_bytes": 1514,
+      "created_at": "2026-01-02T20:59:20.818723",
       "semantic_tags": [
         "distractor",
-        "somewhat_similar",
-        "email"
+        "very_similar",
+        "employment"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039574",
-        "similarity_level": "somewhat_similar",
-        "base_category": "conversational",
-        "topic": "email",
+        "generated_at": "2026-01-02T20:59:20.818723",
+        "similarity_level": "very_similar",
+        "base_category": "legal",
+        "topic": "employment",
         "generator": "template"
       }
     },
@@ -5474,22 +5127,22 @@
       "doc_id": "distractor_0099",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_conversational",
+      "domain": "synthetic_technical",
       "file_path": "synthetic://distractor/distractor_0099",
-      "content_hash": "d1bee70b627a2c30",
-      "size_bytes": 761,
-      "created_at": "2026-01-02T20:52:40.039581",
+      "content_hash": "f38893cbe4d4c3b6",
+      "size_bytes": 956,
+      "created_at": "2026-01-02T20:59:20.818731",
       "semantic_tags": [
         "distractor",
-        "somewhat_similar",
-        "support"
+        "very_similar",
+        "networking"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039580",
-        "similarity_level": "somewhat_similar",
-        "base_category": "conversational",
-        "topic": "support",
+        "generated_at": "2026-01-02T20:59:20.818730",
+        "similarity_level": "very_similar",
+        "base_category": "technical",
+        "topic": "networking",
         "generator": "template"
       }
     },
@@ -5497,22 +5150,22 @@
       "doc_id": "distractor_0100",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_knowledge_base",
+      "domain": "synthetic_conversational",
       "file_path": "synthetic://distractor/distractor_0100",
-      "content_hash": "998481fc6449899f",
-      "size_bytes": 793,
-      "created_at": "2026-01-02T20:52:40.039586",
+      "content_hash": "50d51e0082c39907",
+      "size_bytes": 1190,
+      "created_at": "2026-01-02T20:59:20.818739",
       "semantic_tags": [
         "distractor",
-        "somewhat_similar",
-        "howto"
+        "very_similar",
+        "support"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039585",
-        "similarity_level": "somewhat_similar",
-        "base_category": "knowledge_base",
-        "topic": "howto",
+        "generated_at": "2026-01-02T20:59:20.818738",
+        "similarity_level": "very_similar",
+        "base_category": "conversational",
+        "topic": "support",
         "generator": "template"
       }
     },
@@ -5520,22 +5173,22 @@
       "doc_id": "distractor_0101",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_knowledge_base",
+      "domain": "synthetic_legal",
       "file_path": "synthetic://distractor/distractor_0101",
-      "content_hash": "f73dff75b4367e66",
-      "size_bytes": 765,
-      "created_at": "2026-01-02T20:52:40.039592",
+      "content_hash": "9db44bae11346b11",
+      "size_bytes": 1448,
+      "created_at": "2026-01-02T20:59:20.818749",
       "semantic_tags": [
         "distractor",
-        "somewhat_similar",
-        "faq"
+        "very_similar",
+        "litigation"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039591",
-        "similarity_level": "somewhat_similar",
-        "base_category": "knowledge_base",
-        "topic": "faq",
+        "generated_at": "2026-01-02T20:59:20.818748",
+        "similarity_level": "very_similar",
+        "base_category": "legal",
+        "topic": "litigation",
         "generator": "template"
       }
     },
@@ -5543,22 +5196,22 @@
       "doc_id": "distractor_0102",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_technical",
+      "domain": "synthetic_knowledge_base",
       "file_path": "synthetic://distractor/distractor_0102",
-      "content_hash": "a0426b2ecacb6573",
-      "size_bytes": 1313,
-      "created_at": "2026-01-02T20:52:40.039600",
+      "content_hash": "862f55fc3b011c05",
+      "size_bytes": 715,
+      "created_at": "2026-01-02T20:59:20.818755",
       "semantic_tags": [
         "distractor",
-        "somewhat_similar",
-        "networking"
+        "very_similar",
+        "troubleshooting"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039599",
-        "similarity_level": "somewhat_similar",
-        "base_category": "technical",
-        "topic": "networking",
+        "generated_at": "2026-01-02T20:59:20.818755",
+        "similarity_level": "very_similar",
+        "base_category": "knowledge_base",
+        "topic": "troubleshooting",
         "generator": "template"
       }
     },
@@ -5566,22 +5219,22 @@
       "doc_id": "distractor_0103",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_conversational",
+      "domain": "synthetic_knowledge_base",
       "file_path": "synthetic://distractor/distractor_0103",
-      "content_hash": "aedaf8661f1506ea",
-      "size_bytes": 720,
-      "created_at": "2026-01-02T20:52:40.039606",
+      "content_hash": "617e77db74988d20",
+      "size_bytes": 983,
+      "created_at": "2026-01-02T20:59:20.818763",
       "semantic_tags": [
         "distractor",
-        "somewhat_similar",
-        "chat"
+        "very_similar",
+        "reference"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039606",
-        "similarity_level": "somewhat_similar",
-        "base_category": "conversational",
-        "topic": "chat",
+        "generated_at": "2026-01-02T20:59:20.818762",
+        "similarity_level": "very_similar",
+        "base_category": "knowledge_base",
+        "topic": "reference",
         "generator": "template"
       }
     },
@@ -5589,22 +5242,22 @@
       "doc_id": "distractor_0104",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_technical",
+      "domain": "synthetic_legal",
       "file_path": "synthetic://distractor/distractor_0104",
-      "content_hash": "61468c8b46266fb0",
-      "size_bytes": 1401,
-      "created_at": "2026-01-02T20:52:40.039618",
+      "content_hash": "0c21ea5df445755c",
+      "size_bytes": 1288,
+      "created_at": "2026-01-02T20:59:20.818771",
       "semantic_tags": [
         "distractor",
         "very_similar",
-        "database"
+        "employment"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039617",
+        "generated_at": "2026-01-02T20:59:20.818770",
         "similarity_level": "very_similar",
-        "base_category": "technical",
-        "topic": "database",
+        "base_category": "legal",
+        "topic": "employment",
         "generator": "template"
       }
     },
@@ -5614,20 +5267,20 @@
       "category": "synthetic",
       "domain": "synthetic_legal",
       "file_path": "synthetic://distractor/distractor_0105",
-      "content_hash": "7cff70c78c4417d2",
-      "size_bytes": 1190,
-      "created_at": "2026-01-02T20:52:40.039627",
+      "content_hash": "4caeaab2b9b531d8",
+      "size_bytes": 1233,
+      "created_at": "2026-01-02T20:59:20.818779",
       "semantic_tags": [
         "distractor",
         "very_similar",
-        "privacy"
+        "litigation"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039626",
+        "generated_at": "2026-01-02T20:59:20.818778",
         "similarity_level": "very_similar",
         "base_category": "legal",
-        "topic": "privacy",
+        "topic": "litigation",
         "generator": "template"
       }
     },
@@ -5635,22 +5288,22 @@
       "doc_id": "distractor_0106",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_legal",
+      "domain": "synthetic_knowledge_base",
       "file_path": "synthetic://distractor/distractor_0106",
-      "content_hash": "3b31e70ccafa1542",
-      "size_bytes": 1037,
-      "created_at": "2026-01-02T20:52:40.039634",
+      "content_hash": "f63b59ac0b67225a",
+      "size_bytes": 1222,
+      "created_at": "2026-01-02T20:59:20.818788",
       "semantic_tags": [
         "distractor",
         "very_similar",
-        "employment"
+        "faq"
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039633",
+        "generated_at": "2026-01-02T20:59:20.818787",
         "similarity_level": "very_similar",
-        "base_category": "legal",
-        "topic": "employment",
+        "base_category": "knowledge_base",
+        "topic": "faq",
         "generator": "template"
       }
     },
@@ -5658,310 +5311,11 @@
       "doc_id": "distractor_0107",
       "source_type": "synthetic",
       "category": "synthetic",
-      "domain": "synthetic_knowledge_base",
+      "domain": "synthetic_conversational",
       "file_path": "synthetic://distractor/distractor_0107",
-      "content_hash": "596797841c841695",
-      "size_bytes": 725,
-      "created_at": "2026-01-02T20:52:40.039642",
-      "semantic_tags": [
-        "distractor",
-        "very_similar",
-        "faq"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039641",
-        "similarity_level": "very_similar",
-        "base_category": "knowledge_base",
-        "topic": "faq",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0108",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_conversational",
-      "file_path": "synthetic://distractor/distractor_0108",
-      "content_hash": "4dfd46ad89c37a27",
-      "size_bytes": 1419,
-      "created_at": "2026-01-02T20:52:40.039651",
-      "semantic_tags": [
-        "distractor",
-        "very_similar",
-        "email"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039650",
-        "similarity_level": "very_similar",
-        "base_category": "conversational",
-        "topic": "email",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0109",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_conversational",
-      "file_path": "synthetic://distractor/distractor_0109",
-      "content_hash": "0920f5edc7a54892",
-      "size_bytes": 1437,
-      "created_at": "2026-01-02T20:52:40.039661",
-      "semantic_tags": [
-        "distractor",
-        "very_similar",
-        "forum"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039660",
-        "similarity_level": "very_similar",
-        "base_category": "conversational",
-        "topic": "forum",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0110",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_legal",
-      "file_path": "synthetic://distractor/distractor_0110",
-      "content_hash": "2d7a54a92f81ab13",
-      "size_bytes": 1485,
-      "created_at": "2026-01-02T20:52:40.039671",
-      "semantic_tags": [
-        "distractor",
-        "very_similar",
-        "contract"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039670",
-        "similarity_level": "very_similar",
-        "base_category": "legal",
-        "topic": "contract",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0111",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_technical",
-      "file_path": "synthetic://distractor/distractor_0111",
-      "content_hash": "b11d7dbbdb4d33a0",
-      "size_bytes": 812,
-      "created_at": "2026-01-02T20:52:40.039677",
-      "semantic_tags": [
-        "distractor",
-        "very_similar",
-        "security"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039676",
-        "similarity_level": "very_similar",
-        "base_category": "technical",
-        "topic": "security",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0112",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_legal",
-      "file_path": "synthetic://distractor/distractor_0112",
-      "content_hash": "d19c355a07a87bf9",
-      "size_bytes": 774,
-      "created_at": "2026-01-02T20:52:40.039682",
-      "semantic_tags": [
-        "distractor",
-        "very_similar",
-        "employment"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039681",
-        "similarity_level": "very_similar",
-        "base_category": "legal",
-        "topic": "employment",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0113",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_knowledge_base",
-      "file_path": "synthetic://distractor/distractor_0113",
-      "content_hash": "c99f397560129345",
-      "size_bytes": 743,
-      "created_at": "2026-01-02T20:52:40.039688",
-      "semantic_tags": [
-        "distractor",
-        "very_similar",
-        "faq"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039687",
-        "similarity_level": "very_similar",
-        "base_category": "knowledge_base",
-        "topic": "faq",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0114",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_legal",
-      "file_path": "synthetic://distractor/distractor_0114",
-      "content_hash": "3855c1cb9485300d",
-      "size_bytes": 1457,
-      "created_at": "2026-01-02T20:52:40.039697",
-      "semantic_tags": [
-        "distractor",
-        "very_similar",
-        "litigation"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039696",
-        "similarity_level": "very_similar",
-        "base_category": "legal",
-        "topic": "litigation",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0115",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_knowledge_base",
-      "file_path": "synthetic://distractor/distractor_0115",
-      "content_hash": "686c6e59e452e866",
-      "size_bytes": 1465,
-      "created_at": "2026-01-02T20:52:40.039706",
-      "semantic_tags": [
-        "distractor",
-        "very_similar",
-        "troubleshooting"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039705",
-        "similarity_level": "very_similar",
-        "base_category": "knowledge_base",
-        "topic": "troubleshooting",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0116",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_legal",
-      "file_path": "synthetic://distractor/distractor_0116",
-      "content_hash": "b95f75e9991f134d",
-      "size_bytes": 1451,
-      "created_at": "2026-01-02T20:52:40.039716",
-      "semantic_tags": [
-        "distractor",
-        "very_similar",
-        "contract"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039715",
-        "similarity_level": "very_similar",
-        "base_category": "legal",
-        "topic": "contract",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0117",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_technical",
-      "file_path": "synthetic://distractor/distractor_0117",
-      "content_hash": "80022ffc346e980a",
-      "size_bytes": 995,
-      "created_at": "2026-01-02T20:52:40.039723",
-      "semantic_tags": [
-        "distractor",
-        "very_similar",
-        "cloud"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039722",
-        "similarity_level": "very_similar",
-        "base_category": "technical",
-        "topic": "cloud",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0118",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_technical",
-      "file_path": "synthetic://distractor/distractor_0118",
-      "content_hash": "32315d86c4da3d61",
-      "size_bytes": 1259,
-      "created_at": "2026-01-02T20:52:40.039731",
-      "semantic_tags": [
-        "distractor",
-        "very_similar",
-        "cloud"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039730",
-        "similarity_level": "very_similar",
-        "base_category": "technical",
-        "topic": "cloud",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0119",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_legal",
-      "file_path": "synthetic://distractor/distractor_0119",
-      "content_hash": "7fdacde1227f7127",
-      "size_bytes": 1210,
-      "created_at": "2026-01-02T20:52:40.039740",
-      "semantic_tags": [
-        "distractor",
-        "very_similar",
-        "privacy"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039739",
-        "similarity_level": "very_similar",
-        "base_category": "legal",
-        "topic": "privacy",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0120",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_conversational",
-      "file_path": "synthetic://distractor/distractor_0120",
-      "content_hash": "dcbf9349e56e38be",
-      "size_bytes": 1335,
-      "created_at": "2026-01-02T20:52:40.039750",
+      "content_hash": "c4c7b419e74f8033",
+      "size_bytes": 1093,
+      "created_at": "2026-01-02T20:59:20.818796",
       "semantic_tags": [
         "distractor",
         "very_similar",
@@ -5969,217 +5323,10 @@
       ],
       "is_distractor": true,
       "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039749",
+        "generated_at": "2026-01-02T20:59:20.818795",
         "similarity_level": "very_similar",
         "base_category": "conversational",
         "topic": "chat",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0121",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_legal",
-      "file_path": "synthetic://distractor/distractor_0121",
-      "content_hash": "ec2e2b97250c4d24",
-      "size_bytes": 1305,
-      "created_at": "2026-01-02T20:52:40.039758",
-      "semantic_tags": [
-        "distractor",
-        "very_similar",
-        "copyright"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039757",
-        "similarity_level": "very_similar",
-        "base_category": "legal",
-        "topic": "copyright",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0122",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_technical",
-      "file_path": "synthetic://distractor/distractor_0122",
-      "content_hash": "61f7b876cc106eb0",
-      "size_bytes": 1572,
-      "created_at": "2026-01-02T20:52:40.039768",
-      "semantic_tags": [
-        "distractor",
-        "very_similar",
-        "security"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039767",
-        "similarity_level": "very_similar",
-        "base_category": "technical",
-        "topic": "security",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0123",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_conversational",
-      "file_path": "synthetic://distractor/distractor_0123",
-      "content_hash": "def7b550bc4e0f60",
-      "size_bytes": 1397,
-      "created_at": "2026-01-02T20:52:40.039777",
-      "semantic_tags": [
-        "distractor",
-        "very_similar",
-        "forum"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039776",
-        "similarity_level": "very_similar",
-        "base_category": "conversational",
-        "topic": "forum",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0124",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_legal",
-      "file_path": "synthetic://distractor/distractor_0124",
-      "content_hash": "0f79ca8a08230610",
-      "size_bytes": 1046,
-      "created_at": "2026-01-02T20:52:40.039784",
-      "semantic_tags": [
-        "distractor",
-        "very_similar",
-        "copyright"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039783",
-        "similarity_level": "very_similar",
-        "base_category": "legal",
-        "topic": "copyright",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0125",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_technical",
-      "file_path": "synthetic://distractor/distractor_0125",
-      "content_hash": "2461d57b137b483b",
-      "size_bytes": 1533,
-      "created_at": "2026-01-02T20:52:40.039794",
-      "semantic_tags": [
-        "distractor",
-        "very_similar",
-        "cloud"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039793",
-        "similarity_level": "very_similar",
-        "base_category": "technical",
-        "topic": "cloud",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0126",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_legal",
-      "file_path": "synthetic://distractor/distractor_0126",
-      "content_hash": "ffde4995d364e4de",
-      "size_bytes": 1504,
-      "created_at": "2026-01-02T20:52:40.039804",
-      "semantic_tags": [
-        "distractor",
-        "very_similar",
-        "litigation"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039803",
-        "similarity_level": "very_similar",
-        "base_category": "legal",
-        "topic": "litigation",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0127",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_technical",
-      "file_path": "synthetic://distractor/distractor_0127",
-      "content_hash": "edbe979e62ad7676",
-      "size_bytes": 1304,
-      "created_at": "2026-01-02T20:52:40.039813",
-      "semantic_tags": [
-        "distractor",
-        "very_similar",
-        "security"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039812",
-        "similarity_level": "very_similar",
-        "base_category": "technical",
-        "topic": "security",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0128",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_legal",
-      "file_path": "synthetic://distractor/distractor_0128",
-      "content_hash": "d2853976d90fe5a5",
-      "size_bytes": 718,
-      "created_at": "2026-01-02T20:52:40.039819",
-      "semantic_tags": [
-        "distractor",
-        "very_similar",
-        "privacy"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039818",
-        "similarity_level": "very_similar",
-        "base_category": "legal",
-        "topic": "privacy",
-        "generator": "template"
-      }
-    },
-    {
-      "doc_id": "distractor_0129",
-      "source_type": "synthetic",
-      "category": "synthetic",
-      "domain": "synthetic_knowledge_base",
-      "file_path": "synthetic://distractor/distractor_0129",
-      "content_hash": "9a90722f0be0c97a",
-      "size_bytes": 720,
-      "created_at": "2026-01-02T20:52:40.039825",
-      "semantic_tags": [
-        "distractor",
-        "very_similar",
-        "reference"
-      ],
-      "is_distractor": true,
-      "metadata": {
-        "generated_at": "2026-01-02T20:52:40.039824",
-        "similarity_level": "very_similar",
-        "base_category": "knowledge_base",
-        "topic": "reference",
         "generator": "template"
       }
     }
