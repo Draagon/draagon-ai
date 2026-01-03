@@ -28,6 +28,11 @@ from .downloaders import (
     OPENSOURCE_LICENSES,
     TOS_URLS,
     PRIVACY_POLICY_URLS,
+    CorpusBuilder,
+    CorpusBuilderConfig,
+    SourceConfig,
+    BuildProgress,
+    build_default_corpus,
 )
 
 __all__ = [
@@ -50,4 +55,9 @@ __all__ = [
     "OPENSOURCE_LICENSES",
     "TOS_URLS",
     "PRIVACY_POLICY_URLS",
+    "CorpusBuilder",
+    "CorpusBuilderConfig",
+    "SourceConfig",
+    "BuildProgress",
+    "build_default_corpus",
 ]

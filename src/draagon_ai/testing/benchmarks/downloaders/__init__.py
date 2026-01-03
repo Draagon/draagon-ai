@@ -5,6 +5,7 @@ Provides tools for collecting documents from various sources:
 - OnlineDocumentFetcher: Fetch from web documentation
 - DistractorGenerator: Generate synthetic distractor documents
 - LegalDocumentFetcher: Fetch legal documents (licenses, ToS, privacy policies)
+- CorpusBuilder: Orchestrate corpus assembly from all sources
 """
 
 from .local_scanner import LocalDocumentScanner
@@ -27,6 +28,13 @@ from .legal_fetcher import (
     TOS_URLS,
     PRIVACY_POLICY_URLS,
 )
+from .corpus_builder import (
+    CorpusBuilder,
+    CorpusBuilderConfig,
+    SourceConfig,
+    BuildProgress,
+    build_default_corpus,
+)
 
 __all__ = [
     "LocalDocumentScanner",
@@ -43,4 +51,9 @@ __all__ = [
     "OPENSOURCE_LICENSES",
     "TOS_URLS",
     "PRIVACY_POLICY_URLS",
+    "CorpusBuilder",
+    "CorpusBuilderConfig",
+    "SourceConfig",
+    "BuildProgress",
+    "build_default_corpus",
 ]
