@@ -3,7 +3,7 @@
 Provides tools for collecting documents from various sources:
 - LocalDocumentScanner: Scan local filesystem
 - OnlineDocumentFetcher: Fetch from web documentation
-- DistractorGenerator: Generate synthetic distractors (future)
+- DistractorGenerator: Generate synthetic distractor documents
 """
 
 from .local_scanner import LocalDocumentScanner
@@ -15,6 +15,11 @@ from .online_fetcher import (
     NARRATIVE_SOURCES,
     ACADEMIC_SOURCES,
 )
+from .distractor_generator import (
+    DistractorGenerator,
+    DistractorConfig,
+    SimilarityLevel,
+)
 
 __all__ = [
     "LocalDocumentScanner",
@@ -24,4 +29,7 @@ __all__ = [
     "TECHNICAL_SOURCES",
     "NARRATIVE_SOURCES",
     "ACADEMIC_SOURCES",
+    "DistractorGenerator",
+    "DistractorConfig",
+    "SimilarityLevel",
 ]

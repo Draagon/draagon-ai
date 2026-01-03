@@ -21,6 +21,9 @@ from .downloaders import (
     TECHNICAL_SOURCES,
     NARRATIVE_SOURCES,
     ACADEMIC_SOURCES,
+    DistractorGenerator,
+    DistractorConfig,
+    SimilarityLevel,
 )
 
 __all__ = [
@@ -36,4 +39,7 @@ __all__ = [
     "TECHNICAL_SOURCES",
     "NARRATIVE_SOURCES",
     "ACADEMIC_SOURCES",
+    "DistractorGenerator",
+    "DistractorConfig",
+    "SimilarityLevel",
 ]
