@@ -235,6 +235,13 @@ async def build_corpus(
                 local_paths.append(books_path)
                 logger.info(f"Scanning books path: {books_path}")
 
+        # Add Work folders for business documents
+        for work_folder in ["Cengage", "DougMealingLLC"]:
+            work_path = Path.home() / "Work" / work_folder
+            if work_path.exists():
+                local_paths.append(work_path)
+                logger.info(f"Scanning work path: {work_path}")
+
         if not local_paths:
             logger.warning("No local paths found to scan")
 
@@ -248,7 +255,7 @@ async def build_corpus(
     config = CorpusBuilderConfig(
         min_documents=min_documents,
         distractor_ratio=distractor_ratio,
-        local=SourceConfig(enabled=bool(local_paths), max_docs=300),  # Room for multiple paths
+        local=SourceConfig(enabled=bool(local_paths), max_docs=500),  # Room for 5 source paths
         online=SourceConfig(enabled=True, max_docs=200),
         legal=SourceConfig(enabled=True, max_docs=50),
         distractors=SourceConfig(enabled=True),
