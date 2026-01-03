@@ -4,6 +4,7 @@ Provides tools for collecting documents from various sources:
 - LocalDocumentScanner: Scan local filesystem
 - OnlineDocumentFetcher: Fetch from web documentation
 - DistractorGenerator: Generate synthetic distractor documents
+- LegalDocumentFetcher: Fetch legal documents (licenses, ToS, privacy policies)
 """
 
 from .local_scanner import LocalDocumentScanner
@@ -20,6 +21,12 @@ from .distractor_generator import (
     DistractorConfig,
     SimilarityLevel,
 )
+from .legal_fetcher import (
+    LegalDocumentFetcher,
+    OPENSOURCE_LICENSES,
+    TOS_URLS,
+    PRIVACY_POLICY_URLS,
+)
 
 __all__ = [
     "LocalDocumentScanner",
@@ -32,4 +39,8 @@ __all__ = [
     "DistractorGenerator",
     "DistractorConfig",
     "SimilarityLevel",
+    "LegalDocumentFetcher",
+    "OPENSOURCE_LICENSES",
+    "TOS_URLS",
+    "PRIVACY_POLICY_URLS",
 ]

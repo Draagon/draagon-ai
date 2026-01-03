@@ -24,6 +24,10 @@ from .downloaders import (
     DistractorGenerator,
     DistractorConfig,
     SimilarityLevel,
+    LegalDocumentFetcher,
+    OPENSOURCE_LICENSES,
+    TOS_URLS,
+    PRIVACY_POLICY_URLS,
 )
 
 __all__ = [
@@ -42,4 +46,8 @@ __all__ = [
     "DistractorGenerator",
     "DistractorConfig",
     "SimilarityLevel",
+    "LegalDocumentFetcher",
+    "OPENSOURCE_LICENSES",
+    "TOS_URLS",
+    "PRIVACY_POLICY_URLS",
 ]
